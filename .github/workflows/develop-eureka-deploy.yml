@@ -9,8 +9,7 @@ on:
       
 jobs:
   deploy:
-  
-    if: github.event.pull_request.merged == true && contains(github.event.pull_request.changed_files, 'OFZ-eureka/')
+    if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
 
     steps:
@@ -22,6 +21,16 @@ jobs:
         with:
           java-version: '17' 
 
+      - name: Get PR Changed Files
+        id: get-changed-files
+        run: |
+          git fetch origin develop
+          CHANGED_FILES=$(git diff --name-only origin/develop...HEAD)
+          echo "$CHANGED_FILES" | grep '^OFZ-eureka/' && echo "OFZ-eureka" >> changed_modules.txt
+
       - name: builde
-        run: ./gradlew :ONF-eureka:assemble
+        if: contains(steps.get-changed-files.outputs.changed_modules, 'OFZ-eureka')
+        run: |
+          ./gradlew :OFZ-eureka:assemble
+          echo "eureka!"
   
