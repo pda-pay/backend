@@ -1,0 +1,21 @@
+plugins {
+    id 'java'
+}
+
+group 'org.ofz'
+version 'unspecified'
+
+bootJar.enabled = false
+jar.enabled =true
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+
+}
+
+test {
+    useJUnitPlatform()
+}
