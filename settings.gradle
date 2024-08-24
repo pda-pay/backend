@@ -1,0 +1,10 @@
+rootProject.name = 'OFZ-Pay-Backend'
+
+include 'OFZ-common'
+include 'OFZ-payment'
+include 'OFZ-schedule'
+include 'OFZ-asset'
+include 'OFZ-notification'
+include 'OFZ-eureka'
+include 'OFZ-api-gateway'
+
