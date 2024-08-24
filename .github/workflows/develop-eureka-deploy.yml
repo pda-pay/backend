@@ -1,0 +1,27 @@
+name: dev-eureka-deploy
+
+on:
+  pull_request:
+    branches: 
+      - develop
+    types:
+      - closed
+      
+jobs:
+  deploy:
+  
+    if: github.event.pull_request.merged == true && contains(github.event.pull_request.changed_files, 'OFZ-eureka/')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17' 
+
+      - name: builde
+        run: ./gradlew :ONF-eureka:assemble
+  
