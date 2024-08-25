@@ -30,7 +30,7 @@ jobs:
           echo "$CHANGED_FILES" | grep '^OFZ-eureka/' && echo "OFZ-eureka" >> changed_modules.txt
 
       - name: builde
-        if: contains(steps.get-changed-files.outputs.changed_modules, 'OFZ-eureka')
+        # if: contains(steps.get-changed-files.outputs.changed_modules, 'OFZ-eureka')
         run: |
           ./gradlew :OFZ-eureka:assemble
           echo "eureka!"
