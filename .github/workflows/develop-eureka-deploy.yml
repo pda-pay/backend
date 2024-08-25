@@ -1,38 +1,61 @@
-name: dev-eureka-deploy
+name: MSA Module Deployment
 
 on:
-  # pull_request:
-  #   branches: 
-  #     - develop
-  #   types:
-  #     - closed
-  workflow_dispatch:
-      
+  push:
+    branches:
+      - develop
+
 jobs:
-  deploy:
-    # if: github.event.pull_request.merged == true
+  detect-modules:
     runs-on: ubuntu-latest
-
+    outputs:
+      changed_modules: ${{ steps.detect.outputs.changed_modules }}
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Detect changed modules
+        id: detect
+        run: |
+          # Define module directories
+          MODULES=("OFZ-eureka" "OFZ-payment" "OFZ-api-gateway")
 
+          # Detect changes
+          CHANGED_MODULES=()
+          for MODULE in "${MODULES[@]}"; do
+            if git diff --name-only HEAD~1 HEAD | grep -q "^$MODULE/"; then
+              CHANGED_MODULES+=($MODULE)
+            fi
+          done
+
+          # Output changed modules as a string
+          echo "changed_modules=${CHANGED_MODULES[*]}" >> $GITHUB_OUTPUT
+
+  deploy:
+    needs: detect-modules
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: ${{ fromJson(needs.detect-modules.outputs.changed_modules) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
       - name: Set up JDK
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v3
         with:
-          distribution: 'corretto'
-          java-version: '17' 
-
-      - name: Get PR Changed Files
-        id: get-changed-files
+          java-version: '17'
+      
+      - name: Build and deploy ${{ matrix.module }}
         run: |
-          git fetch origin develop
-          CHANGED_FILES=$(git diff --name-only origin/develop...HEAD)
-          echo "$CHANGED_FILES" | grep '^OFZ-eureka/' && echo "OFZ-eureka" >> changed_modules.txt
-
-      - name: builde
-        # if: contains(steps.get-changed-files.outputs.changed_modules, 'OFZ-eureka')
-        run: |
-          ./gradlew :OFZ-eureka:assemble
-          echo "eureka!"
-  
+          echo 'this is test!'
+          echo ${{ matrix.module }}
+          
+          # cd ${{ matrix.module }}
+          # ./gradlew clean build
+          
+          # # Example deploy script
+          # ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          #   cd /path/to/${{ matrix.module }}
+          #   ./deploy.sh
+          # EOF
