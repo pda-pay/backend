@@ -11,5 +11,5 @@
 
  JAR_PATH="/home/ubuntu/OFZ-payment/OFZ-payment.jar"
  chmod +x $JAR_PATH
- nohup java -jar $JAR_PATH >> /home/ubuntu/OFZ-payment/deploy.log 2>> /home/ubuntu/OFZ-payment/deploy_err.log &
+ nohup java -jar $JAR_PATH --spring.profiles.active=prod  >> /home/ubuntu/OFZ-payment/deploy.log 2>> /home/ubuntu/OFZ-payment/deploy_err.log &
  echo "payment deploy success"
