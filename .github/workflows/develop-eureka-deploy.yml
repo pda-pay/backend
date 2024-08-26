@@ -27,7 +27,7 @@ jobs:
 
       - name: Build and deploy Eureka
         run: |
-          ./gradlew build OFZ-eureka:build
+          ./gradlew OFZ-eureka:build
           echo "complete"
           
           # # Example deploy script
