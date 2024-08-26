@@ -10,7 +10,7 @@ eureka:
     register-with-eureka: false
     fetch-registry: false
     serviceUrl:
-      defaultZone: ${OFZ_EUREKA_URL}
+      defaultZone: ${OFZ_EURE_URL}
 
   server:
     wait-time-in-ms-when-sync-empty: 5
