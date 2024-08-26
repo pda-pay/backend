@@ -64,5 +64,5 @@ jobs:
           aws deploy create-deployment \
             --application-name ofz-deploy   \
             --deployment-group-name ofz-eureka \
-            --s3-location bucket=ofz-deploy,key=$ZIP_FILE,bundleType=zip \
+            --s3-location bucket=ofz-deploy,key=./$ZIP_FILE,bundleType=zip \
             --region ap-northeast-2
