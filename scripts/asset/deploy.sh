@@ -11,5 +11,5 @@
 
  JAR_PATH="/home/ubuntu/OFZ-asset/OFZ-asset.jar"
  chmod +x $JAR_PATH
- nohup java -jar $JAR_PATH >> /home/ubuntu/OFZ-asset/deploy.log 2>> /home/ubuntu/OFZ-asset/deploy_err.log &
+ nohup java -jar --spring.profiles.active=prod  $JAR_PATH >> /home/ubuntu/OFZ-asset/deploy.log 2>> /home/ubuntu/OFZ-asset/deploy_err.log &
  echo "asset deploy success"
