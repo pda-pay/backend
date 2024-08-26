@@ -9,8 +9,7 @@
          sleep 3
  fi
 
- JAR_PATH="/home/ubuntu/OFZ-eureka/*.jar"
- echo "jar path : $JAR_PATH"
+ JAR_PATH="/home/ubuntu/OFZ-eureka/OFZ-eureka.jar"
  chmod +x $JAR_PATH
  nohup java -jar $JAR_PATH >> /home/ubuntu/OFZ-eureka/deploy.log 2>> /home/ubuntu/OFZ-eureka/deploy_err.log &
  echo "eureka deploy success"
