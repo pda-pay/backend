@@ -12,4 +12,4 @@
  JAR_PATH="/home/ubuntu/OFZ-api-gateway/OFZ-api-gateway.jar"
  chmod +x $JAR_PATH
  nohup java -jar $JAR_PATH >> /home/ubuntu/OFZ-api-gateway/deploy.log 2>> /home/ubuntu/OFZ-api-gateway/deploy_err.log &
- echo "eureka deploy success"
+ echo "api-gateway deploy success"
