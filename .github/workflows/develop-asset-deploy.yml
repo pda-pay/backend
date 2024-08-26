@@ -37,7 +37,7 @@ jobs:
 
           mkdir -p deploy-package
           
-          cp -r OFZ-eureka/build/libs/*.jar deploy-package/
+          cp -r OFZ-asset/build/libs/*.jar deploy-package/
           cp scripts/asset/appspec.yml deploy-package/          
           cp scripts/asset/deploy.sh deploy-package/
 
