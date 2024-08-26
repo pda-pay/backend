@@ -1,0 +1,36 @@
+name: Deploy Payment
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - 'OFZ-payment/**'
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build and deploy Payment
+        run: |
+          ./gradlew OFZ-payment:build
+          echo "complete"
+          
+          # # Example deploy script
+          # ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << EOF
+          #   cd /path/to/OFZ-eureka
+          #   ./deploy.sh
+          # EOF
