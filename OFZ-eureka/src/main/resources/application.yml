@@ -1,16 +1,48 @@
+spring:
+  profiles:
+    active: local
+    group:
+      local:
+        - common
+      prod:
+        - common
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+
+  application:
+    name: eureka-server
+
 server:
   port: 8087
 
+---
 spring:
-  application:
-    name: eureka-server
+  config:
+    activate:
+      on-profile: local
 
 eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
     serviceUrl:
-      defaultZone: ${OFZ_EURE_URL}
+      defaultZone: "http://localhost:8087/eureka"
+  server:
+    wait-time-in-ms-when-sync-empty: 5
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
 
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+    serviceUrl:
+      defaultZone: ${OFZ_EUREKA_URL}
   server:
     wait-time-in-ms-when-sync-empty: 5
