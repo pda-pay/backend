@@ -2,12 +2,12 @@
 name: Deploy Eureka
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - develop
     paths:
       - 'OFZ-eureka/**'
-  workflow_dispatch:
 
 jobs:
   build-and-deploy:
