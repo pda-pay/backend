@@ -51,6 +51,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.CODE_DEPLOY_ACCESS }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CODE_DEPLOY_SECRET }}
         run: |
+          ZIP_FILE="OFZ-eureka.zip"
           aws s3 cp ./$ZIP_FILE s3://ofz-deploy/$ZIP_FILE --region ap-northeast-2
 
       - name: Deploy to CodeDeploy
@@ -58,6 +59,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.CODE_DEPLOY_ACCESS }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.CODE_DEPLOY_SECRET }}
         run: |
+          ZIP_FILE="OFZ-eureka.zip"
           echo "Deploying $ZIP_FILE using CodeDeploy"
           aws deploy create-deployment \
             --application-name ofz-deploy   \
