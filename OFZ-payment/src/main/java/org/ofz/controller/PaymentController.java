@@ -8,6 +8,7 @@ public class PaymentController {
 
     @GetMapping("/api/payment/test")
     public String test(){
+
         return "test";
     }
 
