@@ -18,6 +18,7 @@ jobs:
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
+          distribution: 'corretto'
           java-version: '17'
 
       - name: Build and deploy Eureka
