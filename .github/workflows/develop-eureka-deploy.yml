@@ -14,25 +14,25 @@ jobs:
       - name: sout test
         run: |
           echo "this is test"
-  #     - name: Checkout code
-  #       uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
       
-  #     - name: Detect changed modules
-  #       id: detect
-  #       run: |
-  #         # Define module directories
-  #         MODULES=("OFZ-eureka" "OFZ-payment" "OFZ-api-gateway")
+      - name: Detect changed modules
+        id: detect
+        run: |
+          # Define module directories
+          MODULES=("OFZ-eureka" "OFZ-payment" "OFZ-api-gateway")
 
-  #         # Detect changes
-  #         CHANGED_MODULES=()
-  #         for MODULE in "${MODULES[@]}"; do
-  #           if git diff --name-only HEAD~1 HEAD | grep -q "^$MODULE/"; then
-  #             CHANGED_MODULES+=($MODULE)
-  #           fi
-  #         done
+          # Detect changes
+          CHANGED_MODULES=()
+          for MODULE in "${MODULES[@]}"; do
+            if git diff --name-only HEAD~1 HEAD | grep -q "^$MODULE/"; then
+              CHANGED_MODULES+=($MODULE)
+            fi
+          done
 
-  #         # Output changed modules as a string
-  #         echo "changed_modules=${CHANGED_MODULES[*]}" >> $GITHUB_OUTPUT
+          # Output changed modules as a string
+          echo "changed_modules=${CHANGED_MODULES[*]}" >> $GITHUB_OUTPUT
 
   # deploy:
   #   needs: detect-modules
