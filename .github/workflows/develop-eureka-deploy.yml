@@ -23,12 +23,14 @@ jobs:
           # Define module directories
           MODULES=("OFZ-eureka" "OFZ-payment" "OFZ-api-gateway")
 
+          PREV_COMMIT=$(git merge-base HEAD origin/develop)
+          
           # Detect changes
           CHANGED_MODULES=()
           for MODULE in "${MODULES[@]}"; do
-            if git diff --name-only HEAD~1 HEAD | grep -q "^$MODULE/"; then
-              CHANGED_MODULES+=($MODULE)
-            fi
+              if git diff --name-only $PREV_COMMIT HEAD | grep -q "^$MODULE/"; then
+                  CHANGED_MODULES+=($MODULE)
+              fi
           done
 
           # Output changed modules as a string
