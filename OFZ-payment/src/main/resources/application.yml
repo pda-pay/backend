@@ -1,14 +1,51 @@
+spring:
+  profiles:
+    active: local
+    group:
+      local:
+        - common
+      prod:
+        - common
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+
+  application:
+    name: payment-service
 server:
   port: 8081
 
+---
 spring:
-  application:
-    name: payment-service
+  config:
+    activate:
+      on-profile: local
+
 eureka:
   instance:
     prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8087/eureka/
+    serviceUrl:
+      defaultZone: "http://localhost:8087/eureka"
+  server:
+    wait-time-in-ms-when-sync-empty: 5
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: ${OFZ_EUREKA_URL}
+  server:
+    wait-time-in-ms-when-sync-empty: 5
