@@ -24,6 +24,8 @@ jobs:
           MODULES=("OFZ-eureka" "OFZ-payment" "OFZ-api-gateway")
 
           PREV_COMMIT=$(git merge-base HEAD origin/develop)
+
+          echo git diff --name-only $PREV_COMMIT HEAD
           
           # Detect changes
           CHANGED_MODULES=()
