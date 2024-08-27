@@ -1,5 +1,5 @@
 #!/bin/bash
- CURRENT_PID=$(pgrep -f .jar)
+ CURRENT_PID=$(lsof -ti:8087)
  echo "$CURRENT_PID"
  if [ -z $CURRENT_PID ]; then
          echo "no process"
