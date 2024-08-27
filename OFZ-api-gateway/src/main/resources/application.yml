@@ -22,7 +22,7 @@ spring:
           uri: lb://payment-service
           predicates:
             - Path=/api/payment/**
-            -
+
         - id: schedule-service
           uri: lb://schedule-service
           predicates:
