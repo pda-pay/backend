@@ -19,7 +19,7 @@ spring:
     gateway:
       routes:
         - id: payment-service
-          uri: http://10.0.1.176:8081
+          uri: lb://payment-service
           predicates:
             - Path=/api/payment/**
 
