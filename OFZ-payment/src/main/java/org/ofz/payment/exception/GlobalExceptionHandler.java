@@ -3,6 +3,7 @@ package org.ofz.payment.exception;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.ofz.payment.exception.payment.*;
 import org.ofz.payment.exception.websocket.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -112,6 +113,28 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorDTO> catchPaymentPasswordMismatchException(PaymentPasswordMismatchException e) {
+        log.error("exception class: {}", e.getClass());
+
+        ErrorDTO errorDTO = ErrorDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorDTO> catchPaymentTokenExpiredException(PaymentTokenExpiredException e) {
+        log.error("exception class: {}", e.getClass());
+
+        ErrorDTO errorDTO = ErrorDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorDTO, HttpStatus.UNAUTHORIZED);
     }
 
     @Getter
