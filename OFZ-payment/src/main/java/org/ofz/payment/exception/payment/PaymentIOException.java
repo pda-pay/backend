@@ -1,4 +1,4 @@
-package org.ofz.payment.exception.websocket;
+package org.ofz.payment.exception.payment;
 
 public class PaymentIOException extends RuntimeException {
 
