@@ -27,8 +27,8 @@ public class UserControllerAdvice {
                     return error.getDefaultMessage();
                 })
                 .toList();
-        String bindedMessage = String.join(", ", errorMessages);
-        UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), bindedMessage);
+        String boundMessage = String.join(", ", errorMessages);
+        UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), boundMessage);
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
     }
 
