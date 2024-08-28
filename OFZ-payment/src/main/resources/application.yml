@@ -36,6 +36,10 @@ spring:
     password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+secret:
+  key:
+    base64: ${SECRET_KEY_BASE64}
+
 eureka:
   instance:
     prefer-ip-address: true
