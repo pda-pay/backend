@@ -1,14 +1,70 @@
+spring:
+  profiles:
+    active: local
+    group:
+      local:
+        - common
+      prod:
+        - common
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+
+  application:
+    name: payment-service
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
 server:
   port: 8081
 
+
+---
 spring:
-  application:
-    name: payment-service
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/ofz
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
 eureka:
   instance:
     prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8087/eureka/
+    serviceUrl:
+      defaultZone: "http://localhost:8087/eureka"
+  server:
+    wait-time-in-ms-when-sync-empty: 5
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${PAYMENT_DB_URL}
+    username: ${PAYMENT_DB_USERNAME}
+    password: ${PAYMENT_DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: ${OFZ_EUREKA_URL}
+  server:
+    wait-time-in-ms-when-sync-empty: 5

@@ -1,7 +1,17 @@
-server:
-  port: 8080
-
 spring:
+  profiles:
+    active: local
+    group:
+      local:
+        - common
+      prod:
+        - common
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+
   application:
     name: api-gateway
 
@@ -13,11 +23,50 @@ spring:
           predicates:
             - Path=/api/payment/**
 
+        - id: schedule-service
+          uri: lb://schedule-service
+          predicates:
+            - Path=/api/schedule/**
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notification/**
+
+        - id: asset-service
+          uri: lb://asset-service
+          predicates:
+            - Path=/api/asset/**
+
+
+server:
+  port: 8080
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+
 eureka:
-  instance:
-    prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://localhost:8087/eureka
+      defaultZone: "http://localhost:8087/eureka"
+  server:
+    wait-time-in-ms-when-sync-empty: 5
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: ${OFZ_EUREKA_URL}
+  server:
+    wait-time-in-ms-when-sync-empty: 5
