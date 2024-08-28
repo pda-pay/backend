@@ -35,11 +35,13 @@ spring:
   config:
     activate:
       on-profile: local
+    import: optional:file:.env[.properties]
 
   datasource:
-    url: jdbc:mysql://localhost:3306/ofz
-    username: root
-    password: password
+    url: ${LOCAL_PAYMENT_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 eureka:
