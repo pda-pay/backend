@@ -14,6 +14,8 @@ public class Franchise {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+
+    @Column(unique = true)
     private int code;
 
     @OneToMany(mappedBy = "franchise")
