@@ -5,9 +5,9 @@ import lombok.Getter;
 
 @Getter
 public class UserLoginReq {
-    @NotBlank
+    @NotBlank(message = "아이디 미입력")
     private String loginId;
 
-    @NotBlank
+    @NotBlank(message = "비밀번호 미입력")
     private String password;
 }
