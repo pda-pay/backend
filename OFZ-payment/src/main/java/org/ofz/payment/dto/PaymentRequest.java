@@ -10,14 +10,14 @@ public class PaymentRequest {
     private String transactionId;
     private int franchiseCode;
     private int paymentAmount;
-    private Long userId;
+    private String token;
 
     public PaymentRequest() {}
 
-    public PaymentRequest(String transactionId, int franchiseCode, int paymentAmount, Long userId) {
+    public PaymentRequest(String transactionId, int franchiseCode, int paymentAmount, String token) {
         this.transactionId = transactionId;
         this.franchiseCode = franchiseCode;
         this.paymentAmount = paymentAmount;
-        this.userId = userId; //
+        this.token = token;
     }
 }
