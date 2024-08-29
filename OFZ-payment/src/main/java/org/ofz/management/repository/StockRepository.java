@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-
+//dd
 public interface StockRepository extends JpaRepository<Stock, Long> {
     @Query("SELECT s.accountNumber AS accountNumber, " +
             "s.quantity AS quantity, " +

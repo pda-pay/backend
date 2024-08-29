@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import org.ofz.payment.entity.User;
-
+//dd
 @Entity
 @Getter
 @Table(name = "Stock")
