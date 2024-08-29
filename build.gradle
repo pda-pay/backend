@@ -32,6 +32,8 @@ subprojects {
 
         testCompileOnly 'org.projectlombok:lombok'
         testAnnotationProcessor 'org.projectlombok:lombok'
+
+        implementation 'io.github.cdimascio:dotenv-java:3.0.0'
     }
 
     configurations {
