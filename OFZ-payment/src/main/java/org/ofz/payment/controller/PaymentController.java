@@ -1,13 +1,14 @@
 package org.ofz.payment.controller;
 
 import lombok.RequiredArgsConstructor;
+import org.ofz.payment.dto.PaymentAuthRequest;
 import org.ofz.payment.dto.PaymentResponse;
 import org.ofz.payment.dto.PaymentRequest;
-import org.ofz.payment.exception.websocket.PaymentIOException;
+import org.ofz.payment.dto.PaymentTokenResponse;
+import org.ofz.payment.exception.payment.PaymentIOException;
 import org.ofz.payment.service.PaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,10 +19,9 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class PaymentController {
 
-
     private final PaymentService paymentService;
 
-    @PostMapping("/api/payment/request")
+    @PostMapping("/payment/request")
     public ResponseEntity<PaymentResponse> payment(@RequestBody PaymentRequest paymentRequest) {
 
         try {
@@ -34,9 +34,11 @@ public class PaymentController {
         }
     }
 
-    @GetMapping("/api/payment/test")
-    public String test(){
-        return "test";
-    }
+    @PostMapping("/payment/auth")
+    public ResponseEntity<PaymentTokenResponse> paymentAuth(@RequestBody PaymentAuthRequest paymentAuthRequest) {
 
+        PaymentTokenResponse paymentTokenResponse = paymentService.createPaymentToken(paymentAuthRequest);
+
+        return new ResponseEntity<>(paymentTokenResponse, HttpStatus.CREATED);
+    }
 }

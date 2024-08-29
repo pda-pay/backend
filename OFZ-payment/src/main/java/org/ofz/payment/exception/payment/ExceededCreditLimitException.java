@@ -1,4 +1,4 @@
-package org.ofz.payment.exception;
+package org.ofz.payment.exception.payment;
 
 import lombok.Getter;
 

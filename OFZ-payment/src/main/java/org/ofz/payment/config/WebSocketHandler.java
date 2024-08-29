@@ -31,7 +31,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
         String id = extractIdFromUri(uri);
 
         CLIENTS.put(id, session);
-        System.out.println("SocketId = " + id);
 
         session.sendMessage(new TextMessage("연결 성공!"));
     }
@@ -45,9 +44,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
         String id = extractIdFromUri(uri);
 
         CLIENTS.remove(id);
-        System.out.println("SocketId = " + id);
-
-        System.out.println("소켓 연결 종료! - " + id);
     }
 
     private void validationUri(URI uri) {

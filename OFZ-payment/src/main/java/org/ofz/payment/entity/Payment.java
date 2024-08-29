@@ -38,7 +38,7 @@ public class Payment {
     @Column(name = "overdue_day")
     private LocalDate overdueDay;
 
-    private int password;
+    private String password;
 
     @Column(name = "repayment_account_id")
     private Long repaymentAccountId;
@@ -49,7 +49,7 @@ public class Payment {
 
     public Payment() {}
 
-    public Payment(Long id, Long userId, int previousMonthDebt, int currentMonthDebt, int creditLimit, int repaymentDate, Boolean rateFlag, Boolean payFlag, LocalDate overdueDay, int password, Long repaymentAccountId) {
+    public Payment(Long id, Long userId, int previousMonthDebt, int currentMonthDebt, int creditLimit, int repaymentDate, Boolean rateFlag, Boolean payFlag, LocalDate overdueDay, String password, Long repaymentAccountId) {
         this.id = id;
         this.userId = userId;
         this.previousMonthDebt = previousMonthDebt;
