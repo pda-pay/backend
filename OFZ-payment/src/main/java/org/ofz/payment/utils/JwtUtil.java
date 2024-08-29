@@ -1,10 +1,8 @@
 package org.ofz.payment.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import jakarta.annotation.PostConstruct;
+import org.ofz.payment.exception.payment.NonValidPaymentTokenException;
 import org.ofz.payment.exception.payment.PaymentTokenExpiredException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -66,8 +64,11 @@ public class JwtUtil {
 
         try {
             Claims claims = getClaims(token);
+
         } catch (ExpiredJwtException e) {
             throw new PaymentTokenExpiredException("토큰이 만료되었습니다.");
+        } catch (JwtException e) {
+            throw new NonValidPaymentTokenException("유효한 토큰이 아닙니다.");
         }
     }
 }
