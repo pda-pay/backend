@@ -16,26 +16,33 @@ public class UserControllerAdvice {
 
     // @valid 예외처리
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<UserErrorRes> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex){
+    public ResponseEntity<UserErrorRes> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
         List<String> errorMessages = ex.getBindingResult()
                 .getAllErrors()
                 .stream()
                 .map(error -> {
-                    if(error instanceof FieldError){
+                    if (error instanceof FieldError) {
                         return ((FieldError) error).getDefaultMessage();
                     }
                     return error.getDefaultMessage();
                 })
                 .toList();
-        String bindedMessage = String.join(", ", errorMessages);
-        UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), bindedMessage);
+        String boundMessage = String.join(", ", errorMessages);
+        UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), boundMessage);
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
     }
 
     // 회원가입 아이디, 전화번호 중복 예외처리
     @ExceptionHandler(SignupDuplicationException.class)
-    public ResponseEntity<UserErrorRes> handleSignupArgumentException(SignupDuplicationException ex){
+    public ResponseEntity<UserErrorRes> handleSignupArgumentException(SignupDuplicationException ex) {
         UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), ex.getMessage());
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+    }
+
+    // 로그인 시도 유저가 유효하지 않은 경우 예외처리
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<UserErrorRes> handleInvalidCredentialsException(InvalidCredentialsException ex){
+        UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), ex.getMessage());
+        return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
     }
 }

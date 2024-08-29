@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Getter
 public class UserValidateLoginIdReq {
-    @NotBlank
+    @NotBlank(message = "아이디 미입력")
     private String loginId;
 }
