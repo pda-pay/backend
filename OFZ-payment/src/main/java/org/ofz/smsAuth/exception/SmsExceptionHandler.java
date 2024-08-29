@@ -42,6 +42,14 @@ public class SmsExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    // VerificationCodeAlreadySentException 처리
+    @ExceptionHandler(VerificationCodeAlreadySentException.class)
+    public ResponseEntity<SmsAuthErrorRes> handleVerificationCodeAlreadySentException(VerificationCodeAlreadySentException ex) {
+        SmsAuthErrorRes errorResponse = new SmsAuthErrorRes(
+                LocalDateTime.now(),
+                ex.getMessage());
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
 
     // VerificationCodeExpiredException 처리
     @ExceptionHandler(VerificationCodeExpiredException.class)
