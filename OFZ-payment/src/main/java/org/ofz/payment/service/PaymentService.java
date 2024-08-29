@@ -88,15 +88,17 @@ public class PaymentService {
 
     public PaymentTokenResponse createPaymentToken(PaymentAuthRequest paymentAuthRequest) {
 
+        Long reqUserId = paymentAuthRequest.getUserId();
         Payment payment = paymentRepository
-                .findPaymentByUserId(paymentAuthRequest.getUserId())
+                .findPaymentByUserId(reqUserId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));
 
-        if (!payment.getPassword().equals(paymentAuthRequest.getPassword())) {
+        String reqPaymentPassword = paymentAuthRequest.getPaymentPassword();
+        if (!payment.getPassword().equals(reqPaymentPassword)) {
             throw new PaymentPasswordMismatchException("간편 비밀번호가 틀렸습니다.");
         }
 
-        String createdToken = jwtUtil.createToken(paymentAuthRequest.getUserId());
+        String createdToken = jwtUtil.createToken(reqUserId);
 
         return PaymentTokenResponse.builder()
                 .token(createdToken)
