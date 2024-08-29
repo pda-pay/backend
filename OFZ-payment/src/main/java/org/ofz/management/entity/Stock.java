@@ -3,8 +3,9 @@ package org.ofz.management.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
-import org.ofz.payment.entity.User;
-//dd
+import org.ofz.user.User;
+
+
 @Entity
 @Getter
 @Table(name = "Stock")
