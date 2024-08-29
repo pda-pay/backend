@@ -16,9 +16,7 @@ public class SmsExceptionHandler {
     public ResponseEntity<SmsAuthErrorRes> handleVerificationCodeExpiredException(VerificationCodeExpiredException ex) {
         SmsAuthErrorRes errorResponse = new SmsAuthErrorRes(
                 LocalDateTime.now(),
-                ex.getMessage(),
-                "CODE_EXPIRED"  // 예외에 맞는 에러 코드 추가
-        );
+                ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
@@ -27,9 +25,7 @@ public class SmsExceptionHandler {
     public ResponseEntity<SmsAuthErrorRes> handleVerificationCodeNotFoundException(VerificationCodeNotFoundException ex) {
         SmsAuthErrorRes errorResponse = new SmsAuthErrorRes(
                 LocalDateTime.now(),
-                ex.getMessage(),
-                "CODE_NOT_FOUND"  // 예외에 맞는 에러 코드 추가
-        );
+                ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
@@ -38,9 +34,7 @@ public class SmsExceptionHandler {
     public ResponseEntity<SmsAuthErrorRes> handleSmsSendingFailedException(SmsSendingFailedException ex) {
         SmsAuthErrorRes errorResponse = new SmsAuthErrorRes(
                 LocalDateTime.now(),
-                ex.getMessage(),
-                "SMS_SEND_FAILED"  // 예외에 맞는 에러 코드 추가
-        );
+                ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
@@ -49,9 +43,7 @@ public class SmsExceptionHandler {
     public ResponseEntity<SmsAuthErrorRes> handleAllExceptions(Exception ex) {
         SmsAuthErrorRes errorResponse = new SmsAuthErrorRes(
                 LocalDateTime.now(),
-                "An unexpected error occurred: " + ex.getMessage(),
-                "UNKNOWN_ERROR"
-        );
+                "An unexpected error occurred: " + ex.getMessage());
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

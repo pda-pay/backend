@@ -8,11 +8,9 @@ import java.time.LocalDateTime;
 public class SmsAuthErrorRes {
     private final LocalDateTime timestamp;
     private final String message;
-    private final String errorCode;
 
-    public SmsAuthErrorRes(LocalDateTime timestamp, String message, String errorCode) {
+    public SmsAuthErrorRes(LocalDateTime timestamp, String message) {
         this.timestamp = timestamp;
         this.message = message;
-        this.errorCode = errorCode;
     }
 }
