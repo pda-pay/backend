@@ -26,11 +26,10 @@ public class SmsController {
         LocalDateTime sentAt = LocalDateTime.now();
         smsService.sendVerificationMessage(request.getPhoneNumber(), sentAt);
 
-        // 응답 메시지를 HashMap으로 구성
         HashMap<String, String> responseBody = new HashMap<>();
         responseBody.put("message", "SMS 인증번호가 요청되었습니다.");
 
-        // 상태 코드 202 (Accepted)와 메시지를 HashMap으로 반환
+        // 상태 코드 202 (Accepted)
         return new ResponseEntity<>(responseBody, HttpStatus.ACCEPTED);
     }
 
@@ -41,11 +40,10 @@ public class SmsController {
         LocalDateTime verifiedAt = LocalDateTime.now();
         smsService.verifyCode(request.getPhoneNumber(), request.getCode(), verifiedAt);
 
-        // 응답 메시지를 HashMap으로 구성
         HashMap<String, String> responseBody = new HashMap<>();
         responseBody.put("message", "정상 인증 되었습니다.");
 
-        // 상태 코드 200 (OK)와 메시지를 HashMap으로 반환
+        // 상태 코드 200 (OK)
         return new ResponseEntity<>(responseBody, HttpStatus.OK);
     }
 }

@@ -9,7 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @Repository
 public class VerificationCodeRepositoryImpl implements VerificationCodeRepository {
 
-    // 임시 저장소 (HashMap을 이용한 간단한 예시)
     private final Map<String, VerificationCode> store = new ConcurrentHashMap<>();
 
     @Override
@@ -30,7 +29,7 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
 
     @Override
     public Optional<VerificationCode> findByPhoneNumber(String phoneNumber) {
-        return Optional.ofNullable(store.get(phoneNumber)); // 전화번호로 인증 코드 찾기
+        return Optional.ofNullable(store.get(phoneNumber));
     }
 
     @Override
