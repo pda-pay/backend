@@ -9,6 +9,7 @@ import lombok.Setter;
 @Setter
 public class VerificationCodeReq {
     @NotBlank(message = "인증번호 부재")
+    @Pattern(regexp = "(\\d{6})$", message = "인증번호 양식 틀림")
     private String code;
 
     @NotBlank(message = "전화번호 부재")
