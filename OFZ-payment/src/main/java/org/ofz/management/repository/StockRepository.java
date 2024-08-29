@@ -1,0 +1,20 @@
+package org.ofz.management.repository;
+
+import org.ofz.management.dto.UserStockProjection;
+import org.ofz.management.entity.Stock;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
+
+public interface StockRepository extends JpaRepository<Stock, Long> {
+    @Query("SELECT s.accountNumber AS accountNumber, " +
+            "s.quantity AS quantity, " +
+            "COALESCE(ms.quantity, 0) AS mortgagedQuantity, " +
+            "s.stockCode AS stockCode " +
+            "FROM Stock s " +
+            "LEFT JOIN MortgagedStock ms ON s.accountNumber = ms.accountNumber AND s.stockCode = ms.stockCode " +
+            "WHERE s.user.id = :userId")
+    List<UserStockProjection> findUserStocksByUserId(@Param("userId") Long userId);
+}
