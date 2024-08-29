@@ -5,7 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class VerificationCodeRequest {
-    private String code;
-    // TODO
+public class PhoneNumberForVerificationReq {
+    private String phoneNumber;
 }

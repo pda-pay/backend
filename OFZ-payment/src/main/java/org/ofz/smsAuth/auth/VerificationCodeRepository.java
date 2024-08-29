@@ -6,7 +6,7 @@ public interface VerificationCodeRepository {
 
     void save(VerificationCode verificationCode);
 
-    Optional<VerificationCode> findByCode(String code);
+    Optional<VerificationCode> findByCode(String phoneNumber, String code);
 
     Optional<VerificationCode> findByPhoneNumber(String phoneNumber);
 

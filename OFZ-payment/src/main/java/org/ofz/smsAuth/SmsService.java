@@ -68,8 +68,8 @@ public class SmsService {
         }
     }
 
-    public void verifyCode(String code, LocalDateTime verifiedAt) {
-        VerificationCode verificationCode = verificationCodeRepositoryImpl.findByCode(code)
+    public void verifyCode(String phoneNumber,String code, LocalDateTime verifiedAt) {
+        VerificationCode verificationCode = verificationCodeRepositoryImpl.findByCode(phoneNumber, code)
                 .orElseThrow(() -> new VerificationCodeNotFoundException("유효하지 않은 인증 코드입니다."));
 
         if (verificationCode.isExpired(verifiedAt)) {

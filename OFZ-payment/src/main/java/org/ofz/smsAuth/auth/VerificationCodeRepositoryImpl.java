@@ -24,11 +24,9 @@ public class VerificationCodeRepositoryImpl implements VerificationCodeRepositor
     }
 
     @Override
-    public Optional<VerificationCode> findByCode(String code) {
-//        return store.values().stream()
-//                .filter(vc -> vc.getCode().equals(code))
-//                .findFirst();
-        // TODO
+    public Optional<VerificationCode> findByCode(String phoneNumber,String code) {
+        return Optional.ofNullable(store.get(phoneNumber))
+                .filter(vc -> vc.getCode().equals(code));
     }
 
     @Override
