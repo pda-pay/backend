@@ -1,6 +1,9 @@
 package org.ofz.user;
 
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.ofz.jwt.JwtToken;
 import org.ofz.user.dto.UserLoginReq;
 import org.ofz.user.dto.UserSignupReq;
 import org.ofz.user.dto.UserValidateLoginIdReq;
@@ -34,22 +37,6 @@ public class UserController {
         return new ResponseEntity<>(responseBody, HttpStatus.OK);
     }
 
-//    // 인증번호 요청
-//    @ResponseBody
-//    @PostMapping("/users/sms-request")
-//    public ResponseEntity<String> requestSms(@RequestBody UserSmsReq userSmsReq){
-//        String certificationNumber = userService.requestSms(userSmsReq);
-//        return new ResponseEntity<>(certificationNumber, HttpStatus.OK);
-//    }
-//
-//    // 인증번호 검증
-//    @ResponseBody
-//    @PostMapping("/users/sms-validation")
-//    public ResponseEntity<Boolean> validateSms(@RequestBody UserSmsReq userSmsReq){
-//        boolean isValid = userService.validateSms(userSmsReq);
-//        return new ResponseEntity<>(isValid, HttpStatus.OK);
-//    }
-
     // 회원가입
     @ResponseBody
     @PostMapping("/users/signup")
@@ -58,11 +45,25 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
-    // 로그인 // jwt & 쿠키 발급 추가해야 함
+    // 로그인
     @ResponseBody
     @PostMapping("/users/login")
-    public ResponseEntity<Boolean> login(@RequestBody @Valid UserLoginReq userLoginReq){
-        boolean isSuccess = userService.login(userLoginReq);
-        return new ResponseEntity<>(isSuccess, HttpStatus.OK);
+    public ResponseEntity<Void> login(@RequestBody @Valid UserLoginReq userLoginReq, HttpServletResponse response){
+        JwtToken jwtToken = userService.login(userLoginReq);
+
+        Cookie accessTokenCookie = new Cookie("accessToken", jwtToken.getAccessToken());
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setPath("/");
+        accessTokenCookie.setMaxAge(30 * 60 * 60);
+
+        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setPath("/");
+        refreshTokenCookie.setMaxAge(30 * 60 * 60);
+
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

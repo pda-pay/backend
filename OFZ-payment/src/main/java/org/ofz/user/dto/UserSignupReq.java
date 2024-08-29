@@ -22,10 +22,10 @@ public class UserSignupReq {
     @Pattern(regexp = "^01(?:0|1|[6-9])(\\d{3}|\\d{4})(\\d{4})$", message = "전화번호 양식 틀림")
     private String phoneNumber;
 
-    public User toEntity(){
+    public User toEntity(String encodedPassword){
         return User.builder()
                 .loginId(loginId)
-                .password(password)
+                .password(encodedPassword)
                 .name(name)
                 .phoneNumber(phoneNumber)
                 .build();
