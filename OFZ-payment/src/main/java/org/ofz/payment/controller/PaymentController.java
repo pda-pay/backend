@@ -19,7 +19,6 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class PaymentController {
 
-
     private final PaymentService paymentService;
 
     @PostMapping("/payment/request")
@@ -36,7 +35,7 @@ public class PaymentController {
     }
 
     @PostMapping("/payment/auth")
-    public ResponseEntity<?> paymentAuth(@RequestBody PaymentAuthRequest paymentAuthRequest) {
+    public ResponseEntity<PaymentTokenResponse> paymentAuth(@RequestBody PaymentAuthRequest paymentAuthRequest) {
 
         PaymentTokenResponse paymentTokenResponse = paymentService.createPaymentToken(paymentAuthRequest);
 
