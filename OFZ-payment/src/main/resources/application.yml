@@ -23,6 +23,12 @@ spring:
 server:
   port: 8081
 
+coolsms:
+  api:
+    key: ${SMS_AUTH_API_KEY}
+    secret: ${SMS_AUTH_API_SECRET}
+    provider: https://api.coolsms.co.kr
+    sender: ${SMS_AUTH_SENDER}
 
 ---
 spring:
@@ -48,6 +54,7 @@ eureka:
       defaultZone: "http://localhost:8087/eureka"
   server:
     wait-time-in-ms-when-sync-empty: 5
+
 ---
 spring:
   config:
