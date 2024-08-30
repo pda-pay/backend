@@ -1,6 +1,5 @@
 package org.ofz.user;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ofz.jwt.JwtToken;
@@ -10,6 +9,8 @@ import org.ofz.management.repository.StockRepository;
 import org.ofz.user.dto.*;
 import org.ofz.user.exception.InvalidCredentialsException;
 import org.ofz.user.exception.SignupDuplicationException;
+import org.ofz.user.exception.SignupPartnerApiCallException;
+import org.ofz.user.exception.SignupStockDataSaveException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
+//@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -54,7 +55,7 @@ public class UserService {
 
         fetchAndSavePartnerDataAsync(user);
     }
-    @Async // 비동기 처리
+
     public void fetchAndSavePartnerDataAsync(User user) {
 
         UserSignupStockDataReq request = new UserSignupStockDataReq(user.getName(), user.getPhoneNumber());
@@ -64,24 +65,40 @@ public class UserService {
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(UserSignupStockDataRes.class)
-                .doOnError(ex -> log.error("Error calling partner API: {}", ex.getMessage()))
-                .subscribe(response -> saveStocks(response, user));
+                .doOnError(ex -> {
+//                    log.error("Error calling partner API: {}", ex.getMessage());
+                    throw new SignupPartnerApiCallException("파트너 API 호출 중 오류 발생", ex);
+                })
+                .subscribe(response -> {
+                    try {
+                        saveStocks(response, user);
+                    } catch (Exception e) {
+                        throw new SignupStockDataSaveException("데이터 저장 중 오류 발생", e);
+                    }
+                });
     }
 
     private void saveStocks(UserSignupStockDataRes response, User user) {
         response.getAccounts().forEach(account -> {
             account.getStocks().forEach(stock -> {
-                Stock newStock = Stock.builder()
-                        .quantity(stock.getQuantity())
-                        .accountNumber(account.getAccountNumber())
-                        .stockCode(stock.getStockCode())
-                        .companyCode(account.getCompanyCode())
-                        .user(user)
-                        .build();
-                stockRepository.save(newStock);
+                try {
+                    Stock newStock = Stock.builder()
+                            .quantity(stock.getQuantity())
+                            .accountNumber(account.getAccountNumber())
+                            .stockCode(stock.getStockCode())
+                            .companyCode(account.getCompanyCode())
+                            .user(user)
+                            .build();
+
+                    stockRepository.save(newStock);
+                } catch (Exception e) {
+//                    log.error("Error saving stock data for user {}: {}", user.getName(), e.getMessage());
+                    throw new SignupStockDataSaveException("데이터 저장 중 오류 발생: " + e.getMessage(), e);
+                }
             });
         });
     }
+
 
     @Transactional
     public JwtToken login(UserLoginReq userLoginReq){
