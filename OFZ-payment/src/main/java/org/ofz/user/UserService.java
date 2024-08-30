@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ofz.jwt.JwtToken;
 import org.ofz.jwt.JwtTokenProvider;
+import org.ofz.redis.RedisUtil;
 import org.ofz.user.dto.UserLoginReq;
 import org.ofz.user.dto.UserSignupReq;
 import org.ofz.user.dto.UserValidateLoginIdReq;
@@ -21,6 +22,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final RedisUtil redisUtil;
 
     @Transactional
     public boolean isAvailableLoginId(UserValidateLoginIdReq userValidateLoginIdReq) {
@@ -48,5 +50,11 @@ public class UserService {
                 .filter(user -> passwordEncoder.matches(userLoginReq.getPassword(), user.getPassword()))
                 .map(user -> jwtTokenProvider.generateToken(user.getLoginId()))
                 .orElseThrow(() -> new InvalidCredentialsException("유효하지 않은 아이디입니다."));
+    }
+
+    @Transactional
+    public void logout(String accessToken){
+        Long expiration = jwtTokenProvider.getExpiration(accessToken);
+        redisUtil.addBlackList(accessToken, expiration);
     }
 }
