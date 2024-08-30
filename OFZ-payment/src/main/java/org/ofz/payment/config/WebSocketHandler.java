@@ -45,7 +45,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
         String id = extractIdFromUri(uri);
 
         CLIENTS.remove(id);
-        session.close();
     }
 
     private void validationUri(URI uri) {

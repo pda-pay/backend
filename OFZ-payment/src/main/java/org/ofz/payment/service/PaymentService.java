@@ -68,7 +68,6 @@ public class PaymentService {
                 .build();
         PaymentHistory paymentHistory = paymentHistoryDTO.toEntity();
 
-        jwtUtil.deleteToken(token);
         paymentRepository.save(payment);
         paymentHistoryService.savePaymentHistory(paymentHistory);
 
@@ -83,7 +82,7 @@ public class PaymentService {
         String message = convertMessageToJson(paymentResponse);
 
         session.sendMessage(new TextMessage(message));
-        webSocketHandler.afterConnectionClosed(session, CloseStatus.NORMAL);
+        session.close();
 
         return paymentResponse;
     }
