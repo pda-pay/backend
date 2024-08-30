@@ -1,7 +1,6 @@
 package org.ofz.user;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.ofz.jwt.JwtToken;
 import org.ofz.jwt.JwtTokenProvider;
 import org.ofz.management.entity.Stock;
@@ -12,7 +11,6 @@ import org.ofz.user.exception.SignupDuplicationException;
 import org.ofz.user.exception.SignupPartnerApiCallException;
 import org.ofz.user.exception.SignupStockDataSaveException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +19,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
-//@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -66,7 +63,6 @@ public class UserService {
                 .retrieve()
                 .bodyToMono(UserSignupStockDataRes.class)
                 .doOnError(ex -> {
-//                    log.error("Error calling partner API: {}", ex.getMessage());
                     throw new SignupPartnerApiCallException("파트너 API 호출 중 오류 발생", ex);
                 })
                 .subscribe(response -> {
@@ -92,7 +88,6 @@ public class UserService {
 
                     stockRepository.save(newStock);
                 } catch (Exception e) {
-//                    log.error("Error saving stock data for user {}: {}", user.getName(), e.getMessage());
                     throw new SignupStockDataSaveException("데이터 저장 중 오류 발생: " + e.getMessage(), e);
                 }
             });
