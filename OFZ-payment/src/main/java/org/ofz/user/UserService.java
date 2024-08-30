@@ -3,6 +3,7 @@ package org.ofz.user;
 import lombok.RequiredArgsConstructor;
 import org.ofz.jwt.JwtToken;
 import org.ofz.jwt.JwtTokenProvider;
+import org.ofz.redis.RedisUtil;
 import org.ofz.management.entity.Stock;
 import org.ofz.management.repository.StockRepository;
 import org.ofz.user.dto.*;
@@ -24,7 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
-
+    private final RedisUtil redisUtil;
     private final StockRepository stockRepository;
     private final WebClient webClient;
 
@@ -85,7 +86,6 @@ public class UserService {
                             .companyCode(account.getCompanyCode())
                             .user(user)
                             .build();
-
                     stockRepository.save(newStock);
                 } catch (Exception e) {
                     throw new SignupStockDataSaveException("데이터 저장 중 오류 발생: " + e.getMessage(), e);
@@ -94,12 +94,20 @@ public class UserService {
         });
     }
 
+    @Transactional
+    public UserLoginRes login(UserLoginReq userLoginReq){
+        User user = userRepository.findByLoginId(userLoginReq.getLoginId())
+                .filter(u -> passwordEncoder.matches(userLoginReq.getPassword(), u.getPassword()))
+                .orElseThrow(() -> new InvalidCredentialsException("유효하지 않은 아이디입니다."));
+        return UserLoginRes.builder()
+                .loginId(user.getLoginId())
+                .name(user.getName())
+                .build();
+    }
 
     @Transactional
-    public JwtToken login(UserLoginReq userLoginReq){
-        return userRepository.findByLoginId(userLoginReq.getLoginId())
-                .filter(user -> passwordEncoder.matches(userLoginReq.getPassword(), user.getPassword()))
-                .map(user -> jwtTokenProvider.generateToken(user.getLoginId()))
-                .orElseThrow(() -> new InvalidCredentialsException("유효하지 않은 아이디입니다."));
+    public void logout(String accessToken){
+        Long expiration = jwtTokenProvider.getExpiration(accessToken);
+        redisUtil.addBlackList(accessToken, expiration);
     }
 }

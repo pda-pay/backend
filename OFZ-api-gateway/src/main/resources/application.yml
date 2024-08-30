@@ -17,6 +17,10 @@ spring:
   application:
     name: api-gateway
 
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
   cloud:
     gateway:
       default-filters:
