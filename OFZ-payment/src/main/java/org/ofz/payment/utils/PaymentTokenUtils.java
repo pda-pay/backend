@@ -18,6 +18,8 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class PaymentTokenUtils {
 
+    private static final String PAYMENT_PREFIX = "payment:";
+
     private final RedisUtil redisUtil;
 
     @Value("${secret.key.base64}")
@@ -39,7 +41,7 @@ public class PaymentTokenUtils {
         long expirationTime = System.currentTimeMillis() + EXPIRATION_TIME;
         String id = String.valueOf(userId);
 
-        String token = Jwts.builder()
+        String token = PAYMENT_PREFIX + Jwts.builder()
                 .setSubject(id)
                 .setExpiration(new Date(expirationTime))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -51,7 +53,10 @@ public class PaymentTokenUtils {
     }
 
     // 토큰에서 유저 id 추출
-    public Long extractUserId(String token) {
+    public Long extractUserId(String paymentToken) {
+
+        String token = separateToken(paymentToken);
+
         Claims claims = getClaims(token);
         String userId = claims.getSubject();
 
@@ -72,11 +77,13 @@ public class PaymentTokenUtils {
     }
 
     // 토큰 검증
-    public void validateToken(String token) {
+    public void validateToken(String paymentToken) {
 
-        if (!redisUtil.validatePaymentToken(token)) {
+        if (!redisUtil.validatePaymentToken(paymentToken)) {
             throw new PaymentTokenExpiredException("토큰이 만료되었습니다.");
         }
+
+        String token = separateToken(paymentToken);
 
         try {
             Claims claims = getClaims(token);
@@ -86,5 +93,10 @@ public class PaymentTokenUtils {
         } catch (JwtException e) {
             throw new NonValidPaymentTokenException("유효한 토큰이 아닙니다.");
         }
+    }
+
+    private String separateToken(String paymentToken) {
+
+        return paymentToken.split(":")[1];
     }
 }
