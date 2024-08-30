@@ -15,10 +15,9 @@ import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.exception.payment.PaymentPasswordMismatchException;
 import org.ofz.payment.exception.websocket.*;
 import org.ofz.payment.repository.PaymentRepository;
-import org.ofz.payment.utils.JwtUtil;
+import org.ofz.payment.utils.PaymentTokenUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -33,7 +32,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final FranchiseService franchiseService;
     private final PaymentHistoryService paymentHistoryService;
-    private final JwtUtil jwtUtil;
+    private final PaymentTokenUtils paymentTokenUtils;
 
     @Transactional
     public PaymentResponse payment(PaymentRequest paymentRequest) throws IOException {
@@ -42,8 +41,8 @@ public class PaymentService {
         validationSession(session);
 
         String token = paymentRequest.getToken();
-        jwtUtil.validateToken(token);
-        Long userId = jwtUtil.extractUserId(token);
+        paymentTokenUtils.validateToken(token);
+        Long userId = paymentTokenUtils.extractUserId(token);
 
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
@@ -68,6 +67,7 @@ public class PaymentService {
                 .build();
         PaymentHistory paymentHistory = paymentHistoryDTO.toEntity();
 
+        paymentTokenUtils.deleteToken(token);
         paymentRepository.save(payment);
         paymentHistoryService.savePaymentHistory(paymentHistory);
 
@@ -99,7 +99,7 @@ public class PaymentService {
             throw new PaymentPasswordMismatchException("간편 비밀번호가 틀렸습니다.");
         }
 
-        String createdToken = jwtUtil.createToken(reqUserId);
+        String createdToken = paymentTokenUtils.createToken(reqUserId);
 
         return PaymentTokenResponse.builder()
                 .token(createdToken)

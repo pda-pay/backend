@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Component
 @RequiredArgsConstructor
@@ -17,5 +18,17 @@ public class RedisUtil {
 
     public boolean hasKeyBlackList(String token){
         return Boolean.TRUE.equals(redisTemplate.hasKey(token));
+    }
+
+    public void addPaymentToken(String token, long expirationTimeInMillis) {
+        redisTemplate.opsForValue().set(token, "alive", expirationTimeInMillis, TimeUnit.MILLISECONDS);
+    }
+
+    public boolean validatePaymentToken(String token) {
+        return Boolean.TRUE.equals(redisTemplate.hasKey(token));
+    }
+
+    public void deletePaymentToken(String token) {
+        redisTemplate.delete(token);
     }
 }
