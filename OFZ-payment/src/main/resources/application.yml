@@ -34,6 +34,10 @@ coolsms:
     provider: https://api.coolsms.co.kr
     sender: ${SMS_AUTH_SENDER}
 
+partner:
+  api:
+    signup-stock-data: ${SIGNUP_REQ_PARTNER_API_URL}
+
 ---
 spring:
   config:
