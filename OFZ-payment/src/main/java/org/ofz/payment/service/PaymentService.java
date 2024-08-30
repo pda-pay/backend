@@ -41,8 +41,9 @@ public class PaymentService {
         WebSocketSession session = webSocketHandler.getSession(paymentRequest.getTransactionId());
         validationSession(session);
 
-        jwtUtil.validateToken(paymentRequest.getToken());
-        Long userId = jwtUtil.extractUserId(paymentRequest.getToken());
+        String token = paymentRequest.getToken();
+        jwtUtil.validateToken(token);
+        Long userId = jwtUtil.extractUserId(token);
 
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
@@ -67,6 +68,7 @@ public class PaymentService {
                 .build();
         PaymentHistory paymentHistory = paymentHistoryDTO.toEntity();
 
+        jwtUtil.deleteToken(token);
         paymentRepository.save(payment);
         paymentHistoryService.savePaymentHistory(paymentHistory);
 
