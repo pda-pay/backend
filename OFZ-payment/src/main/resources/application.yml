@@ -41,6 +41,17 @@ spring:
       on-profile: local
     import: optional:file:.env[.properties]
 
+partner:
+  api:
+    signup-stock-data: ${SIGNUP_REQ_PARTNER_API_URL}
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+    import: optional:file:.env[.properties]
+
   datasource:
     url: ${LOCAL_PAYMENT_DB_URL}
     username: ${LOCAL_DB_USERNAME}
