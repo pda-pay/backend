@@ -41,8 +41,9 @@ public class PaymentService {
         WebSocketSession session = webSocketHandler.getSession(paymentRequest.getTransactionId());
         validationSession(session);
 
-        jwtUtil.validateToken(paymentRequest.getToken());
-        Long userId = jwtUtil.extractUserId(paymentRequest.getToken());
+        String token = paymentRequest.getToken();
+        jwtUtil.validateToken(token);
+        Long userId = jwtUtil.extractUserId(token);
 
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
@@ -81,7 +82,7 @@ public class PaymentService {
         String message = convertMessageToJson(paymentResponse);
 
         session.sendMessage(new TextMessage(message));
-        webSocketHandler.afterConnectionClosed(session, CloseStatus.NORMAL);
+        session.close();
 
         return paymentResponse;
     }
