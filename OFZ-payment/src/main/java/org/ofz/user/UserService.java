@@ -86,7 +86,6 @@ public class UserService {
                             .companyCode(account.getCompanyCode())
                             .user(user)
                             .build();
-
                     stockRepository.save(newStock);
                 } catch (Exception e) {
                     throw new SignupStockDataSaveException("데이터 저장 중 오류 발생: " + e.getMessage(), e);
@@ -96,11 +95,14 @@ public class UserService {
     }
 
     @Transactional
-    public JwtToken login(UserLoginReq userLoginReq){
-        return userRepository.findByLoginId(userLoginReq.getLoginId())
-                .filter(user -> passwordEncoder.matches(userLoginReq.getPassword(), user.getPassword()))
-                .map(user -> jwtTokenProvider.generateToken(user.getLoginId()))
+    public UserLoginRes login(UserLoginReq userLoginReq){
+        User user = userRepository.findByLoginId(userLoginReq.getLoginId())
+                .filter(u -> passwordEncoder.matches(userLoginReq.getPassword(), u.getPassword()))
                 .orElseThrow(() -> new InvalidCredentialsException("유효하지 않은 아이디입니다."));
+        return UserLoginRes.builder()
+                .loginId(user.getLoginId())
+                .name(user.getName())
+                .build();
     }
 
     @Transactional

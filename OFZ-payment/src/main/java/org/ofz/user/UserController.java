@@ -3,8 +3,11 @@ package org.ofz.user;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.ofz.jwt.JwtToken;
+import org.ofz.jwt.JwtTokenProvider;
 import org.ofz.user.dto.UserLoginReq;
+import org.ofz.user.dto.UserLoginRes;
 import org.ofz.user.dto.UserSignupReq;
 import org.ofz.user.dto.UserValidateLoginIdReq;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,14 +19,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 
 @Controller
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
-
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    private final JwtTokenProvider jwtTokenProvider;
 
     // ID 중복검사 // true면 사용 가능한 ID
     @ResponseBody
@@ -46,8 +46,10 @@ public class UserController {
     // 로그인
     @ResponseBody
     @PostMapping("/users/login")
-    public ResponseEntity<Void> login(@RequestBody @Valid UserLoginReq userLoginReq, HttpServletResponse response){
-        JwtToken jwtToken = userService.login(userLoginReq);
+    public ResponseEntity<UserLoginRes> login(@RequestBody @Valid UserLoginReq userLoginReq, HttpServletResponse response){
+        UserLoginRes userLoginRes = userService.login(userLoginReq);
+
+        JwtToken jwtToken = jwtTokenProvider.generateToken(userLoginReq.getLoginId());
 
         Cookie accessTokenCookie = new Cookie("accessToken", jwtToken.getAccessToken());
         accessTokenCookie.setHttpOnly(true);
@@ -62,7 +64,7 @@ public class UserController {
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(userLoginRes, HttpStatus.OK);
     }
 
     @ResponseBody
