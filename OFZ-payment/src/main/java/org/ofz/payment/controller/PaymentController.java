@@ -1,10 +1,10 @@
 package org.ofz.payment.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.payment.dto.PaymentAuthRequest;
-import org.ofz.payment.dto.PaymentResponse;
-import org.ofz.payment.dto.PaymentRequest;
-import org.ofz.payment.dto.PaymentTokenResponse;
+import org.ofz.payment.dto.request.PaymentAuthRequest;
+import org.ofz.payment.dto.response.PaymentResponse;
+import org.ofz.payment.dto.request.PaymentRequest;
+import org.ofz.payment.dto.response.PaymentTokenResponse;
 import org.ofz.payment.exception.payment.PaymentIOException;
 import org.ofz.payment.service.PaymentService;
 import org.springframework.http.HttpStatus;

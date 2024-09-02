@@ -32,8 +32,6 @@ public class WebSocketHandler extends TextWebSocketHandler {
         String id = extractIdFromUri(uri);
 
         CLIENTS.put(id, session);
-
-        session.sendMessage(new TextMessage("연결 성공!"));
     }
 
     @Override
