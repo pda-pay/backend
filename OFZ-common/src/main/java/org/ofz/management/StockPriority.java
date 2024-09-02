@@ -1,4 +1,4 @@
-package org.ofz.management.entity;
+package org.ofz.management;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -8,11 +8,12 @@ import org.ofz.user.User;
 
 @Entity
 @Getter
-@Table(name = "mortgaged_stock")
-public class MortgagedStock {
+@Table(name = "stock_priority")
+public class StockPriority {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    private int stockRank;
     private int quantity;
     private String accountNumber;
     private String companyCode;
@@ -22,14 +23,15 @@ public class MortgagedStock {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public MortgagedStock() {}
+    public StockPriority() {}
 
     @Builder
-    public MortgagedStock(int quantity, String accountNumber, String companyCode, String stockCode, User user) {
-        this.quantity = quantity;
+    public StockPriority(String accountNumber, int stockRank, String stockCode, int quantity, String companyCode, User user) {
         this.accountNumber = accountNumber;
+        this.quantity = quantity;
         this.companyCode = companyCode;
         this.stockCode = stockCode;
+        this.stockRank = stockRank;
         this.user = user;
     }
 }

@@ -1,4 +1,4 @@
-package org.ofz.payment.entity;
+package org.ofz.payment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
