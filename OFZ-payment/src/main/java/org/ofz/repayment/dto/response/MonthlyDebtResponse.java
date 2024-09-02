@@ -1,4 +1,4 @@
-package org.ofz.repayment.dto;
+package org.ofz.repayment.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package org.ofz.payment.repository;
 
 import org.ofz.payment.entity.PaymentHistory;
-import org.ofz.repayment.dto.PaymentHistoriesResponse.PaymentHistoryDTO;
+import org.ofz.repayment.dto.response.PaymentHistoriesResponse.PaymentHistoryDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

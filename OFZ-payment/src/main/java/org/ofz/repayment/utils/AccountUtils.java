@@ -1,7 +1,7 @@
 package org.ofz.repayment.utils;
 
-import org.ofz.repayment.dto.CashRepaymentResponse;
-import org.ofz.repayment.dto.AccountResponse;
+import org.ofz.repayment.dto.response.CashRepaymentResponse;
+import org.ofz.repayment.dto.response.AccountResponse;
 import org.ofz.repayment.exception.webclient.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
