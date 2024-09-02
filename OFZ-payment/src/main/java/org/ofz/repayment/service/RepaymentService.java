@@ -2,9 +2,9 @@ package org.ofz.repayment.service;
 
 import lombok.RequiredArgsConstructor;
 import org.ofz.payment.Payment;
+import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.repository.PaymentHistoryRepository;
-import org.ofz.payment.PaymentRepository;
 import org.ofz.repayment.dto.request.CashPrepaymentRequest;
 import org.ofz.repayment.dto.request.PaymentHistoryRequest;
 import org.ofz.repayment.dto.request.RepaymentUserRequest;
