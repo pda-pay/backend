@@ -11,12 +11,41 @@ spring:
   config:
     activate:
       on-profile: common
+    import: optional:file:.env[.properties]
+
 
   application:
     name: api-gateway
 
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+            allow-credentials: true
+            allowedHeaders:
+              - x-requested-with
+              - authorization
+              - content-type
+              - credential
+              - X-AUTH-TOKEN
+              - X-CSRF-TOKEN
+            allowedMethods:
+              - POST
+              - GET
+              - PUT
+              - PATCH
+              - OPTIONS
+              - DELETE
+
       routes:
         - id: users
           uri: lb://payment-service
@@ -56,6 +85,9 @@ spring:
 
 server:
   port: 8080
+
+jwt:
+  secret: ${JWT_SECRET}
 
 ---
 spring:

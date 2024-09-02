@@ -21,6 +21,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
 server:
   port: 8081
 
@@ -33,6 +37,10 @@ coolsms:
     secret: ${SMS_AUTH_API_SECRET}
     provider: https://api.coolsms.co.kr
     sender: ${SMS_AUTH_SENDER}
+
+partner:
+  api:
+    signup-stock-data: ${SIGNUP_REQ_PARTNER_API_URL}
 
 ---
 spring:

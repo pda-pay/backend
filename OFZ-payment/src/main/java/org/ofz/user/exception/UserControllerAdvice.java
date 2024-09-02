@@ -45,4 +45,19 @@ public class UserControllerAdvice {
         UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), ex.getMessage());
         return new ResponseEntity<>(responseBody, HttpStatus.UNAUTHORIZED);
     }
+
+    // 회원가입 시 partner API 호출 예외 처리
+    @ExceptionHandler(SignupPartnerApiCallException.class)
+    public ResponseEntity<UserErrorRes> handleApiCallException(SignupPartnerApiCallException ex) {
+        UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), "API 호출 중 오류가 발생했습니다: " + ex.getMessage());
+        return new ResponseEntity<>(responseBody, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
+    // 주식 데이터 저장 예외 처리
+    @ExceptionHandler(SignupStockDataSaveException.class)
+    public ResponseEntity<UserErrorRes> handleDataSaveException(SignupStockDataSaveException ex) {
+        UserErrorRes responseBody = new UserErrorRes(LocalDateTime.now(), "데이터 저장 중 오류가 발생했습니다: " + ex.getMessage());
+        return new ResponseEntity<>(responseBody, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 }

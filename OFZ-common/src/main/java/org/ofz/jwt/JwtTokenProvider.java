@@ -3,6 +3,7 @@ package org.ofz.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.ofz.redis.RedisUtil;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,13 +14,16 @@ import java.util.Date;
 @Slf4j
 @Component
 public class JwtTokenProvider {
-    private Key key;
+    private final Key key;
+    private final RedisUtil redisUtil;
 
-    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
+    public JwtTokenProvider(@Value("${jwt.secret}") String secretKey, RedisUtil redisUtil) {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.redisUtil = redisUtil;
     }
 
+    // 토큰 발급
     public JwtToken generateToken(String loginId){
         long now = (new Date()).getTime();
 
@@ -42,12 +46,17 @@ public class JwtTokenProvider {
                 .build();
     }
 
+    // 토큰 유효성 검사
     public boolean validateToken(String token){
         try{
             Jwts.parserBuilder()
                     .setSigningKey(key)
                     .build()
                     .parseClaimsJws(token);
+            if(redisUtil.hasKeyBlackList(token)){
+                log.info("This token is in the blacklist");
+                return false;
+            }
             return true;
         } catch (SecurityException | MalformedJwtException e){
             log.info("Invalid JWT Token", e);
@@ -61,6 +70,18 @@ public class JwtTokenProvider {
         return false;
     }
 
+    // accessToken 남은 유효시간
+    public Long getExpiration(String accessToken){
+        Date expiration = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(accessToken)
+                .getBody().getExpiration();
+        long now = new Date().getTime();
+        return expiration.getTime() - now;
+    }
+
+    // 토큰 claims 가져오기
     private Claims parseClaims(String accessToken){
         try{
             return Jwts.parserBuilder()

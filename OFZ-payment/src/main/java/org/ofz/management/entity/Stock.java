@@ -2,13 +2,19 @@ package org.ofz.management.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.ofz.user.User;
 
 
 @Entity
 @Getter
 @Table(name = "stock")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Stock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,6 +23,7 @@ public class Stock {
     private String accountNumber;
     private String companyCode;
     private String stockCode;
+    private String companyCode;
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id")
