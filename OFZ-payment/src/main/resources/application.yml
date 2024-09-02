@@ -30,6 +30,9 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
+
+webclient:
+  base-url: ${PARTNERS_URL}
   
 coolsms:
   api:
@@ -55,9 +58,6 @@ spring:
     password: ${LOCAL_DB_PASSWORD}
 
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-webclient:
-  base-url: ${PARTNERS_URL}
 
 secret:
   key:
