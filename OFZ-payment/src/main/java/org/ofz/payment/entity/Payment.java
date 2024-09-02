@@ -47,6 +47,14 @@ public class Payment {
         this.currentMonthDebt += paymentAmount;
     }
 
+    public void minusPreviousMonthDebt(int prepaymentAmount) {
+        this.previousMonthDebt -= prepaymentAmount;
+    }
+
+    public void minusCurrentMonthDebt(int prepaymentAmount) {
+        this.currentMonthDebt -= prepaymentAmount;
+    }
+
     public Payment() {}
 
     public Payment(Long id, Long userId, int previousMonthDebt, int currentMonthDebt, int creditLimit, int repaymentDate, Boolean rateFlag, Boolean payFlag, LocalDate overdueDay, String password, Long repaymentAccountId) {
