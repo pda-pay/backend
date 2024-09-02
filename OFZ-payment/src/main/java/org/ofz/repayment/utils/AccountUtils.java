@@ -23,20 +23,18 @@ public class AccountUtils {
         this.webClient = webClient;
     }
 
-    public synchronized AccountResponse fetchPaymentAccount(Long accountId) {
-
-        System.out.println("PARTNERS_URL = " + PARTNERS_URL);
+    public synchronized AccountResponse fetchPaymentAccount(String accountNumber) {
 
         AccountResponse response = null;
 
-        Map<String, String> map = new HashMap<>();
-        map.put("accountNumber", "381-6598-15037");
+        Map<String, String> request = new HashMap<>();
+        request.put("accountNumber", accountNumber);
 
         try {
 
             response = webClient.post()
                     .uri(PARTNERS_URL + "/accounts/deposits")
-                    .bodyValue(map)
+                    .bodyValue(request)
                     .retrieve()
                     .bodyToMono(AccountResponse.class).block();
 
@@ -59,23 +57,23 @@ public class AccountUtils {
             throw new WebClientIllegalArgumentException("잘못된 인자를 메서드에 전달하였습니다.", e.getMessage());
         }
 
-        response.setAccountNumber("어카운트 넘버");
+        response.setAccountNumber(accountNumber);
 
         return response;
     }
 
-    public synchronized CashRepaymentResponse fetchCashRepayment(Long accountId, int value) {
+    public synchronized CashRepaymentResponse fetchCashRepayment(String accountNumber, int value) {
         CashRepaymentResponse response = null;
 
-        Map<String, Object> map = new HashMap<>();
-        map.put("accountNumber", "381-6598-15037");
-        map.put("value", value);
+        Map<String, Object> request = new HashMap<>();
+        request.put("accountNumber", accountNumber);
+        request.put("value", value);
 
         try {
 
             response = webClient.put()
                     .uri(PARTNERS_URL + "/accounts/withdraw")
-                    .bodyValue(map)
+                    .bodyValue(request)
                     .retrieve()
                     .bodyToMono(CashRepaymentResponse.class).block();
 

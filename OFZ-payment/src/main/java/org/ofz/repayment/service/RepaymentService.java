@@ -48,8 +48,8 @@ public class RepaymentService {
         int thisMonthRepaymentAmount = payment.getPreviousMonthDebt();
         int creditLimit = payment.getCreditLimit();
 
-        Long accountId = payment.getRepaymentAccountId();
-        int accountDeposit = getPaymentAccountData(accountId).getDeposit();
+        String accountNumber = payment.getRepaymentAccountNumber();
+        int accountDeposit = getPaymentAccountData(accountNumber).getDeposit();
 
         Pageable pageable = PageRequest.of(0, 2);
         List<PaymentHistoriesResponse.PaymentHistoryDTO> currentPaymentHistories = paymentHistoryRepository.findPaymentHistoryByUserId(userId, pageable);
@@ -80,11 +80,10 @@ public class RepaymentService {
                 .findPaymentByUserId(userId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));
 
-        // TODO: 2024-09-01 계좌번호로 조회하는 걸로 바꿔야 함 
-        Long accountId = payment.getRepaymentAccountId();
+        String accountNumber = payment.getRepaymentAccountNumber();
         int totalDebt = payment.getPreviousMonthDebt() + payment.getCurrentMonthDebt();
 
-        AccountResponse response = getPaymentAccountData(accountId);
+        AccountResponse response = getPaymentAccountData(accountNumber);
 
         return RepaymentAccountResponse.builder()
                 .totalDebt(totalDebt)
@@ -153,13 +152,11 @@ public class RepaymentService {
             payment.minusPreviousMonthDebt(prepaymentAmount);
         }
 
-        // 계좌 번호로 바뀔 것
-        Long accountId = payment.getRepaymentAccountId();
-        CashRepaymentResponse response = accountUtils.fetchCashRepayment(accountId, prepaymentAmount);
+        String accountNumber = payment.getRepaymentAccountNumber();
+        CashRepaymentResponse response = accountUtils.fetchCashRepayment(accountNumber, prepaymentAmount);
 
         response.setMessage("현금 선결제가 완료되었습니다.");
 
-        // RepaymentHistory 저장 로직
         RepaymentHistory repaymentHistory = RepaymentHistory.builder()
                 .repaymentAmount(prepaymentAmount)
                 .createdAt(LocalDateTime.now())
@@ -167,14 +164,13 @@ public class RepaymentService {
                 .type(RepaymentType.PRE_CASH)
                 .build();
 
-        // TODO: 2024-09-02 RepaymentHistory 흠...
         repaymentHistoryRepository.save(repaymentHistory);
         paymentRepository.save(payment);
 
         return response;
     }
 
-    private AccountResponse getPaymentAccountData(Long accountId) {
-        return accountUtils.fetchPaymentAccount(accountId);
+    private AccountResponse getPaymentAccountData(String accountNumber) {
+        return accountUtils.fetchPaymentAccount(accountNumber);
     }
 }
