@@ -11,13 +11,13 @@ import java.util.List;
 
 public interface PaymentHistoryRepository extends JpaRepository<PaymentHistory, Long> {
 
-    @Query("SELECT new org.ofz.repayment.dto.PaymentHistoriesResponse$PaymentHistoryDTO(p.id, p.paymentAmount, p.createdAt, f.name) " +
+    @Query("SELECT new org.ofz.repayment.dto.response.PaymentHistoriesResponse$PaymentHistoryDTO(p.id, p.paymentAmount, p.createdAt, f.name) " +
             "FROM PaymentHistory p " +
             "JOIN Franchise f ON p.franchise.id = f.id " +
             "WHERE p.userId = :userId AND FUNCTION('MONTH', p.createdAt) = :month")
     List<PaymentHistoryDTO> findPaymentHistoryByUserIdAndMonth(@Param("userId") Long userId, @Param("month") int month);
 
-    @Query("SELECT new org.ofz.repayment.dto.PaymentHistoriesResponse$PaymentHistoryDTO(p.id, p.paymentAmount, p.createdAt, f.name) " +
+    @Query("SELECT new org.ofz.repayment.dto.response.PaymentHistoriesResponse$PaymentHistoryDTO(p.id, p.paymentAmount, p.createdAt, f.name) " +
             "FROM PaymentHistory p " +
             "JOIN Franchise f ON p.franchise.id = f.id " +
             "WHERE p.userId = :userId " +
