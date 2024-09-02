@@ -1,5 +1,6 @@
 package org.ofz.repayment.utils;
 
+import org.ofz.payment.dto.response.AccountDepositResponse;
 import org.ofz.repayment.dto.response.CashRepaymentResponse;
 import org.ofz.repayment.dto.response.AccountResponse;
 import org.ofz.repayment.exception.webclient.*;
@@ -15,7 +16,7 @@ import java.util.Map;
 @Service
 public class AccountUtils {
 
-    @Value("${partner.api.signup-stock-data}")
+    @Value("${webclient.base-url}")
     private String PARTNERS_URL;
     private final WebClient webClient;
 
@@ -33,7 +34,7 @@ public class AccountUtils {
         try {
 
             response = webClient.post()
-                    .uri(PARTNERS_URL + "/accounts/deposits")
+                    .uri("http://" + PARTNERS_URL + "/mydata/accounts/deposits")
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono(AccountResponse.class).block();
@@ -72,7 +73,7 @@ public class AccountUtils {
         try {
 
             response = webClient.put()
-                    .uri(PARTNERS_URL + "/accounts/withdraw")
+                    .uri("http://" + PARTNERS_URL + "/mydata/accounts/withdraw")
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono(CashRepaymentResponse.class).block();
@@ -97,6 +98,44 @@ public class AccountUtils {
         }
 
         response.setRepaymentAmount(value);
+        return response;
+    }
+
+    public synchronized AccountDepositResponse fetchDepositToAccount(String accountNumber, int value) {
+        AccountDepositResponse response = null;
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("accountNumber", accountNumber);
+        request.put("value", value);
+
+        try {
+
+            response = webClient.put()
+                    .uri("http://" + PARTNERS_URL + "/mydata/accounts/deposit")
+                    .bodyValue(request)
+                    .retrieve()
+                    .bodyToMono(AccountDepositResponse.class).block();
+
+            if (response == null) {
+                throw new WebClientResponseNullPointerException("응답 받은 상환 계좌 정보 데이터가 없습니다.");
+            }
+
+        } catch (WebClientRequestException e) {
+            throw new WebClientBadRequestException("네트워크 연결 문제 또는 잘못된 URI 요청입니다.");
+
+        } catch (WebClientResponseException  e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                throw new WebClientErrorException("요청 데이터를 확인해주세요.", e.getStatusCode());
+
+            } else if (e.getStatusCode().is5xxServerError()) {
+                throw new WebClientServerErrorException("서버 에러가 발생했습니다.", e.getStatusCode());
+            }
+
+        } catch (IllegalArgumentException e) {
+            throw new WebClientIllegalArgumentException("잘못된 인자를 메서드에 전달하였습니다.", e.getMessage());
+        }
+
+        response.setPaymentAmount(value);
         return response;
     }
 }
