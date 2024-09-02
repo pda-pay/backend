@@ -60,6 +60,10 @@ secret:
   key:
     base64: ${SECRET_KEY_BASE64}
 
+partner:
+  api:
+    signup-stock-data: ${SIGNUP_REQ_PARTNER_API_URL}
+
 eureka:
   instance:
     prefer-ip-address: true
