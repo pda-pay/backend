@@ -1,5 +1,6 @@
 package org.ofz.payment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -19,19 +20,20 @@ public class Owner {
     @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column(name = "account_id")
-    private Long accountId;
+    @Column(name = "account_number")
+    private String accountNumber;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "owner")
     private List<Franchise> franchises;
 
     public Owner() {}
 
-    public Owner(Long id, String name, String phoneNumber, Long accountId, List<Franchise> franchises) {
+    public Owner(Long id, String name, String phoneNumber, String accountNumber, List<Franchise> franchises) {
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
-        this.accountId = accountId;
+        this.accountNumber = accountNumber;
         this.franchises = franchises;
     }
 }
