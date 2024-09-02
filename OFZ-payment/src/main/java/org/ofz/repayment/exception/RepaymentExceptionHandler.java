@@ -12,13 +12,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
+
 @RestControllerAdvice
 public class RepaymentExceptionHandler {
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchUserNotFoundException(UserNotFoundException e) {
+    public ResponseEntity<ErrorResponseDTO> catchUserNotFoundException(UserNotFoundException e) {
 
-        ErrorDTO error = ErrorDTO.builder()
+        ErrorResponseDTO error = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
@@ -26,94 +28,96 @@ public class RepaymentExceptionHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchTooHighCashPrepaymentAmountException(TooHighCashPrepaymentAmountException e) {
+    public ResponseEntity<ErrorResponseDTO> catchTooHighCashPrepaymentAmountException(TooHighCashPrepaymentAmountException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchWebClientIllegalArgumentException(WebClientIllegalArgumentException e) {
+    public ResponseEntity<ErrorResponseDTO> catchWebClientIllegalArgumentException(WebClientIllegalArgumentException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage() + " " + e.getErrorMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchWebClientResponseNullPointerException(WebClientResponseNullPointerException e) {
+    public ResponseEntity<ErrorResponseDTO> catchWebClientResponseNullPointerException(WebClientResponseNullPointerException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchWebClientErrorException(WebClientErrorException e) {
+    public ResponseEntity<ErrorResponseDTO> catchWebClientErrorException(WebClientErrorException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, e.getCode());
+        return new ResponseEntity<>(errorResponseDTO, e.getCode());
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchWebClientServerErrorException(WebClientServerErrorException e) {
+    public ResponseEntity<ErrorResponseDTO> catchWebClientServerErrorException(WebClientServerErrorException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, e.getCode());
+        return new ResponseEntity<>(errorResponseDTO, e.getCode());
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchWebClientBadRequestException(WebClientBadRequestException e) {
+    public ResponseEntity<ErrorResponseDTO> catchWebClientBadRequestException(WebClientBadRequestException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchNoRepaymentRecordsException(NoRepaymentRecordsException e) {
+    public ResponseEntity<ErrorResponseDTO> catchNoRepaymentRecordsException(NoRepaymentRecordsException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchInvalidCashPrepaymentAmountException(InvalidCashPrepaymentAmountException e) {
+    public ResponseEntity<ErrorResponseDTO> catchInvalidCashPrepaymentAmountException(InvalidCashPrepaymentAmountException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @Getter
-    @Builder
-    private static class ErrorDTO {
+    private static class ErrorResponseDTO {
 
+        private LocalDateTime timestamp;
         private String message;
 
-        public ErrorDTO() {}
+        public ErrorResponseDTO() {}
 
-        public ErrorDTO(String message) {
+        @Builder
+        public ErrorResponseDTO(String message) {
+            this.timestamp = LocalDateTime.now();
             this.message = message;
         }
     }
