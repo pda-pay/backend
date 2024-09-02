@@ -1,7 +1,10 @@
 package org.ofz.payment.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
+import org.ofz.user.User;
 
 import java.time.LocalDate;
 
@@ -14,8 +17,10 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @JsonIgnore
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
     @Column(name = "previous_month_debt")
     private int previousMonthDebt;
@@ -30,18 +35,18 @@ public class Payment {
     private int repaymentDate;
 
     @Column(name = "rate_flag")
-    private Boolean rateFlag;
+    private boolean rateFlag;
 
     @Column(name = "pay_flag")
-    private Boolean payFlag;
+    private boolean payFlag;
 
     @Column(name = "overdue_day")
     private LocalDate overdueDay;
 
     private String password;
 
-    @Column(name = "repayment_account_id")
-    private Long repaymentAccountId;
+    @Column(name = "repayment_account_number")
+    private String repaymentAccountNumber;
 
     public void plusCurrentMonthDebt(int paymentAmount) {
         this.currentMonthDebt += paymentAmount;
@@ -57,17 +62,21 @@ public class Payment {
 
     public Payment() {}
 
-    public Payment(Long id, Long userId, int previousMonthDebt, int currentMonthDebt, int creditLimit, int repaymentDate, Boolean rateFlag, Boolean payFlag, LocalDate overdueDay, String password, Long repaymentAccountId) {
-        this.id = id;
-        this.userId = userId;
-        this.previousMonthDebt = previousMonthDebt;
-        this.currentMonthDebt = currentMonthDebt;
+    @Builder
+    public Payment(User user, int creditLimit, int repaymentDate, String password, String repaymentAccountNumber) {
+        this.user = user;
         this.creditLimit = creditLimit;
         this.repaymentDate = repaymentDate;
-        this.rateFlag = rateFlag;
-        this.payFlag = payFlag;
-        this.overdueDay = overdueDay;
         this.password = password;
-        this.repaymentAccountId = repaymentAccountId;
+        this.repaymentAccountNumber = repaymentAccountNumber;
+        this.rateFlag = true;
+        this.payFlag = true;
+    }
+
+    public void changeCreditLimit(int creditLimit) {
+        this.creditLimit = creditLimit;
+    }
+    public void changeRepaymentAccountNumber(String repaymentAccountNumber) {
+        this.repaymentAccountNumber = repaymentAccountNumber;
     }
 }
