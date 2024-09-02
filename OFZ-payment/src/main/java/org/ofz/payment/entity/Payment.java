@@ -52,6 +52,14 @@ public class Payment {
         this.currentMonthDebt += paymentAmount;
     }
 
+    public void minusPreviousMonthDebt(int prepaymentAmount) {
+        this.previousMonthDebt -= prepaymentAmount;
+    }
+
+    public void minusCurrentMonthDebt(int prepaymentAmount) {
+        this.currentMonthDebt -= prepaymentAmount;
+    }
+
     public Payment() {}
 
     @Builder
