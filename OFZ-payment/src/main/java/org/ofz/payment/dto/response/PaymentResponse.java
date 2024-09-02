@@ -1,4 +1,4 @@
-package org.ofz.payment.dto;
+package org.ofz.payment.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
