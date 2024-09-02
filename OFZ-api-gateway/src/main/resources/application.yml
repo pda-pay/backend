@@ -13,6 +13,7 @@ spring:
       on-profile: common
     import: optional:file:.env[.properties]
 
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   application:
     name: api-gateway
@@ -94,6 +95,10 @@ spring:
   config:
     activate:
       on-profile: local
+  datasource:
+    url: ${LOCAL_PAYMENT_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
 
 eureka:
   client:
@@ -103,11 +108,17 @@ eureka:
       defaultZone: "http://localhost:8087/eureka"
   server:
     wait-time-in-ms-when-sync-empty: 5
+
 ---
 spring:
   config:
     activate:
       on-profile: prod
+
+  datasource:
+    url: ${PAYMENT_DB_URL}
+    username: ${PAYMENT_DB_USERNAME}
+    password: ${PAYMENT_DB_PASSWORD}
 
 eureka:
   client:
