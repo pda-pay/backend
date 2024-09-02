@@ -16,6 +16,7 @@ import org.ofz.payment.repository.PaymentRepository;
 import org.ofz.user.NameAndPhoneNumberProjection;
 import org.ofz.user.User;
 import org.ofz.user.UserRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -35,6 +36,9 @@ public class ManagementService {
     private final PaymentRepository paymentRepository;
     private final StockInformationRepository stockInformationRepository;
     private final WebClient  webClient;
+
+    @Value("${webclient.base-url}")
+    private String baseUrl;
 
     public ManagementService(UserRepository userRepository,
                              StockRepository stockRepository,
@@ -146,7 +150,7 @@ public class ManagementService {
 
     private int fetchPreviousStockPrice(String stockCode) {
         Mono<PreviousStockPriceResponse> previousStockPriceResponseMono = webClient.get()
-                .uri("/securities/stocks/{stockCode}", stockCode)
+                .uri("{baseUrl}/securities/stocks/{stockCode}", baseUrl, stockCode)
                 .retrieve()
                 .bodyToMono(PreviousStockPriceResponse.class);
         PreviousStockPriceResponse previousStockPriceResponse = previousStockPriceResponseMono.block();
@@ -157,7 +161,7 @@ public class ManagementService {
 
     private UserAccountsResponse fetchUserAccounts(UserAccountsRequest userAccountsRequest) {
         UserAccountsResponse response = webClient.post()
-                .uri("/mydata/accounts")
+                .uri("{baseUrl}/mydata/accounts", baseUrl)
                 .bodyValue(userAccountsRequest)
                 .retrieve()
                 .bodyToMono(UserAccountsResponse.class)
