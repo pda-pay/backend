@@ -61,7 +61,7 @@ public class PaymentService {
         payment.plusCurrentMonthDebt(paymentRequest.getPaymentAmount());
 
         PaymentHistoryDTO paymentHistoryDTO = PaymentHistoryDTO.builder()
-                .userId(payment.getUserId())
+                .userId(userId)
                 .paymentAmount(paymentRequest.getPaymentAmount())
                 .franchise(franchise)
                 .build();
