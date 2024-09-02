@@ -1,9 +1,9 @@
 package org.ofz.management.service;
 
 import org.ofz.management.dto.*;
-import org.ofz.management.entity.MortgagedStock;
+import org.ofz.management.MortgagedStock;
 import org.ofz.management.entity.StockInformation;
-import org.ofz.management.entity.StockPriority;
+import org.ofz.management.StockPriority;
 import org.ofz.management.exception.StockInformationNotFoundException;
 import org.ofz.management.exception.UserNotFoundException;
 import org.ofz.management.repository.MortgagedStockRepository;
@@ -24,7 +24,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service

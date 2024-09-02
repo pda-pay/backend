@@ -1,6 +1,6 @@
 package org.ofz.management.repository;
 
-import org.ofz.management.entity.MortgagedStock;
+import org.ofz.management.MortgagedStock;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
