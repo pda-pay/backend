@@ -23,7 +23,6 @@ public class Stock {
     private String accountNumber;
     private String companyCode;
     private String stockCode;
-    private String companyCode;
     @JsonIgnore
     @ManyToOne
     @JoinColumn(name = "user_id")

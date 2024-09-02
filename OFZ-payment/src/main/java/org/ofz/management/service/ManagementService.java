@@ -10,8 +10,6 @@ import org.ofz.management.repository.MortgagedStockRepository;
 import org.ofz.management.repository.StockInformationRepository;
 import org.ofz.management.repository.StockPriorityRepository;
 import org.ofz.management.repository.StockRepository;
-import org.ofz.management.test.TestRequest;
-import org.ofz.management.test.TestResponse;
 import org.ofz.payment.entity.Payment;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.repository.PaymentRepository;
