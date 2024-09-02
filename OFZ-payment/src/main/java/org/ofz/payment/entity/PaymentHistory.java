@@ -15,7 +15,7 @@ public class PaymentHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "payment_ammount")
+    @Column(name = "payment_amount")
     private int paymentAmount;
 
     @Column(name = "created_at")
