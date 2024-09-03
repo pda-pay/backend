@@ -1,6 +1,6 @@
 package org.ofz.management.repository;
 
-import org.ofz.management.dto.UserStockProjection;
+import org.ofz.management.dto.database.UserStockProjection;
 import org.ofz.management.entity.Stock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
