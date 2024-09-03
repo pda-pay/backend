@@ -1,5 +1,6 @@
 package org.ofz.management.service;
 
+import lombok.RequiredArgsConstructor;
 import org.ofz.management.dto.*;
 import org.ofz.management.entity.MortgagedStock;
 import org.ofz.management.entity.StockInformation;
@@ -17,6 +18,7 @@ import org.ofz.user.NameAndPhoneNumberProjection;
 import org.ofz.user.User;
 import org.ofz.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -27,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class ManagementService {
     private final UserRepository userRepository;
@@ -37,24 +40,11 @@ public class ManagementService {
     private final StockInformationRepository stockInformationRepository;
     private final WebClient  webClient;
 
+    private final RedisTemplate<String, Object> redisTemplate;
+
     @Value("${webclient.base-url}")
     private String baseUrl;
-
-    public ManagementService(UserRepository userRepository,
-                             StockRepository stockRepository,
-                             MortgagedStockRepository mortgagedStockRepository,
-                             StockPriorityRepository stockPriorityRepository,
-                             PaymentRepository paymentRepository,
-                             StockInformationRepository stockInformationRepository,
-                             WebClient webClient) {
-        this.userRepository = userRepository;
-        this.stockRepository = stockRepository;
-        this.mortgagedStockRepository = mortgagedStockRepository;
-        this.stockPriorityRepository = stockPriorityRepository;
-        this.paymentRepository = paymentRepository;
-        this.stockInformationRepository = stockInformationRepository;
-        this.webClient = webClient;
-    }
+    
     @Transactional
     public UserStockResponses getUserStocks(String userLoginId) {
         Long userId = findUserbyLoginId(userLoginId).getId();
@@ -64,9 +54,7 @@ public class ManagementService {
 
         for (UserStockProjection userStockProjection : UserStockProjections) {
             final String stockCode = userStockProjection.getStockCode();
-            // TODO: 전일 종가 요청하는 부분 캐시 완료 후 캐시 데이터 가져오는 식으로 대체
-            final int previousStockPrice = fetchPreviousStockPrice(stockCode);
-            System.out.println(stockCode);
+            final int previousStockPrice = fetchStoredPrice(stockCode);
             StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
                     .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
 
@@ -220,5 +208,10 @@ public class ManagementService {
         }
 
         stockPriorityRepository.saveAll(stockPriorities);
+    }
+
+    private Integer fetchStoredPrice(String stockCode) {
+        String key = "price:" + stockCode;
+        return (Integer) redisTemplate.opsForValue().get(key);
     }
 }
