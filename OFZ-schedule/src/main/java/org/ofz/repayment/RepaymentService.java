@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 public class RepaymentService {
 
     private static final Logger logger = LoggerFactory.getLogger(RepaymentService.class);
-
     private final PaymentRepository paymentRepository;
     private final RepaymentHistoryRepository repaymentHistoryRepository;
     private final WebClient webClient;
@@ -173,6 +172,7 @@ public class RepaymentService {
         RepaymentHistory repaymentHistory = RepaymentHistory.builder()
                 .userId(payment.getUser().getId())
                 .repaymentAmount(repaymentAmount)
+                .type(RepaymentType.CASH)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -211,6 +211,7 @@ public class RepaymentService {
         RepaymentHistory repaymentHistory = RepaymentHistory.builder()
                 .userId(payment.getUser().getId())
                 .repaymentAmount(partialRepaymentAmount)
+                .type(RepaymentType.CASH)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -239,7 +240,6 @@ public class RepaymentService {
      *
      * @return RepaymentResponse 결과 정보
      */
-
     public RepaymentRes processRepayments() {
         logger.info("전체 상환 프로세스를 시작합니다.");
         List<Payment> candidates = findTodayRepaymentTargets();
