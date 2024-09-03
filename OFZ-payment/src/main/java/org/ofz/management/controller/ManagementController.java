@@ -23,6 +23,12 @@ public class ManagementController {
         return ResponseEntity.status(HttpStatus.OK).body(userStockResponses);
     }
 
+    @PutMapping("/users/mortgaed-stocks")
+    public ResponseEntity<?> saveUserMortgagedStocks(@RequestBody SaveMortgagedStockRequest saveMortgagedStockRequest) {
+        SavedResponse saveMortgagedStockResponse = managementService.saveMortgagedStockInformation(saveMortgagedStockRequest);
+
+        return new ResponseEntity(saveMortgagedStockResponse, HttpStatus.OK);
+    }
     @GetMapping("/users/{id}/accounts")
     public ResponseEntity<UserAccountsResponse> getUserAccounts(@PathVariable("id") String userId) {
         UserAccountsResponse userAccountResponses = managementService.getUserAccounts(userId);

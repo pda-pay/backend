@@ -1,6 +1,9 @@
 package org.ofz.management.service;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.ofz.management.dto.*;
 import org.ofz.management.entity.MortgagedStock;
 import org.ofz.management.entity.StockInformation;
@@ -24,9 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -38,13 +39,14 @@ public class ManagementService {
     private final StockPriorityRepository stockPriorityRepository;
     private final PaymentRepository paymentRepository;
     private final StockInformationRepository stockInformationRepository;
-    private final WebClient  webClient;
+    private final WebClient webClient;
+    private final ManagementCacheService cacheService;
 
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${webclient.base-url}")
     private String baseUrl;
-    
+
     @Transactional
     public UserStockResponses getUserStocks(String userLoginId) {
         Long userId = findUserbyLoginId(userLoginId).getId();
@@ -67,6 +69,22 @@ public class ManagementService {
         return new UserStockResponses(userStockResponses, totalDebt);
     }
 
+    @Transactional
+    public SavedResponse saveMortgagedStockInformation(SaveMortgagedStockRequest saveMortgagedStockRequest) {
+        PaymentUser paymentUser = checkPaymentUser(saveMortgagedStockRequest.getLoginId());
+        User user = paymentUser.getUser();
+        List<MortgagedStockRequest> mortgagedStockRequests = saveMortgagedStockRequest.getMortgagedStocks();
+
+        if (paymentUser.isJoined()) {
+            List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
+            mortgagedStockRepository.deleteAll(mortgagedStocks);
+            saveMortgagedStocks(mortgagedStockRequests, user);
+        } else {
+            cacheService.cacheMortgagedStockRequests(user.getLoginId(), mortgagedStockRequests);
+        }
+
+        return SavedResponse.success(saveMortgagedStockRequest.getLoginId());
+    }
     @Transactional
     public UserAccountsResponse getUserAccounts(String userId) {
         NameAndPhoneNumberProjection nameAndPhoneNumberProjection = userRepository.findNameAndPhoneNumberByLoginId(userId)
@@ -213,5 +231,28 @@ public class ManagementService {
     private Integer fetchStoredPrice(String stockCode) {
         String key = "price:" + stockCode;
         return (Integer) redisTemplate.opsForValue().get(key);
+    }
+
+    private PaymentUser checkPaymentUser(String loginId) {
+        User user = findUserbyLoginId(loginId);
+        PaymentUser paymentUser = new PaymentUser(true, null, user);
+
+        Payment payment = paymentRepository.findPaymentByUserId(user.getId())
+                .orElseGet(() -> {
+                    paymentUser.setJoined(false);
+                    return null;
+                });
+        paymentUser.setPayment(payment);
+
+        return paymentUser;
+    }
+
+    @Setter
+    @Getter
+    @AllArgsConstructor
+    private class PaymentUser {
+        private boolean isJoined;
+        private Payment payment;
+        private User user;
     }
 }

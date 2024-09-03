@@ -1,13 +1,16 @@
 package org.ofz.management.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
 @Getter
-@RequiredArgsConstructor
+@AllArgsConstructor
+@NoArgsConstructor
 public class MortgagedStockRequest {
-    private final String accountNumber;
-    private final String stockCode;
-    private final int quantity;
-    private final String companyCode;
+    private String accountNumber;
+    private String stockCode;
+    private int quantity;
+    private String companyCode;
 }
