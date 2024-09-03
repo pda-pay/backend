@@ -1,8 +1,9 @@
 package org.ofz.management.service;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.management.dto.MortgagedStockRequest;
-import org.ofz.management.dto.StockPriorityRequest;
+import org.ofz.management.dto.common.AccountDto;
+import org.ofz.management.dto.common.MortgagedStockDto;
+import org.ofz.management.dto.common.StockPriorityDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -34,24 +35,20 @@ public class ManagementCacheService {
         return prifixKey + String.format("%s:",userLoginId) + "date";
     }
 
-    private String configurePasswordKey(String userLoginId) {
-        return prifixKey + String.format("%s:",userLoginId) + "password";
+    public void cacheMortgagedStocks(String userLoginId, List<MortgagedStockDto> mortgagedStockDtos) {
+        redisTemplate.opsForValue().set(configureMortgagedStockKey(userLoginId), mortgagedStockDtos, Duration.ofMinutes(10));
     }
 
-    public void cacheMortgagedStockRequests(String userLoginId, List<MortgagedStockRequest> mortgagedStockRequests) {
-        redisTemplate.opsForValue().set(configureMortgagedStockKey(userLoginId), mortgagedStockRequests, Duration.ofMinutes(10));
+    public List<MortgagedStockDto> getCachedMortgagedStocks(String userLoginId) {
+        return (List<MortgagedStockDto>) redisTemplate.opsForValue().get(configureMortgagedStockKey(userLoginId));
     }
 
-    public List<MortgagedStockRequest> getCachedMortgagedStockRequests(String userLoginId) {
-        return (List<MortgagedStockRequest>) redisTemplate.opsForValue().get(configureMortgagedStockKey(userLoginId));
+    public void cacheStockPriorities(String userLoginId, List<StockPriorityDto> stockPriorityDtos) {
+        redisTemplate.opsForValue().set(configureStockPriorityKey(userLoginId), stockPriorityDtos, Duration.ofMinutes(10));
     }
 
-    public void cacheStockPriorityRequests(String userLoginId, List<StockPriorityRequest> stockPriorityRequests) {
-        redisTemplate.opsForValue().set(configureStockPriorityKey(userLoginId), stockPriorityRequests, Duration.ofMinutes(10));
-    }
-
-    public List<StockPriorityRequest> getCachedStockPriorityRequests(String userLoginId) {
-        return (List<StockPriorityRequest>) redisTemplate.opsForValue().get(configureStockPriorityKey(userLoginId));
+    public List<StockPriorityDto> getCachedStockPriorities(String userLoginId) {
+        return (List<StockPriorityDto>) redisTemplate.opsForValue().get(configureStockPriorityKey(userLoginId));
     }
 
     public void cacheLimit(String userLoginId, Integer limit) {
@@ -62,12 +59,12 @@ public class ManagementCacheService {
         return (Integer) redisTemplate.opsForValue().get(configureLimitKey(userLoginId));
     }
 
-    public void cacheAccount(String userLoginId, String account) {
-        redisTemplate.opsForValue().set(configureAccountKey(userLoginId), account, Duration.ofMinutes(10));
+    public void cacheAccount(String userLoginId, AccountDto accountDto) {
+        redisTemplate.opsForValue().set(configureAccountKey(userLoginId), accountDto, Duration.ofMinutes(10));
     }
 
-    public String getCachedAccount(String userLoginId) {
-        return (String) redisTemplate.opsForValue().get(configureAccountKey(userLoginId));
+    public AccountDto getCachedAccount(String userLoginId) {
+        return (AccountDto) redisTemplate.opsForValue().get(configureAccountKey(userLoginId));
     }
 
     public void cacheDate(String userLoginId, Integer date) {
@@ -76,13 +73,5 @@ public class ManagementCacheService {
 
     public Integer getCachedDate(String userLoginId) {
         return (Integer) redisTemplate.opsForValue().get(configureDateKey(userLoginId));
-    }
-
-    public void cachePassword(String userLoginId, String password) {
-        redisTemplate.opsForValue().set(configurePasswordKey(userLoginId), password, Duration.ofMinutes(10));
-    }
-
-    public String getCachedPassword(String userLoginId) {
-        return (String) redisTemplate.opsForValue().get(configurePasswordKey(userLoginId));
     }
 }
