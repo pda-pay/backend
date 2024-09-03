@@ -15,7 +15,7 @@ import org.ofz.payment.entity.Franchise;
 import org.ofz.payment.entity.Owner;
 import org.ofz.payment.Payment;
 import org.ofz.payment.entity.PaymentHistory;
-import org.ofz.payment.exception.FranchiseNotFoundException;
+import org.ofz.payment.exception.franchise.FranchiseNotFoundException;
 import org.ofz.payment.exception.payment.ExceededCreditLimitException;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.exception.payment.PaymentPasswordMismatchException;
