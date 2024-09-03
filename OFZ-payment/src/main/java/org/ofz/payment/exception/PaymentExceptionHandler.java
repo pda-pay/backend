@@ -3,6 +3,8 @@ package org.ofz.payment.exception;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.ofz.payment.exception.franchise.FranchiseNotFoundException;
+import org.ofz.payment.exception.franchise.FranchisePasswordMismatchException;
 import org.ofz.payment.exception.payment.*;
 import org.ofz.payment.exception.websocket.*;
 import org.springframework.http.HttpStatus;
@@ -147,6 +149,16 @@ public class PaymentExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchFranchisePasswordMismatchException(FranchisePasswordMismatchException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @Getter
