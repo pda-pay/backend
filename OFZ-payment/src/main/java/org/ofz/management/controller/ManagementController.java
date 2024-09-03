@@ -12,6 +12,7 @@ import java.util.List;
 // TODO: Exception 처리
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/payment")
 public class ManagementController {
     private final ManagementService managementService;
 
