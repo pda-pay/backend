@@ -61,6 +61,13 @@ spring:
             - Path=/api/payment/**
           filters:
             - StripPrefix=1
+            
+        - id: franchise
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/franchise/**
+          filters:
+            - StripPrefix=1
 
         - id: schedule-service
           uri: lb://schedule-service
