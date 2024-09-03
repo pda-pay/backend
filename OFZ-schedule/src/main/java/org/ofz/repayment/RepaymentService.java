@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -240,6 +241,8 @@ public class RepaymentService {
      *
      * @return RepaymentResponse 결과 정보
      */
+    // 월-금 자정 로직 수행되도록 구현
+    @Scheduled(cron = "0 0 0 * * 1-5")
     public RepaymentRes processRepayments() {
         logger.info("전체 상환 프로세스를 시작합니다.");
         List<Payment> candidates = findTodayRepaymentTargets();
