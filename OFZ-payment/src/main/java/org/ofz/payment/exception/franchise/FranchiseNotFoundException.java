@@ -1,4 +1,4 @@
-package org.ofz.payment.exception;
+package org.ofz.payment.exception.franchise;
 
 public class FranchiseNotFoundException extends RuntimeException {
     public FranchiseNotFoundException(String message) {
