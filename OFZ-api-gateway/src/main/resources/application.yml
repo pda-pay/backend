@@ -48,12 +48,20 @@ spring:
               - DELETE
 
       routes:
+        - id: users-loginSession
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/users/validation, /api/users/login, /api/users/signup, /users/sms-request, /users/sms-verification
+          filters:
+            - StripPrefix=1
+
         - id: users
           uri: lb://payment-service
           predicates:
             - Path=/api/users/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
         - id: payment
           uri: lb://payment-service
@@ -61,6 +69,7 @@ spring:
             - Path=/api/payment/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
             
         - id: franchise
           uri: lb://payment-service
@@ -75,6 +84,7 @@ spring:
             - Path=/api/schedule/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
         - id: notification-service
           uri: lb://notification-service
@@ -82,6 +92,7 @@ spring:
             - Path=/api/notification/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
         - id: asset-service
           uri: lb://asset-service
@@ -89,6 +100,7 @@ spring:
             - Path=/api/asset/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
 
 server:
