@@ -5,6 +5,7 @@ import org.ofz.payment.PaymentRepository;
 import org.ofz.repayment.dto.AccountDepositRes;
 import org.ofz.repayment.dto.RepaymentRes;
 import org.ofz.repayment.exception.ExternalServiceException;
+import org.ofz.repayment.exception.RepaymentProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,16 +82,16 @@ public class RepaymentService {
      */
     public String checkRepaymentAbility(Payment payment) {
         int accountDeposit = getAccountDeposit(payment.getRepaymentAccountNumber());
-        logger.info("계좌 잔고 확인 완료: 계좌번호: {}, 잔고: {}", payment.getRepaymentAccountNumber(), accountDeposit);
+        logger.info("계좌 잔고 확인 완료: 대상자 ID: {}, 계좌번호: {}, 잔고: {}", payment.getId(), payment.getRepaymentAccountNumber(), accountDeposit);
 
         if (accountDeposit == 0) {
-            logger.warn("상환 불가: 계좌 잔고가 0원입니다.");
+            logger.warn("상환 불가: 대상자 ID: {}, 계좌 잔고가 0원입니다.", payment.getId());
             return "FAILURE";
         } else if (accountDeposit >= payment.getPreviousMonthDebt()) {
-            logger.info("상환 가능: 잔고가 빚보다 많습니다.");
+            logger.info("상환 가능: 대상자 ID: {}, 잔고가 빚보다 많습니다.", payment.getId());
             return "SUCCESS";
         } else {
-            logger.info("상환 일부 가능: 잔고가 빚보다 적습니다.");
+            logger.info("상환 일부 가능: 대상자 ID: {}, 잔고가 빚보다 적습니다.", payment.getId());
             return "PARTIAL";
         }
     }
@@ -163,7 +164,7 @@ public class RepaymentService {
      */
     @Transactional
     public void processSuccessfulRepayment(Payment payment) {
-        logger.info("상환 성공 처리를 시작합니다. 대상자 ID: {}", payment.getId());
+        logger.info("상환 성공 처리를 시작합니다. 대상자 ID: {}, 실행 스레드: {}", payment.getId(), Thread.currentThread().getName());
         int repaymentAmount = payment.getPreviousMonthDebt();
         debitAccount(payment.getRepaymentAccountNumber(), repaymentAmount);
         payment.minusPreviousMonthDebt(repaymentAmount);
@@ -193,7 +194,7 @@ public class RepaymentService {
      */
     @Transactional
     public void processPartialRepayment(Payment payment) {
-        logger.info("상환 일부 처리를 시작합니다. 대상자 ID: {}", payment.getId());
+        logger.info("상환 일부 처리를 시작합니다. 대상자 ID: {}, 실행 스레드: {}", payment.getId(), Thread.currentThread().getName());
         int accountDeposit = getAccountDeposit(payment.getRepaymentAccountNumber());
         debitAccount(payment.getRepaymentAccountNumber(), accountDeposit);
 
@@ -227,7 +228,7 @@ public class RepaymentService {
      */
     @Transactional
     public void processFailedRepayment(Payment payment) {
-        logger.info("상환 실패 처리를 시작합니다. 대상자 ID: {}", payment.getId());
+        logger.info("상환 실패 처리를 시작합니다. 대상자 ID: {}, 실행 스레드: {}", payment.getId(), Thread.currentThread().getName());
         payment.disablePay(); // 서비스 중지
         if (payment.getOverdueDay() == null) {
             payment.updateOverdueDay(LocalDate.now());
@@ -249,8 +250,16 @@ public class RepaymentService {
         List<Payment> repaymentTargets = filterRepaymentTargets(candidates);
 
         for (Payment payment : repaymentTargets) {
-            String result = checkRepaymentAbility(payment);
+            processRepayment(payment);
+        }
+        logger.info("상환 프로세스가 완료되었습니다. 총 처리 대상: {}명", repaymentTargets.size());
 
+        return new RepaymentRes("상환 프로세스가 완료되었습니다.", repaymentTargets.size());
+    }
+
+    private void processRepayment(Payment payment) {
+        try {
+            String result = checkRepaymentAbility(payment);
             switch (result) {
                 case "SUCCESS":
                     processSuccessfulRepayment(payment);
@@ -261,10 +270,18 @@ public class RepaymentService {
                 case "FAILURE":
                     processFailedRepayment(payment);
                     break;
+                default:
+                    logger.error("알 수 없는 상환 결과: 대상자 ID: {}, 결과: {}", payment.getId(), result);
+                    throw new IllegalStateException("예상치 못한 상환 결과: " + result);
             }
+        } catch (ExternalServiceException ex) {
+            throw new RepaymentProcessingException("외부 서비스 호출 중 예외 발생: 대상자 ID: " + payment.getId(), ex);
+        } catch (Exception ex) {
+            throw new RepaymentProcessingException("상환 처리 중 예외 발생: 대상자 ID: " + payment.getId(), ex);
         }
-        logger.info("상환 프로세스가 완료되었습니다. 총 처리 대상: {}명", repaymentTargets.size());
-
-        return new RepaymentRes("상환 프로세스가 완료되었습니다.", repaymentTargets.size());
     }
+
+
+
+
 }
