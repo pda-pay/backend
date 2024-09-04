@@ -10,8 +10,11 @@ public class PaymentAuthRequest {
 
     public PaymentAuthRequest() {}
 
-    public PaymentAuthRequest(Long userId, String paymentPassword) {
-        this.userId = userId;
+    public PaymentAuthRequest(String paymentPassword) {
         this.paymentPassword = paymentPassword;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }
