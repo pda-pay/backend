@@ -12,15 +12,15 @@ import java.util.List;
 public class PaymentInfoForPawnResponse {
 
     private int totalDebt;
-    private List<MortgagedStockDTO> mortgagedStocks;
+    private List<MortgagedStockDTO> stockPriorities;
 
     public void addMortgagedStock(MortgagedStockDTO mortgagedStock) {
-        mortgagedStocks.add(mortgagedStock);
+        stockPriorities.add(mortgagedStock);
     }
 
     public PaymentInfoForPawnResponse(int totalDebt) {
         this.totalDebt = totalDebt;
-        this.mortgagedStocks = new ArrayList<>();
+        this.stockPriorities = new ArrayList<>();
     }
 
     public PaymentInfoForPawnResponse() {}
