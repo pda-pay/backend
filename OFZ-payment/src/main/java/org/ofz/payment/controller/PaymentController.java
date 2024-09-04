@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
@@ -35,7 +36,8 @@ public class PaymentController {
     }
 
     @PostMapping("/payment/auth")
-    public ResponseEntity<PaymentTokenResponse> paymentAuth(@RequestBody PaymentAuthRequest paymentAuthRequest) {
+    public ResponseEntity<PaymentTokenResponse> paymentAuth(@RequestHeader("X-USER-ID") String userId,  @RequestBody PaymentAuthRequest paymentAuthRequest) {
+        paymentAuthRequest.setUserId(Long.parseLong(userId));
 
         PaymentTokenResponse paymentTokenResponse = paymentService.createPaymentToken(paymentAuthRequest);
 

@@ -93,4 +93,14 @@ public class JwtTokenProvider {
             return e.getClaims();
         }
     }
+
+    public String parseUserId(String accessToken){
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(accessToken)
+                .getBody()
+                .getSubject();
+    }
+
 }
