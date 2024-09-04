@@ -34,4 +34,8 @@ public class StockPriority {
         this.stockRank = stockRank;
         this.user = user;
     }
+
+    public void minusQuantity(int deductionQuantity) {
+        this.quantity -= deductionQuantity;
+    }
 }
