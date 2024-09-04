@@ -6,6 +6,7 @@ spring:
         - common
       prod:
         - common
+
 ---
 spring:
   config:
@@ -30,6 +31,10 @@ server:
 jwt:
   secret: ${JWT_SECRET}
 
+webclient:
+  base-url: ${PARTNERS_URL}
+
+
 ---
 spring:
   config:
@@ -44,6 +49,9 @@ spring:
 
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+webclient:
+  base-url: ${PARTNERS_URL}
+
 eureka:
   instance:
     prefer-ip-address: true
@@ -54,6 +62,7 @@ eureka:
       defaultZone: "http://localhost:8087/eureka"
   server:
     wait-time-in-ms-when-sync-empty: 5
+
 ---
 spring:
   config:
