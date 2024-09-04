@@ -1,4 +1,4 @@
-package org.ofz.payment.entity;
+package org.ofz.payment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -50,6 +50,14 @@ public class Payment {
 
     public void plusCurrentMonthDebt(int paymentAmount) {
         this.currentMonthDebt += paymentAmount;
+    }
+
+    public void minusPreviousMonthDebt(int prepaymentAmount) {
+        this.previousMonthDebt -= prepaymentAmount;
+    }
+
+    public void minusCurrentMonthDebt(int prepaymentAmount) {
+        this.currentMonthDebt -= prepaymentAmount;
     }
 
     public Payment() {}

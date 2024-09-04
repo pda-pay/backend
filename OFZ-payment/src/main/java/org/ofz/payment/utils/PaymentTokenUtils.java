@@ -35,27 +35,23 @@ public class PaymentTokenUtils {
         );
     }
 
-    // 토큰 생성
     public String createToken(Long userId) {
 
         long expirationTime = System.currentTimeMillis() + EXPIRATION_TIME;
         String id = String.valueOf(userId);
 
-        String token = PAYMENT_PREFIX + Jwts.builder()
+        String token = Jwts.builder()
                 .setSubject(id)
                 .setExpiration(new Date(expirationTime))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
 
-        redisUtil.addPaymentToken(token, EXPIRATION_TIME);
+        redisUtil.addPaymentToken(PAYMENT_PREFIX + token, EXPIRATION_TIME);
 
         return token;
     }
 
-    // 토큰에서 유저 id 추출
-    public Long extractUserId(String paymentToken) {
-
-        String token = separateToken(paymentToken);
+    public Long extractUserId(String token) {
 
         Claims claims = getClaims(token);
         String userId = claims.getSubject();
@@ -63,7 +59,6 @@ public class PaymentTokenUtils {
         return Long.parseLong(userId);
     }
 
-    // 클레임 파싱
     private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
@@ -76,14 +71,11 @@ public class PaymentTokenUtils {
         redisUtil.deletePaymentToken(token);
     }
 
-    // 토큰 검증
-    public void validateToken(String paymentToken) {
+    public void validateToken(String token) {
 
-        if (!redisUtil.validatePaymentToken(paymentToken)) {
+        if (!redisUtil.validatePaymentToken(PAYMENT_PREFIX + token)) {
             throw new PaymentTokenExpiredException("토큰이 만료되었습니다.");
         }
-
-        String token = separateToken(paymentToken);
 
         try {
             Claims claims = getClaims(token);
@@ -93,10 +85,5 @@ public class PaymentTokenUtils {
         } catch (JwtException e) {
             throw new NonValidPaymentTokenException("유효한 토큰이 아닙니다.");
         }
-    }
-
-    private String separateToken(String paymentToken) {
-
-        return paymentToken.split(":")[1];
     }
 }

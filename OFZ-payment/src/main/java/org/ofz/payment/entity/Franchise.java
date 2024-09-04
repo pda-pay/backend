@@ -18,6 +18,8 @@ public class Franchise {
     @Column(unique = true)
     private int code;
 
+    private String password;
+
     @OneToMany(mappedBy = "franchise")
     private List<PaymentHistory> paymentHistories;
 

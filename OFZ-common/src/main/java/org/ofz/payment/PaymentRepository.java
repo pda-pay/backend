@@ -1,6 +1,6 @@
-package org.ofz.payment.repository;
+package org.ofz.payment;
 
-import org.ofz.payment.entity.Payment;
+import org.ofz.payment.Payment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

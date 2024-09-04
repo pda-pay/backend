@@ -1,4 +1,4 @@
-package org.ofz.payment.dto;
+package org.ofz.payment.dto.request;
 
 import lombok.Getter;
 

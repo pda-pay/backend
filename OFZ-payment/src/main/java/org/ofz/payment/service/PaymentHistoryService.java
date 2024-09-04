@@ -11,7 +11,4 @@ public class PaymentHistoryService {
 
     private final PaymentHistoryRepository paymentHistoryRepository;
 
-    public void savePaymentHistory(PaymentHistory paymentHistory) {
-        paymentHistoryRepository.save(paymentHistory);
-    }
 }

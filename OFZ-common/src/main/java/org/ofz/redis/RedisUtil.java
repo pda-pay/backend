@@ -11,13 +11,14 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
+    private static final String LOGOUT_PREFIX = "logoutList:";
 
     public void addBlackList(String token, Long expiration){
-        redisTemplate.opsForValue().set(token, "logout", Duration.ofMillis(expiration));
+        redisTemplate.opsForValue().set(LOGOUT_PREFIX + token, "logout", Duration.ofMillis(expiration));
     }
 
     public boolean hasKeyBlackList(String token){
-        return Boolean.TRUE.equals(redisTemplate.hasKey(token));
+        return Boolean.TRUE.equals(redisTemplate.hasKey(LOGOUT_PREFIX + token));
     }
 
     public void addPaymentToken(String token, long expirationTimeInMillis) {

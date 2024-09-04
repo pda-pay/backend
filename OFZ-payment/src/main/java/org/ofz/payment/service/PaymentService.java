@@ -7,15 +7,24 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.RequiredArgsConstructor;
 import org.ofz.payment.config.WebSocketHandler;
 import org.ofz.payment.dto.*;
+import org.ofz.payment.dto.request.PaymentAuthRequest;
+import org.ofz.payment.dto.request.PaymentRequest;
+import org.ofz.payment.dto.response.PaymentResponse;
+import org.ofz.payment.dto.response.PaymentTokenResponse;
 import org.ofz.payment.entity.Franchise;
-import org.ofz.payment.entity.Payment;
+import org.ofz.payment.entity.Owner;
+import org.ofz.payment.Payment;
 import org.ofz.payment.entity.PaymentHistory;
+import org.ofz.payment.exception.franchise.FranchiseNotFoundException;
 import org.ofz.payment.exception.payment.ExceededCreditLimitException;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.exception.payment.PaymentPasswordMismatchException;
 import org.ofz.payment.exception.websocket.*;
-import org.ofz.payment.repository.PaymentRepository;
+import org.ofz.payment.repository.FranchiseRepository;
+import org.ofz.payment.repository.PaymentHistoryRepository;
+import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.utils.PaymentTokenUtils;
+import org.ofz.repayment.utils.AccountUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.TextMessage;
@@ -23,6 +32,8 @@ import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -30,9 +41,10 @@ public class PaymentService {
 
     private final WebSocketHandler webSocketHandler;
     private final PaymentRepository paymentRepository;
-    private final FranchiseService franchiseService;
-    private final PaymentHistoryService paymentHistoryService;
+    private final FranchiseRepository franchiseRepository;
+    private final PaymentHistoryRepository paymentHistoryRepository;
     private final PaymentTokenUtils paymentTokenUtils;
+    private final AccountUtils accountUtils;
 
     @Transactional
     public PaymentResponse payment(PaymentRequest paymentRequest) throws IOException {
@@ -48,32 +60,39 @@ public class PaymentService {
                 .findPaymentByUserId(userId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));
 
-        Franchise franchise = franchiseService.getFranchise(paymentRequest.getFranchiseCode());
+        Franchise franchise = franchiseRepository
+                .findFranchiseByCode(paymentRequest.getFranchiseCode())
+                .orElseThrow(() -> new FranchiseNotFoundException("가맹점이 조회되지 않습니다."));
 
+        int paymentAmount = paymentRequest.getPaymentAmount();
         int creditLimit = payment.getCreditLimit();
         int currentMonthDebt = payment.getCurrentMonthDebt();
-        int leftCreditLimit = creditLimit - (currentMonthDebt + paymentRequest.getPaymentAmount());
+        int leftCreditLimit = creditLimit - (currentMonthDebt + paymentAmount);
 
-        if (creditLimit < currentMonthDebt + paymentRequest.getPaymentAmount()) {
-            throw new ExceededCreditLimitException(franchise.getName(), paymentRequest.getPaymentAmount(), "한도 초과");
+        if (creditLimit < currentMonthDebt + paymentAmount) {
+            throw new ExceededCreditLimitException(franchise.getName(), paymentAmount, "한도 초과");
         }
 
-        payment.plusCurrentMonthDebt(paymentRequest.getPaymentAmount());
+        payment.plusCurrentMonthDebt(paymentAmount);
 
         PaymentHistoryDTO paymentHistoryDTO = PaymentHistoryDTO.builder()
                 .userId(userId)
-                .paymentAmount(paymentRequest.getPaymentAmount())
+                .paymentAmount(paymentAmount)
                 .franchise(franchise)
                 .build();
         PaymentHistory paymentHistory = paymentHistoryDTO.toEntity();
 
+        Owner owner = franchise.getOwner();
+        String ownerAccountNumber = owner.getAccountNumber();
+
+        accountUtils.fetchDepositToAccount(ownerAccountNumber, paymentAmount);
         paymentTokenUtils.deleteToken(token);
         paymentRepository.save(payment);
-        paymentHistoryService.savePaymentHistory(paymentHistory);
+        paymentHistoryRepository.save(paymentHistory);
 
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .franchiseName(franchise.getName())
-                .paymentAmount(paymentRequest.getPaymentAmount())
+                .paymentAmount(paymentAmount)
                 .date(LocalDateTime.now())
                 .leftCreditLimit(leftCreditLimit)
                 .message("결제가 완료되었습니다.")
@@ -112,8 +131,12 @@ public class PaymentService {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
+        Map<String, Object> message = new HashMap<>();
+        message.put("paymentAmount", paymentResponse.getPaymentAmount());
+        message.put("paymentDate", paymentResponse.getDate());
+
         try {
-            return objectMapper.writeValueAsString(paymentResponse);
+            return objectMapper.writeValueAsString(message);
         } catch (JsonProcessingException e) {
             throw new ConvertMessageToJsonException("응답 메시지 직렬화 실패", e);
         }

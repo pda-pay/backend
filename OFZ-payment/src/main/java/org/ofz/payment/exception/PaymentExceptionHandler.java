@@ -3,6 +3,8 @@ package org.ofz.payment.exception;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.ofz.payment.exception.franchise.FranchiseNotFoundException;
+import org.ofz.payment.exception.franchise.FranchisePasswordMismatchException;
 import org.ofz.payment.exception.payment.*;
 import org.ofz.payment.exception.websocket.*;
 import org.springframework.http.HttpStatus;
@@ -10,92 +12,94 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
+
 @Slf4j
 @RestControllerAdvice
 public class PaymentExceptionHandler {
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchSocketIdNullException(SocketIdNullException e) {
+    public ResponseEntity<ErrorResponseDTO> catchSocketIdNullException(SocketIdNullException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchWebSocketSessionNotFoundException(WebSocketSessionNotFoundException e) {
+    public ResponseEntity<ErrorResponseDTO> catchWebSocketSessionNotFoundException(WebSocketSessionNotFoundException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchInvalidWebSocketSessionException(InvalidWebSocketSessionException e) {
+    public ResponseEntity<ErrorResponseDTO> catchInvalidWebSocketSessionException(InvalidWebSocketSessionException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.GONE);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.GONE);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchInvalidUriException(InvalidUriException e) {
+    public ResponseEntity<ErrorResponseDTO> catchInvalidUriException(InvalidUriException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchConvertMessageToJsonException(ConvertMessageToJsonException e) {
+    public ResponseEntity<ErrorResponseDTO> catchConvertMessageToJsonException(ConvertMessageToJsonException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage() + " " + e.getCause().getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchPaymentIOException(PaymentIOException e) {
+    public ResponseEntity<ErrorResponseDTO> catchPaymentIOException(PaymentIOException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage() + " " + e.getCause().getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchPaymentNotFoundException(PaymentNotFoundException e) {
+    public ResponseEntity<ErrorResponseDTO> catchPaymentNotFoundException(PaymentNotFoundException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<PaymentFailDTO> catchExceededCreditLimitException(ExceededCreditLimitException e) {
+    public ResponseEntity<PaymentFailResponseDTO> catchExceededCreditLimitException(ExceededCreditLimitException e) {
         log.error("exception class: {}", e.getClass());
 
-        PaymentFailDTO failDTO = PaymentFailDTO.builder()
+        PaymentFailResponseDTO failDTO = PaymentFailResponseDTO.builder()
                 .franchiseName(e.getFranchiseName())
                 .triedAmount(e.getTriedAmount())
                 .message(e.getMessage())
@@ -105,71 +109,86 @@ public class PaymentExceptionHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchFranchiseNotFoundException(FranchiseNotFoundException e) {
+    public ResponseEntity<ErrorResponseDTO> catchFranchiseNotFoundException(FranchiseNotFoundException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchPaymentPasswordMismatchException(PaymentPasswordMismatchException e) {
+    public ResponseEntity<ErrorResponseDTO> catchPaymentPasswordMismatchException(PaymentPasswordMismatchException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchPaymentTokenExpiredException(PaymentTokenExpiredException e) {
+    public ResponseEntity<ErrorResponseDTO> catchPaymentTokenExpiredException(PaymentTokenExpiredException e) {
         log.error("exception class: {}", e.getClass());
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorDTO> catchNonValidPaymentTokenException(NonValidPaymentTokenException e) {
+    public ResponseEntity<ErrorResponseDTO> catchNonValidPaymentTokenException(NonValidPaymentTokenException e) {
 
-        ErrorDTO errorDTO = ErrorDTO.builder()
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
-        return new ResponseEntity<>(errorDTO, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchFranchisePasswordMismatchException(FranchisePasswordMismatchException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
     @Getter
-    @Builder
-    private static class ErrorDTO {
+    private static class ErrorResponseDTO {
 
+        private LocalDateTime timestamp;
         private String message;
 
-        public ErrorDTO() {}
+        public ErrorResponseDTO() {}
 
-        public ErrorDTO(String message) {
+        @Builder
+        public ErrorResponseDTO(String message) {
+            this.timestamp = LocalDateTime.now();
             this.message = message;
         }
     }
 
     @Getter
-    @Builder
-    private static class PaymentFailDTO {
+    private static class PaymentFailResponseDTO {
+
+        private LocalDateTime timestamp;
         private String franchiseName;
         private int triedAmount;
         private String message;
 
-        public PaymentFailDTO() {}
+        public PaymentFailResponseDTO() {}
 
-        public PaymentFailDTO(String franchiseName, int triedAmount, String message) {
+        @Builder
+        public PaymentFailResponseDTO(String franchiseName, int triedAmount, String message) {
+            this.timestamp = LocalDateTime.now();
             this.franchiseName = franchiseName;
             this.triedAmount = triedAmount;
             this.message = message;
