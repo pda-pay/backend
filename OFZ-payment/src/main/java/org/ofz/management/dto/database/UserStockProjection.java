@@ -1,4 +1,4 @@
-package org.ofz.management.dto;
+package org.ofz.management.dto.database;
 
 public interface UserStockProjection {
     public String getAccountNumber();

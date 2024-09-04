@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import org.ofz.user.User;
 
 import java.time.LocalDate;
@@ -80,14 +79,18 @@ public class Payment {
     public void changeCreditLimit(int creditLimit) {
         this.creditLimit = creditLimit;
     }
+
     public void changeRepaymentAccountNumber(String repaymentAccountNumber) {
         this.repaymentAccountNumber = repaymentAccountNumber;
+    }
+
+    public void changeRepaymentDate(int repaymentDate) {
+        this.repaymentDate = repaymentDate;
     }
 
     public void updateOverdueDay(LocalDate now) {
         this.overdueDay=now;
     }
-
 
     public void disablePay() {
         payFlag = false;

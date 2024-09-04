@@ -43,4 +43,10 @@ public enum StockStability {
 
         return stability.getPercent();
     }
+
+    public static double calculateLimitPrice(int group, int stockPrice) {
+        double limitRate = StockStability.getPercentByGroup(group);
+        double price = stockPrice * limitRate;
+        return Math.round(price * 100.0) / 100.0;
+    }
 }
