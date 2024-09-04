@@ -16,7 +16,6 @@ public class CashRepaymentController {
 
     private final RepaymentService repaymentService;
 
-    // 결제 페이지
     @GetMapping("/payment/cash-info")
     public ResponseEntity<PaymentInfoForCashResponse> getPaymentInfo(@RequestHeader("X-USER-ID") String userId) {
 
@@ -25,7 +24,6 @@ public class CashRepaymentController {
         return new ResponseEntity<>(paymentInfo, HttpStatus.OK);
     }
 
-    // 결제 내역 조회
     @GetMapping("/payment/history")
     public ResponseEntity<PaymentHistoriesResponse> getPaymentHistories(@RequestParam("month") int month, @RequestHeader("X-USER-ID") String userId) {
 
@@ -38,7 +36,6 @@ public class CashRepaymentController {
         return new ResponseEntity<>(new PaymentHistoriesResponse(paymentHistories), HttpStatus.OK);
     }
 
-    // 출금 계좌 조회
     @GetMapping("/payment/accounts")
     public ResponseEntity<RepaymentAccountResponse> getPaymentAccount(@RequestHeader("X-USER-ID") String userId) {
 
@@ -55,7 +52,6 @@ public class CashRepaymentController {
         return new ResponseEntity<>(monthlyDebtResponse, HttpStatus.OK);
     }
 
-    // prepayments-cash
     @PostMapping("/payment/cash")
     public ResponseEntity<CashRepaymentResponse> prepayWithCash(@RequestHeader("X-USER-ID") String userId, @RequestBody CashPrepaymentRequest cashPrepaymentRequest) {
 
