@@ -2,8 +2,6 @@ package org.ofz.repayment.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.ofz.repayment.dto.request.CashPrepaymentRequest;
-import org.ofz.repayment.dto.request.PaymentHistoryRequest;
-import org.ofz.repayment.dto.request.RepaymentUserRequest;
 import org.ofz.repayment.dto.response.*;
 import org.ofz.repayment.service.RepaymentService;
 import org.springframework.http.HttpStatus;
