@@ -11,7 +11,6 @@ import java.util.List;
 @AllArgsConstructor
 public class PawnPrepaymentRequest {
 
-    private Long userId;
     private int repaymentAmount;
     private List<SelectedStock> selectedStocks;
 
