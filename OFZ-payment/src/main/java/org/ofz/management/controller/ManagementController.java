@@ -28,7 +28,6 @@ public class ManagementController {
         return ResponseEntity.status(HttpStatus.OK).body(saveMortgagedStockResponse);
     }
 
-    // 사용자의 주식 담보 주식, 우선순위 정보 반환 API
     @GetMapping("/users/{id}/stock-priorities")
     public ResponseEntity<UserMortgagedStockStockPriorityResponse> getUserStockPriorities(@PathVariable("id") String userId) {
         UserMortgagedStockStockPriorityResponse userMortgagedStockStockPriorityResponse = managementService.getUserMortgagedStockStockPriority(userId);
@@ -42,7 +41,7 @@ public class ManagementController {
         return ResponseEntity.status(HttpStatus.OK).body(saveStockPriorityResponse);
     }
 
-    @PutMapping("/users/{id}/limit-information")
+    @GetMapping("/users/{id}/limit-information")
     public ResponseEntity<UserLimitResponse> getUserLimitInformation(@PathVariable("id") String userId) {
         UserLimitResponse userLimitInformation = managementService.getUserLimitInformation(userId);
 
