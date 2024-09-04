@@ -17,11 +17,11 @@ import org.ofz.management.dto.partners.request.UserAccountRequest;
 import org.ofz.management.dto.partners.request.UserAccountsRequest;
 import org.ofz.management.dto.partners.response.UserAccountResponse;
 import org.ofz.management.dto.partners.response.UserAccountsResponse;
-import org.ofz.management.entity.StockInformation;
+import org.ofz.management.StockInformation;
 import org.ofz.management.exception.StockInformationNotFoundException;
 import org.ofz.management.exception.UserNotFoundException;
 import org.ofz.management.repository.MortgagedStockRepository;
-import org.ofz.management.repository.StockInformationRepository;
+import org.ofz.management.StockInformationRepository;
 import org.ofz.management.repository.StockPriorityRepository;
 import org.ofz.management.repository.StockRepository;
 import org.ofz.management.utils.BankCategory;
@@ -39,8 +39,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.time.Duration;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -54,7 +52,6 @@ public class ManagementService {
     private final StockInformationRepository stockInformationRepository;
     private final WebClient webClient;
     private final ManagementCacheService cacheService;
-
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${webclient.base-url}")
