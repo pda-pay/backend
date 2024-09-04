@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 
 @RestControllerAdvice
-public class RepaymentExceptionHandler {
+public class RepaymentScheduleExceptionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(RepaymentExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(RepaymentScheduleExceptionHandler.class);
 
-    @ExceptionHandler(RepaymentProcessingException.class)
-    public ResponseEntity<ErrorResponseDTO> handleRepaymentProcessingException(RepaymentProcessingException ex) {
+    @ExceptionHandler(RepaymentScheduleProcessingException.class)
+    public ResponseEntity<ErrorResponseDTO> handleRepaymentProcessingException(RepaymentScheduleProcessingException ex) {
         logger.error("Repayment processing error: {}", ex.getMessage(), ex);
         ErrorResponseDTO errorResponse = ErrorResponseDTO.builder()
                 .timestamp(LocalDateTime.now())

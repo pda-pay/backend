@@ -5,7 +5,7 @@ import org.ofz.payment.PaymentRepository;
 import org.ofz.repayment.dto.AccountDepositRes;
 import org.ofz.repayment.dto.RepaymentRes;
 import org.ofz.repayment.exception.ExternalServiceException;
-import org.ofz.repayment.exception.RepaymentProcessingException;
+import org.ofz.repayment.exception.RepaymentScheduleProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +24,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class RepaymentService {
+public class RepaymentScheduleService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RepaymentService.class);
+    private static final Logger logger = LoggerFactory.getLogger(RepaymentScheduleService.class);
     private final PaymentRepository paymentRepository;
     private final RepaymentHistoryRepository repaymentHistoryRepository;
     private final WebClient webClient;
@@ -35,9 +35,9 @@ public class RepaymentService {
     private String partnersUrl;
 
     @Autowired
-    public RepaymentService(PaymentRepository paymentRepository,
-                            RepaymentHistoryRepository repaymentHistoryRepository,
-                            WebClient.Builder webClientBuilder) {
+    public RepaymentScheduleService(PaymentRepository paymentRepository,
+                                    RepaymentHistoryRepository repaymentHistoryRepository,
+                                    WebClient.Builder webClientBuilder) {
         this.paymentRepository = paymentRepository;
         this.repaymentHistoryRepository = repaymentHistoryRepository;
 //        this.webClient = webClientBuilder.baseUrl("http://ec2-3-34-1-150.ap-northeast-2.compute.amazonaws.com").build();
@@ -279,9 +279,9 @@ public class RepaymentService {
                     throw new IllegalStateException("예상치 못한 상환 결과: " + result);
             }
         } catch (ExternalServiceException ex) {
-            throw new RepaymentProcessingException("외부 서비스 호출 중 예외 발생: 대상자 ID: " + payment.getId(), ex);
+            throw new RepaymentScheduleProcessingException("외부 서비스 호출 중 예외 발생: 대상자 ID: " + payment.getId(), ex);
         } catch (Exception ex) {
-            throw new RepaymentProcessingException("상환 처리 중 예외 발생: 대상자 ID: " + payment.getId(), ex);
+            throw new RepaymentScheduleProcessingException("상환 처리 중 예외 발생: 대상자 ID: " + payment.getId(), ex);
         }
     }
 

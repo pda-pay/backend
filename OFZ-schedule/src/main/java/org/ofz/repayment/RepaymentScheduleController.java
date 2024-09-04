@@ -9,18 +9,18 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/schedule")
-public class RepaymentController {
+public class RepaymentScheduleController {
 
-    private final RepaymentService repaymentService;
+    private final RepaymentScheduleService repaymentScheduleService;
 
     @Autowired
-    public RepaymentController(RepaymentService repaymentService) {
-        this.repaymentService = repaymentService;
+    public RepaymentScheduleController(RepaymentScheduleService repaymentScheduleService) {
+        this.repaymentScheduleService = repaymentScheduleService;
     }
 
     @PostMapping("/process")
     public ResponseEntity<RepaymentRes> processRepayments() {
-        RepaymentRes response = repaymentService.processRepayments();
+        RepaymentRes response = repaymentScheduleService.processRepayments();
         return ResponseEntity.ok(response);
     }
 }
