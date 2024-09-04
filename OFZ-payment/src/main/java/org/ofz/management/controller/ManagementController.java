@@ -1,67 +1,104 @@
 package org.ofz.management.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.management.dto.*;
+import org.ofz.management.dto.api.response.CheckUserJoinedPaymentServiceResponse;
+import org.ofz.management.dto.api.request.*;
+import org.ofz.management.dto.api.response.*;
 import org.ofz.management.service.ManagementService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-// TODO: Exception 처리
 @RequiredArgsConstructor
 @RestController
+@RequestMapping("/payment")
 public class ManagementController {
     private final ManagementService managementService;
 
-    // TODO: 전일 종가 캐싱 후 종가 반환
-    @GetMapping("/users/{id}/stocks")
-    public ResponseEntity<UserStockResponses> getUserStocks(@PathVariable("id") String userId) {
-        UserStockResponses userStockResponses = managementService.getUserStocks(userId);
-        return ResponseEntity.status(HttpStatus.OK).body(userStockResponses);
+    @GetMapping("/users/stocks")
+    public ResponseEntity<UserStockResponse> getUserStocks(@RequestHeader("X-LOGIN-ID") String userId) {
+        UserStockResponse userStockResponse = managementService.getUserStocks(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(userStockResponse);
     }
 
-    @GetMapping("/users/{id}/accounts")
-    public ResponseEntity<UserAccountsResponse> getUserAccounts(@PathVariable("id") String userId) {
-        UserAccountsResponse userAccountResponses = managementService.getUserAccounts(userId);
+    @PutMapping("/users/mortgaed-stocks")
+    public ResponseEntity<SavedResponse> saveUserMortgagedStocks(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveMortgagedStockRequest saveMortgagedStockRequest) {
+        saveMortgagedStockRequest.setLoginId(userId);
+        SavedResponse saveMortgagedStockResponse = managementService.saveMortgagedStockInformation(saveMortgagedStockRequest);
 
-        return ResponseEntity.status(HttpStatus.OK).body(userAccountResponses);
+        return ResponseEntity.status(HttpStatus.OK).body(saveMortgagedStockResponse);
     }
 
-    @PostMapping("/payments")
-    public ResponseEntity<PaymentsJoinResponse> joinPaymentsService(@RequestBody PaymentsJoinRequest paymentsJoinRequest) {
-        PaymentsJoinResponse paymentsJoinResponse = managementService.joinPaymentsService(paymentsJoinRequest);
-
-        return ResponseEntity.status(HttpStatus.OK).body(paymentsJoinResponse);
+    @GetMapping("/users/stock-priorities")
+    public ResponseEntity<UserMortgagedStockStockPriorityResponse> getUserStockPriorities(@RequestHeader("X-LOGIN-ID") String userId) {
+        UserMortgagedStockStockPriorityResponse userMortgagedStockStockPriorityResponse = managementService.getUserMortgagedStockStockPriority(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(userMortgagedStockStockPriorityResponse);
     }
 
-    // TODO: 전일 종가 캐싱 후 담보총액 계산
-    @PostMapping("/payments/limits-mortgage")
-    public ResponseEntity<UserCreditLimitResponse> getUserCreditLimit(@RequestBody UserCreditLimitRequest userCreditLimitRequest) {
-        UserCreditLimitResponse userCreditLimitResponse = managementService.getUserCreditLimit(userCreditLimitRequest);
+    @PutMapping("/users/stock-priorities")
+    public ResponseEntity<SavedResponse> saveUserStockPriorities(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveStockPriorityRequest saveStockPriorityRequest) {
+        saveStockPriorityRequest.setLoginId(userId);
+        SavedResponse saveStockPriorityResponse = managementService.saveStockPriorityInformation(saveStockPriorityRequest);
 
-        return ResponseEntity.status(HttpStatus.OK).body(userCreditLimitResponse);
+        return ResponseEntity.status(HttpStatus.OK).body(saveStockPriorityResponse);
     }
 
-    // TODO: 한도 유효성 검사
-    @PutMapping(value="/payments/limits")
-    public ResponseEntity<UpdateCreditLimitResponse> updateUserCreditLimit(@RequestBody UpdateCreditLimitRequest updateCreditRequest) {
-        UpdateCreditLimitResponse updateUserCreditLimit = managementService.updateUserCreditLimit(updateCreditRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(updateUserCreditLimit);
+    @GetMapping("/users/limit-information")
+    public ResponseEntity<UserLimitResponse> getUserLimitInformation(@RequestHeader("X-LOGIN-ID") String userId) {
+        UserLimitResponse userLimitInformation = managementService.getUserLimitInformation(userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(userLimitInformation);
     }
 
-    // TODO: 변경 할 담보, 우선순위 유효성 검사
-    @PutMapping(value="/payments/mortgage")
-    public ResponseEntity<UpdateMortgagedStockResponse> updateUserMortgagedStock(@RequestBody UpdateMortgagedStockResquest updateMortgagedStockResquest) {
-        UpdateMortgagedStockResponse updateMortgagedStockResponse = managementService.updateUserMortgagedStock(updateMortgagedStockResquest);
-        return ResponseEntity.status(HttpStatus.OK).body(updateMortgagedStockResponse);
+    @PutMapping("/users/limit-information")
+    public ResponseEntity<SavedResponse> saveUserLimitInformation(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveLimitInformationRequest saveLimitInformationRequest) {
+        saveLimitInformationRequest.setLoginId(userId);
+        SavedResponse saveLimitInformationResponse = managementService.saveLimitInformation(saveLimitInformationRequest);
+
+        return ResponseEntity.status(HttpStatus.OK).body(saveLimitInformationResponse);
     }
 
-    // TODO: 변경 할 출금계좌 유효성 검사
-    @PutMapping(value="/payments/accounts")
-    public ResponseEntity<UpdateRepaymentAccountResponse> updateUserRepaymentAccount(@RequestBody UpdateRepaymentAccountRequest updateRepaymentAccountRequest) {
-        UpdateRepaymentAccountResponse updateRepaymentAccountResponse = managementService.updateUserRepaymentAccount(updateRepaymentAccountRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(updateRepaymentAccountResponse);
+    @GetMapping("/users/accounts")
+    public ResponseEntity<UserAccountInformationResponse> getUserAccountInformation(@RequestHeader("X-LOGIN-ID") String userId) {
+        UserAccountInformationResponse userAccountInformationResponse = managementService.getUserAccountInformation(userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(userAccountInformationResponse);
+    }
+
+    @PutMapping("/users/accounts")
+    public ResponseEntity<SavedResponse> saveUserRepaymentAccount(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveRepaymentAccountRequest saveRepaymentAccountRequest) {
+        saveRepaymentAccountRequest.setLoginId(userId);
+        SavedResponse saveRepaymentAccountResponse = managementService.saveRepaymentAccount(saveRepaymentAccountRequest);
+
+        return ResponseEntity.status(HttpStatus.OK).body(saveRepaymentAccountResponse);
+    }
+
+    @PutMapping("/users/repayment-date")
+    public ResponseEntity<SavedResponse> saveUserRepaymentDate(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveRepaymentDateRequest saveRepaymentDateRequest) {
+        saveRepaymentDateRequest.setLoginId(userId);
+        SavedResponse saveRepaymentDateResponse = managementService.saveRepaymentDate(saveRepaymentDateRequest);
+
+        return ResponseEntity.status(HttpStatus.OK).body(saveRepaymentDateResponse);
+    }
+
+    @GetMapping("/users/information")
+    public ResponseEntity<PaymentInformationResponse> getUserPaymentInformation(@RequestHeader("X-LOGIN-ID") String userId) {
+        PaymentInformationResponse paymentInformationResponse = managementService.getPaymentInformation(userId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(paymentInformationResponse);
+    }
+
+    @GetMapping("/users/join")
+    public ResponseEntity<CheckUserJoinedPaymentServiceResponse> checkUserJoinedPaymentService(@RequestHeader("X-LOGIN-ID") String userId) {
+        CheckUserJoinedPaymentServiceResponse checkUserJoinedPaymentService = managementService.checkUserJoinedPaymentService(userId);
+        return ResponseEntity.status(HttpStatus.OK).body(checkUserJoinedPaymentService);
+    }
+
+    @PostMapping("/users/join")
+    public ResponseEntity<SavedResponse> joinPaymentService(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody JoinPaymentServiceRequest joinPaymentServiceRequest) {
+        joinPaymentServiceRequest.setLoginId(userId);
+        SavedResponse savePaymentServiceResponse = managementService.joinPaymentService(joinPaymentServiceRequest);
+
+        return ResponseEntity.status(HttpStatus.OK).body(savePaymentServiceResponse);
     }
 }
