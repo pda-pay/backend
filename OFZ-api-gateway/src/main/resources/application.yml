@@ -77,7 +77,6 @@ spring:
             - Path=/api/franchise/**
           filters:
             - StripPrefix=1
-            - LoginJWTFilter
 
         - id: schedule-service
           uri: lb://schedule-service
