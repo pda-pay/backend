@@ -16,23 +16,23 @@ public class ManagementCacheService {
     private final RedisTemplate<String, Object> redisTemplate;
     private static final String prifixKey = "payment:";
     private String configureMortgagedStockKey(String userLoginId) {
-        return prifixKey + String.format("%s:",userLoginId) + "mortgagedStock";
+        return prifixKey + String.format("%s:", userLoginId) + "mortgagedStock";
     }
 
     private String configureStockPriorityKey(String userLoginId) {
-        return prifixKey + String.format("%s::",userLoginId) + "stockPriority";
+        return prifixKey + String.format("%s:", userLoginId) + "stockPriority";
     }
 
     private String configureLimitKey(String userLoginId) {
-        return prifixKey + String.format("%s:",userLoginId) + "limit";
+        return prifixKey + String.format("%s:", userLoginId) + "limit";
     }
 
     private String configureAccountKey(String userLoginId) {
-        return prifixKey + String.format("%s:",userLoginId) + "account";
+        return prifixKey + String.format("%s:", userLoginId) + "account";
     }
 
     private String configureDateKey(String userLoginId) {
-        return prifixKey + String.format("%s:",userLoginId) + "date";
+        return prifixKey + String.format("%s:", userLoginId) + "date";
     }
 
     public void cacheMortgagedStocks(String userLoginId, List<MortgagedStockDto> mortgagedStockDtos) {

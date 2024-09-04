@@ -10,5 +10,5 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SaveStockPriorityRequest {
     private final String loginId;
-    private final List<StockPriorityDto> stockPriorityDtos;
+    private final List<StockPriorityDto> stockPriorities;
 }

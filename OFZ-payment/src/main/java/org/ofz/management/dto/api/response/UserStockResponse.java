@@ -10,10 +10,10 @@ import java.util.List;
 @Setter
 @AllArgsConstructor
 public class UserStockResponse {
-    private List<StockMortgagedStockDto> stockMortgagedStockDtos;
+    private List<StockMortgagedStockDto> stockMortgagedStocks;
     private int totalDebt;
 
     public void addStockMortgagedStock(StockMortgagedStockDto stockMortgagedStockDto) {
-        stockMortgagedStockDtos.add(stockMortgagedStockDto);
+        stockMortgagedStocks.add(stockMortgagedStockDto);
     }
 }
