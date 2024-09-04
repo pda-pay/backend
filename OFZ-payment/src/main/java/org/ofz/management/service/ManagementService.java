@@ -1,15 +1,32 @@
 package org.ofz.management.service;
 
-import org.ofz.management.dto.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.ofz.management.MortgagedStock;
-import org.ofz.management.entity.StockInformation;
 import org.ofz.management.StockPriority;
+import org.ofz.management.dto.api.request.*;
+import org.ofz.management.dto.common.MortgagedStockDto;
+import org.ofz.management.dto.common.StockMortgagedStockDto;
+import org.ofz.management.dto.common.StockPriorityDto;
+import org.ofz.management.dto.common.AccountDto;
+import org.ofz.management.dto.api.response.*;
+import org.ofz.management.dto.database.UserStockProjection;
+import org.ofz.management.dto.partners.request.UserAccountRequest;
+import org.ofz.management.dto.partners.request.UserAccountsRequest;
+import org.ofz.management.dto.partners.response.UserAccountResponse;
+import org.ofz.management.dto.partners.response.UserAccountsResponse;
+import org.ofz.management.StockInformation;
 import org.ofz.management.exception.StockInformationNotFoundException;
 import org.ofz.management.exception.UserNotFoundException;
 import org.ofz.management.repository.MortgagedStockRepository;
-import org.ofz.management.repository.StockInformationRepository;
+import org.ofz.management.StockInformationRepository;
 import org.ofz.management.repository.StockPriorityRepository;
 import org.ofz.management.repository.StockRepository;
+import org.ofz.management.utils.BankCategory;
+import org.ofz.management.utils.SecuritiesCategory;
+import org.ofz.management.utils.StockStability;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
@@ -17,15 +34,14 @@ import org.ofz.user.NameAndPhoneNumberProjection;
 import org.ofz.user.User;
 import org.ofz.user.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
+@RequiredArgsConstructor
 @Service
 public class ManagementService {
     private final UserRepository userRepository;
@@ -34,108 +50,372 @@ public class ManagementService {
     private final StockPriorityRepository stockPriorityRepository;
     private final PaymentRepository paymentRepository;
     private final StockInformationRepository stockInformationRepository;
-    private final WebClient  webClient;
+    private final WebClient webClient;
+    private final ManagementCacheService cacheService;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @Value("${webclient.base-url}")
     private String baseUrl;
 
-    public ManagementService(UserRepository userRepository,
-                             StockRepository stockRepository,
-                             MortgagedStockRepository mortgagedStockRepository,
-                             StockPriorityRepository stockPriorityRepository,
-                             PaymentRepository paymentRepository,
-                             StockInformationRepository stockInformationRepository,
-                             WebClient webClient) {
-        this.userRepository = userRepository;
-        this.stockRepository = stockRepository;
-        this.mortgagedStockRepository = mortgagedStockRepository;
-        this.stockPriorityRepository = stockPriorityRepository;
-        this.paymentRepository = paymentRepository;
-        this.stockInformationRepository = stockInformationRepository;
-        this.webClient = webClient;
-    }
     @Transactional
-    public UserStockResponses getUserStocks(String userLoginId) {
+    public UserStockResponse getUserStocks(String userLoginId) {
         Long userId = findUserbyLoginId(userLoginId).getId();
 
-        List<UserStockResponse> userStockResponses = new ArrayList<>();
+        UserStockResponse userStockResponse = new UserStockResponse(new ArrayList<>(), 0);
         List<UserStockProjection> UserStockProjections = stockRepository.findUserStocksByUserId(userId);
 
         for (UserStockProjection userStockProjection : UserStockProjections) {
             final String stockCode = userStockProjection.getStockCode();
-            // TODO: 전일 종가 요청하는 부분 캐시 완료 후 캐시 데이터 가져오는 식으로 대체
-            final int previousStockPrice = fetchPreviousStockPrice(stockCode);
-            System.out.println(stockCode);
+            final String companyCode = userStockProjection.getCompanyCode();
+            final int previousStockPrice = fetchStoredPrice(stockCode);
             StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
                     .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
+            final int stabilityLevel = stockInformation.getStabilityLevel();
 
-            UserStockResponse userStockresponse = new UserStockResponse(userStockProjection, previousStockPrice, stockInformation);
-            userStockResponses.add(userStockresponse);
+            StockMortgagedStockDto stockMortgagedStockDto = StockMortgagedStockDto.builder()
+                    .accountNumber(userStockProjection.getAccountNumber())
+                    .quantity(userStockProjection.getQuantity())
+                    .mortgagedQuantity(userStockProjection.getMortgagedQuantity())
+                    .stockCode(stockCode)
+                    .stockName(stockInformation.getName())
+                    .companyCode(companyCode)
+                    .companyName(SecuritiesCategory.getCompanyNamefromCode(companyCode))
+                    .stabilityLevel(stabilityLevel)
+                    .stockPrice(previousStockPrice)
+                    .limitPrice(StockStability.calculateLimitPrice(stabilityLevel, previousStockPrice))
+                    .build();
+            userStockResponse.addStockMortgagedStock(stockMortgagedStockDto);
         }
 
-        int totalDebt = paymentRepository.findTotalDebtByUserId(userId);
+        final int totalDebt = paymentRepository.findTotalDebtByUserId(userId);
+        userStockResponse.setTotalDebt(totalDebt);
 
-        return new UserStockResponses(userStockResponses, totalDebt);
+        return userStockResponse;
     }
 
     @Transactional
-    public UserAccountsResponse getUserAccounts(String userId) {
-        NameAndPhoneNumberProjection nameAndPhoneNumberProjection = userRepository.findNameAndPhoneNumberByLoginId(userId)
+    public SavedResponse saveMortgagedStockInformation(SaveMortgagedStockRequest saveMortgagedStockRequest) {
+        PaymentUser paymentUser = checkPaymentUser(saveMortgagedStockRequest.getLoginId());
+        User user = paymentUser.getUser();
+        List<MortgagedStockDto> mortgagedStockDtos = saveMortgagedStockRequest.getMortgagedStocks();
+
+        if (paymentUser.isJoined()) {
+            List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
+            mortgagedStockRepository.deleteAll(mortgagedStocks);
+            saveMortgagedStocks(mortgagedStockDtos, user);
+        } else {
+            cacheService.cacheMortgagedStocks(user.getLoginId(), mortgagedStockDtos);
+        }
+
+        return SavedResponse.success(saveMortgagedStockRequest.getLoginId());
+    }
+
+    @Transactional
+    public UserMortgagedStockStockPriorityResponse getUserMortgagedStockStockPriority(String userLoginId) {
+        PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        User user = paymentUser.getUser();
+
+        if (paymentUser.isJoined()) {
+            List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
+            List<StockPriority> stockPriorities = stockPriorityRepository.findAllStockPrioritiesByUserId(user.getId());
+            UserMortgagedStockStockPriorityResponse userMortgagedStockStockPriorityResponse = new UserMortgagedStockStockPriorityResponse(new ArrayList<>(), new ArrayList<>());
+
+            for (MortgagedStock mortgagedStock : mortgagedStocks) {
+                final String stockCode = mortgagedStock.getStockCode();
+                final String companyCode = mortgagedStock.getCompanyCode();
+                final int previousStockPrice = fetchStoredPrice(stockCode);
+                StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
+                        .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
+                final int stabilityLevel = stockInformation.getStabilityLevel();
+                MortgagedStockDto mortgagedStockDto = MortgagedStockDto.builder()
+                        .accountNumber(mortgagedStock.getAccountNumber())
+                        .quantity(mortgagedStock.getQuantity())
+                        .stockCode(mortgagedStock.getStockCode())
+                        .stockName(stockInformation.getName())
+                        .companyCode(companyCode)
+                        .companyName(SecuritiesCategory.getCompanyNamefromCode(companyCode))
+                        .stabilityLevel(stabilityLevel)
+                        .stockPrice(previousStockPrice)
+                        .limitPrice(StockStability.calculateLimitPrice(stabilityLevel, previousStockPrice))
+                        .build();
+
+                userMortgagedStockStockPriorityResponse.addMortgagedStock(mortgagedStockDto);
+            }
+
+            for (StockPriority stockPriority : stockPriorities) {
+                final String stockCode = stockPriority.getStockCode();
+                final int previousStockPrice = fetchStoredPrice(stockCode);
+                final String companyCode = stockPriority.getCompanyCode();
+                StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
+                        .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
+                final int stabilityLevel = stockInformation.getStabilityLevel();
+
+                StockPriorityDto stockPriorityDto = StockPriorityDto.builder()
+                        .accountNumber(stockPriority.getAccountNumber())
+                        .quantity(stockPriority.getQuantity())
+                        .stockCode(stockPriority.getStockCode())
+                        .stockName(stockInformation.getName())
+                        .stockRank(stockPriority.getStockRank())
+                        .companyCode(companyCode)
+                        .companyName(SecuritiesCategory.getCompanyNamefromCode(companyCode))
+                        .stabilityLevel(stabilityLevel)
+                        .stockPrice(previousStockPrice)
+                        .limitPrice(StockStability.calculateLimitPrice(stabilityLevel, previousStockPrice))
+                        .build();
+
+                userMortgagedStockStockPriorityResponse.addStockPriority(stockPriorityDto);
+            }
+
+            return userMortgagedStockStockPriorityResponse;
+        } else {
+            List<MortgagedStockDto> mortgagedStockDtos = cacheService.getCachedMortgagedStocks(userLoginId);
+            return new UserMortgagedStockStockPriorityResponse(mortgagedStockDtos, new ArrayList<>());
+        }
+    }
+
+    @Transactional
+    public SavedResponse saveStockPriorityInformation(SaveStockPriorityRequest saveStockPriorityRequest) {
+        PaymentUser paymentUser = checkPaymentUser(saveStockPriorityRequest.getLoginId());
+        User user = paymentUser.getUser();
+        List<StockPriorityDto> stockPriorityDtos = saveStockPriorityRequest.getStockPriorities();
+
+        if (paymentUser.isJoined()) {
+            List<StockPriority> stockPriorities = stockPriorityRepository.findAllStockPrioritiesByUserId(user.getId());
+            stockPriorityRepository.deleteAll(stockPriorities);
+            saveStockPriorities(stockPriorityDtos, user);
+        } else {
+            cacheService.cacheStockPriorities(user.getLoginId(), stockPriorityDtos);
+        }
+
+        return SavedResponse.success(saveStockPriorityRequest.getLoginId());
+    }
+
+    @Transactional
+    public UserLimitResponse getUserLimitInformation(String userLoginId) {
+        final PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        final User user = paymentUser.getUser();
+        final long userId = user.getId();
+        double totalLimit = 0;
+        int currentLimit = 0;
+
+        if (paymentUser.isJoined()) {
+            List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
+            for (MortgagedStock mortgagedStock : mortgagedStocks) {
+                final String stockCode = mortgagedStock.getStockCode();
+                final int stockPreviousPrice = fetchStoredPrice(stockCode);
+                StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
+                        .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
+                final double stockMaxLimit = StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPreviousPrice);
+                totalLimit += stockMaxLimit * mortgagedStock.getQuantity();
+            }
+            currentLimit = paymentUser.getPayment().getCreditLimit();
+
+            return new UserLimitResponse((int) Math.round(totalLimit), currentLimit);
+        } else {
+            List<MortgagedStockDto> mortgagedStockDtos = cacheService.getCachedMortgagedStocks(userLoginId);
+            for (MortgagedStockDto mortgagedStockDto : mortgagedStockDtos) {
+                final String stockCode = mortgagedStockDto.getStockCode();
+                final int stockPreviousPrice = fetchStoredPrice(stockCode);
+                StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
+                        .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
+                final double stockMaxLimit = StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPreviousPrice);
+                totalLimit += stockMaxLimit * mortgagedStockDto.getQuantity();
+            }
+
+            return new UserLimitResponse((int) Math.round(totalLimit), currentLimit);
+        }
+    }
+
+    @Transactional
+    public SavedResponse saveLimitInformation(SaveLimitInformationRequest saveLimitInformationRequest) {
+        final String userLoginId = saveLimitInformationRequest.getLoginId();
+        final PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        final User user = paymentUser.getUser();
+        final int currentLimit = saveLimitInformationRequest.getCurrentLimit();
+
+        if (paymentUser.isJoined()) {
+            Payment payment = paymentUser.getPayment();
+            payment.changeCreditLimit(currentLimit);
+            paymentRepository.save(payment);
+        } else {
+            cacheService.cacheLimit(userLoginId, currentLimit);
+        }
+
+        return SavedResponse.success(userLoginId);
+    }
+
+    @Transactional
+    public UserAccountInformationResponse getUserAccountInformation(String userLoginId) {
+        NameAndPhoneNumberProjection nameAndPhoneNumberProjection = userRepository.findNameAndPhoneNumberByLoginId(userLoginId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾지 못했습니다."));
         UserAccountsRequest userAccountsRequest = new UserAccountsRequest(nameAndPhoneNumberProjection.getName(), nameAndPhoneNumberProjection.getPhoneNumber());
-        return fetchUserAccounts(userAccountsRequest);
+        UserAccountsResponse userAccountsResponse = fetchUserAccounts(userAccountsRequest);
+        UserAccountInformationResponse userAccountInformationResponse = new UserAccountInformationResponse(new ArrayList<>());
+
+        for (UserAccountsResponse.UserAccountDto userAccountDto : userAccountsResponse.getBankAccounts()) {
+            final String companyCode = userAccountDto.getCompanyCode();
+            userAccountInformationResponse.addAccount(AccountDto.builder()
+                    .accountNumber(userAccountDto.getAccountNumber())
+                    .companyCode(companyCode)
+                    .companyName(BankCategory.fromCode(companyCode))
+                    .category(userAccountDto.getCategory())
+                    .build());
+        }
+
+        return userAccountInformationResponse;
     }
 
     @Transactional
-    public PaymentsJoinResponse joinPaymentsService(PaymentsJoinRequest paymentsJoinRequest) {
-        User user = findUserbyLoginId(paymentsJoinRequest.getUserId());
-        savePayment(paymentsJoinRequest, user);
-        saveMortgagedStocks(paymentsJoinRequest.getMortgagedStocks(), user);
-        savePriorityStocks(paymentsJoinRequest.getPriorityStocks(), user);
-        return PaymentsJoinResponse.success(user.getLoginId());
+    public SavedResponse saveRepaymentAccount(SaveRepaymentAccountRequest saveRepaymentAccountRequest) {
+        final String userLoginId = saveRepaymentAccountRequest.getLoginId();
+        final PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        final User user = paymentUser.getUser();
+        final AccountDto accountDto = saveRepaymentAccountRequest.getRepaymentAccount();
+
+        if (paymentUser.isJoined()) {
+            Payment payment = getPaymentByUserId(user.getId());
+            payment.changeRepaymentAccountNumber(accountDto.getAccountNumber());
+            paymentRepository.save(payment);
+
+        } else {
+            cacheService.cacheAccount(userLoginId, accountDto);
+        }
+
+        return SavedResponse.success(userLoginId);
     }
 
     @Transactional
-    public UserCreditLimitResponse getUserCreditLimit(UserCreditLimitRequest userCreditLimitRequest) {
-        User user = findUserbyLoginId(userCreditLimitRequest.getUserId());
-        int currentCreditLimit = paymentRepository.findCreditLimitByUserId(user.getId())
-                .orElseThrow(() -> new PaymentNotFoundException("결제 서비스 이용자를 찾지 못했습니다."));
-        // TODO: 담보 총액 요청하는 부분 캐시 완료 후 캐시 데이터 가져오는 식으로 대체
-        return new UserCreditLimitResponse(currentCreditLimit, 0, 0);
+    public SavedResponse saveRepaymentDate(SaveRepaymentDateRequest saveRepaymentDateRequest) {
+        final String userLoginId = saveRepaymentDateRequest.getLoginId();
+        final PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        final User user = paymentUser.getUser();
+        final int repaymentDate = saveRepaymentDateRequest.getRepaymentDate();
+
+        if (paymentUser.isJoined()) {
+            Payment payment = getPaymentByUserId(user.getId());
+            payment.changeRepaymentDate(repaymentDate);
+            paymentRepository.save(payment);
+
+        } else {
+            cacheService.cacheDate(userLoginId, repaymentDate);
+        }
+
+        return SavedResponse.success(userLoginId);
     }
 
     @Transactional
-    public UpdateCreditLimitResponse updateUserCreditLimit(UpdateCreditLimitRequest updateCreditRequest) {
-        User user = findUserbyLoginId(updateCreditRequest.getUserId());
-        Payment payment = getPaymentByUserId(user.getId());
-        payment.changeCreditLimit(updateCreditRequest.getCreditLimit());
+    public PaymentInformationResponse getPaymentInformation(String userLoginId) {
+        final PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        final User user = paymentUser.getUser();
+
+        if (paymentUser.isJoined()) {
+            Payment payment = paymentUser.getPayment();
+            String repaymentAccount = payment.getRepaymentAccountNumber();
+            UserAccountResponse userAccountResponse = fetchUserAccount(new UserAccountRequest(repaymentAccount));
+            String accountCompanyCode = userAccountResponse.getCompanyCode();
+            AccountDto accountDto = AccountDto.builder()
+                    .accountNumber(repaymentAccount)
+                    .companyCode(accountCompanyCode)
+                    .companyName(BankCategory.fromCode(accountCompanyCode))
+                    .category("01")
+                    .build();
+
+
+            PaymentInformationResponse paymentInformationResponse = PaymentInformationResponse.builder()
+                    .repaymentAccount(accountDto)
+                    .repaymentDate(payment.getRepaymentDate())
+                    .currentLimit(payment.getCreditLimit())
+                    .mortgagedStocks(new ArrayList<>())
+                    .stockPriorities(new ArrayList<>())
+                    .build();
+
+            List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
+            List<StockPriority> stockPriorities = stockPriorityRepository.findAllStockPrioritiesByUserId(user.getId());
+
+
+            for (MortgagedStock mortgagedStock : mortgagedStocks) {
+                final String stockCode = mortgagedStock.getStockCode();
+                final String companyCode = mortgagedStock.getCompanyCode();
+                final int previousStockPrice = fetchStoredPrice(stockCode);
+                StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
+                        .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
+                final int stabilityLevel = stockInformation.getStabilityLevel();
+                MortgagedStockDto mortgagedStockDto = MortgagedStockDto.builder()
+                        .accountNumber(mortgagedStock.getAccountNumber())
+                        .quantity(mortgagedStock.getQuantity())
+                        .stockCode(mortgagedStock.getStockCode())
+                        .stockName(stockInformation.getName())
+                        .companyCode(companyCode)
+                        .companyName(SecuritiesCategory.getCompanyNamefromCode(companyCode))
+                        .stabilityLevel(stabilityLevel)
+                        .stockPrice(previousStockPrice)
+                        .limitPrice(StockStability.calculateLimitPrice(stabilityLevel, previousStockPrice))
+                        .build();
+
+                paymentInformationResponse.addMortgagedStock(mortgagedStockDto);
+            }
+
+            for (StockPriority stockPriority : stockPriorities) {
+                final String stockCode = stockPriority.getStockCode();
+                final int previousStockPrice = fetchStoredPrice(stockCode);
+                final String companyCode = stockPriority.getCompanyCode();
+                StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
+                        .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
+                final int stabilityLevel = stockInformation.getStabilityLevel();
+
+                StockPriorityDto stockPriorityDto = StockPriorityDto.builder()
+                        .accountNumber(stockPriority.getAccountNumber())
+                        .quantity(stockPriority.getQuantity())
+                        .stockCode(stockPriority.getStockCode())
+                        .stockName(stockInformation.getName())
+                        .stockRank(stockPriority.getStockRank())
+                        .companyCode(companyCode)
+                        .companyName(SecuritiesCategory.getCompanyNamefromCode(companyCode))
+                        .stabilityLevel(stabilityLevel)
+                        .stockPrice(previousStockPrice)
+                        .limitPrice(StockStability.calculateLimitPrice(stabilityLevel, previousStockPrice))
+                        .build();
+
+                paymentInformationResponse.addStockPriority(stockPriorityDto);
+            }
+
+            return paymentInformationResponse;
+        } else {
+            return PaymentInformationResponse.builder()
+                    .repaymentAccount(cacheService.getCachedAccount(userLoginId))
+                    .repaymentDate(cacheService.getCachedDate(userLoginId))
+                    .currentLimit(cacheService.getCachedLimit(userLoginId))
+                    .mortgagedStocks(cacheService.getCachedMortgagedStocks(userLoginId))
+                    .stockPriorities(cacheService.getCachedStockPriorities(userLoginId))
+                    .build();
+        }
+    }
+
+    @Transactional
+    public CheckUserJoinedPaymentServiceResponse checkUserJoinedPaymentService(String userLoginId) {
+        final PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        return new CheckUserJoinedPaymentServiceResponse(userLoginId, paymentUser.isJoined());
+    }
+
+    @Transactional
+    public SavedResponse joinPaymentService(JoinPaymentServiceRequest joinPaymentServiceRequest) {
+        final String userLoginId = joinPaymentServiceRequest.getLoginId();
+        final User user = findUserbyLoginId(userLoginId);
+        Payment payment = Payment.builder()
+                .user(user)
+                .creditLimit(cacheService.getCachedLimit(userLoginId))
+                .repaymentDate(cacheService.getCachedDate(userLoginId))
+                .password(joinPaymentServiceRequest.getPaymentPassword())
+                .repaymentAccountNumber(cacheService.getCachedAccount(userLoginId).getAccountNumber())
+                .build();
+
         paymentRepository.save(payment);
-        return UpdateCreditLimitResponse.success(updateCreditRequest.getUserId());
+        saveMortgagedStocks(cacheService.getCachedMortgagedStocks(userLoginId), user);
+        saveStockPriorities(cacheService.getCachedStockPriorities(userLoginId), user);
+
+        return SavedResponse.success(userLoginId);
     }
 
-    @Transactional
-    public UpdateMortgagedStockResponse updateUserMortgagedStock(UpdateMortgagedStockResquest updateMortgagedStockResquest) {
-        User user = findUserbyLoginId(updateMortgagedStockResquest.getUserId());
-        List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
-        mortgagedStockRepository.deleteAll(mortgagedStocks);
-        saveMortgagedStocks(updateMortgagedStockResquest.getMortgagedStocks(), user);
-
-        List<StockPriority> stockPriorities = stockPriorityRepository.findAllStockPrioritiesByUserId(user.getId());
-        stockPriorityRepository.deleteAll(stockPriorities);
-        savePriorityStocks(updateMortgagedStockResquest.getPriorityStocks(), user);
-
-        return UpdateMortgagedStockResponse.success(updateMortgagedStockResquest.getUserId());
-    }
-
-
-    @Transactional
-    public UpdateRepaymentAccountResponse updateUserRepaymentAccount(UpdateRepaymentAccountRequest updateRepaymentAccountRequest) {
-        User user = findUserbyLoginId(updateRepaymentAccountRequest.getUserId());
-        Payment payment = getPaymentByUserId(user.getId());
-        payment.changeRepaymentAccountNumber(updateRepaymentAccountRequest.getRepaymentAccountNumber());
-        paymentRepository.save(payment);
-        return UpdateRepaymentAccountResponse.success(updateRepaymentAccountRequest.getUserId());
-    }
 
     private Payment getPaymentByUserId(Long userId) {
         return paymentRepository.findPaymentByUserId(userId)
@@ -147,57 +427,38 @@ public class ManagementService {
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾지 못했습니다."));
     }
 
-    private int fetchPreviousStockPrice(String stockCode) {
-        Mono<PreviousStockPriceResponse> previousStockPriceResponseMono = webClient.get()
-                .uri("{baseUrl}/securities/stocks/{stockCode}", baseUrl, stockCode)
-                .retrieve()
-                .bodyToMono(PreviousStockPriceResponse.class);
-        PreviousStockPriceResponse previousStockPriceResponse = previousStockPriceResponseMono.block();
-
-        return previousStockPriceResponse.getAmount();
-    }
-
-
     private UserAccountsResponse fetchUserAccounts(UserAccountsRequest userAccountsRequest) {
-        UserAccountsResponse response = webClient.post()
+        Mono<UserAccountsResponse> userAccountsResponseMono = webClient.post()
                 .uri("{baseUrl}/mydata/accounts", baseUrl)
                 .bodyValue(userAccountsRequest)
                 .retrieve()
-                .bodyToMono(UserAccountsResponse.class)
-                .block();
+                .bodyToMono(UserAccountsResponse.class);
 
-        if (response != null && response.getAccounts() != null) {
-            List<UserAccountResponse> filteredAccounts = response.getAccounts().stream()
-                    .filter(account -> "01".equals(account.getCategory()))
-                    .collect(Collectors.toList());
+        UserAccountsResponse userAccountsResponse = userAccountsResponseMono.block();
 
-            UserAccountsResponse filteredResponse = new UserAccountsResponse();
-            filteredResponse.setAccounts(filteredAccounts);
-
-            return filteredResponse;
-        }
-
-        return new UserAccountsResponse();
+        return userAccountsResponse;
     }
 
-    private void savePayment(PaymentsJoinRequest paymentsJoinRequest, User user) {
-        paymentRepository.save(Payment.builder()
-                .user(user)
-                .creditLimit(paymentsJoinRequest.getCreditLimit())
-                .repaymentDate(paymentsJoinRequest.getRepaymentDate())
-                .password(paymentsJoinRequest.getPassword())
-                .repaymentAccountNumber(paymentsJoinRequest.getRepaymentAccountNumber())
-                .build());
+    private UserAccountResponse fetchUserAccount(UserAccountRequest userAccountRequest) {
+        Mono<UserAccountResponse> userAccountResponseMono = webClient.post()
+                .uri("{baseUrl}/mydata/accounts/deposits", baseUrl)
+                .bodyValue(userAccountRequest)
+                .retrieve()
+                .bodyToMono(UserAccountResponse.class);
+
+        UserAccountResponse userAccountResponse = userAccountResponseMono.block();
+
+        return userAccountResponse;
     }
 
-    private void saveMortgagedStocks(List<MortgagedStockRequest> morgagedStocksRequests, User user) {
+    private void saveMortgagedStocks(List<MortgagedStockDto> mortgagedStockDtos, User user) {
         List<MortgagedStock> mortgagedStocks = new ArrayList<>();
-        for (MortgagedStockRequest mortgagedStockRequest : morgagedStocksRequests) {
+        for (MortgagedStockDto mortgagedStockDto : mortgagedStockDtos) {
             mortgagedStocks.add(MortgagedStock.builder()
-                    .accountNumber(mortgagedStockRequest.getAccountNumber())
-                    .quantity(mortgagedStockRequest.getQuantity())
-                    .stockCode(mortgagedStockRequest.getStockCode())
-                    .companyCode(mortgagedStockRequest.getCompanyCode())
+                    .accountNumber(mortgagedStockDto.getAccountNumber())
+                    .quantity(mortgagedStockDto.getQuantity())
+                    .stockCode(mortgagedStockDto.getStockCode())
+                    .companyCode(mortgagedStockDto.getCompanyCode())
                     .user(user)
                     .build());
         }
@@ -205,19 +466,47 @@ public class ManagementService {
         mortgagedStockRepository.saveAll(mortgagedStocks);
     }
 
-    private void savePriorityStocks(List<StockPriorityRequest> stockPriorityRequests, User user) {
+    private void saveStockPriorities(List<StockPriorityDto> stockPriorityDtos, User user) {
         List<StockPriority> stockPriorities = new ArrayList<>();
-        for (StockPriorityRequest stockPriorityRequest : stockPriorityRequests) {
+        for (StockPriorityDto stockPriorityDto : stockPriorityDtos) {
             stockPriorities.add(StockPriority.builder()
-                    .accountNumber(stockPriorityRequest.getAccountNumber())
-                    .stockRank(stockPriorityRequest.getStockRank())
-                    .quantity(stockPriorityRequest.getQuantity())
-                    .stockCode(stockPriorityRequest.getStockCode())
-                    .companyCode(stockPriorityRequest.getCompanyCode())
-                    .user(user)
-                    .build());
+                        .accountNumber(stockPriorityDto.getAccountNumber())
+                        .stockRank(stockPriorityDto.getStockRank())
+                        .quantity(stockPriorityDto.getQuantity())
+                        .stockCode(stockPriorityDto.getStockCode())
+                        .companyCode(stockPriorityDto.getCompanyCode())
+                        .user(user)
+                        .build());
         }
 
         stockPriorityRepository.saveAll(stockPriorities);
+    }
+
+    private Integer fetchStoredPrice(String stockCode) {
+        String key = "price:" + stockCode;
+        return (Integer) redisTemplate.opsForValue().get(key);
+    }
+
+    private PaymentUser checkPaymentUser(String loginId) {
+        User user = findUserbyLoginId(loginId);
+        PaymentUser paymentUser = new PaymentUser(true, null, user);
+
+        Payment payment = paymentRepository.findPaymentByUserId(user.getId())
+                .orElseGet(() -> {
+                    paymentUser.setJoined(false);
+                    return null;
+                });
+        paymentUser.setPayment(payment);
+
+        return paymentUser;
+    }
+
+    @Setter
+    @Getter
+    @AllArgsConstructor
+    private class PaymentUser {
+        private boolean isJoined;
+        private Payment payment;
+        private User user;
     }
 }
