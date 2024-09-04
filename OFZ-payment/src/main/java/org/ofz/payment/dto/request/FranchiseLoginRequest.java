@@ -16,4 +16,5 @@ public class FranchiseLoginRequest {
         this.code = code;
         this.password = password;
     }
+
 }
