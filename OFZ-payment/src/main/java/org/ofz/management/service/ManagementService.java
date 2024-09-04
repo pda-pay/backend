@@ -13,7 +13,6 @@ import org.ofz.management.dto.api.response.*;
 import org.ofz.management.dto.database.UserStockProjection;
 import org.ofz.management.dto.partners.request.UserAccountRequest;
 import org.ofz.management.dto.partners.request.UserAccountsRequest;
-import org.ofz.management.dto.partners.response.PreviousStockPriceResponse;
 import org.ofz.management.dto.partners.response.UserAccountResponse;
 import org.ofz.management.dto.partners.response.UserAccountsResponse;
 import org.ofz.management.entity.MortgagedStock;
@@ -429,16 +428,6 @@ public class ManagementService {
     private User findUserbyLoginId(String userId) {
         return userRepository.findByLoginId(userId)
                 .orElseThrow(() -> new UserNotFoundException("사용자를 찾지 못했습니다."));
-    }
-
-    private int fetchPreviousStockPrice(String stockCode) {
-        Mono<PreviousStockPriceResponse> previousStockPriceResponseMono = webClient.get()
-                .uri("{baseUrl}/securities/stocks/{stockCode}", baseUrl, stockCode)
-                .retrieve()
-                .bodyToMono(PreviousStockPriceResponse.class);
-        PreviousStockPriceResponse previousStockPriceResponse = previousStockPriceResponseMono.block();
-
-        return previousStockPriceResponse.getAmount();
     }
 
     private UserAccountsResponse fetchUserAccounts(UserAccountsRequest userAccountsRequest) {
