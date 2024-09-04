@@ -1,4 +1,4 @@
-package org.ofz.management.entity;
+package org.ofz.management;
 
 import jakarta.persistence.*;
 import lombok.Getter;

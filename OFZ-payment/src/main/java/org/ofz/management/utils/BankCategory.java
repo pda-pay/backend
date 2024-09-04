@@ -34,13 +34,13 @@ public enum BankCategory {
         return name;
     }
 
-    public static BankCategory fromCode(String code) {
+    public static String fromCode(String code) {
         BankCategory category = CODE_MAP.get(code);
 
         if (category == null) {
             throw new IllegalArgumentException("Invalid bank code: " + code);
         }
 
-        return category;
+        return category.getName();
     }
 }

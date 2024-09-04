@@ -1,4 +1,4 @@
-package org.ofz.management.dto;
+package org.ofz.management.dto.partners.request;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

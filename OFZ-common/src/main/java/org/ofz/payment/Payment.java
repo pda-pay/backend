@@ -79,4 +79,8 @@ public class Payment {
     public void changeRepaymentAccountNumber(String repaymentAccountNumber) {
         this.repaymentAccountNumber = repaymentAccountNumber;
     }
+
+    public void changeRepaymentDate(int repaymentDate) {
+        this.repaymentDate = repaymentDate;
+    }
 }

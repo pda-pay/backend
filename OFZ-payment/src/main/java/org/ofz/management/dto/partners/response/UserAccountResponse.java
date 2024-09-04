@@ -1,4 +1,4 @@
-package org.ofz.management.dto;
+package org.ofz.management.dto.partners.response;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -6,8 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class UserAccountResponse {
-    private String accountNumber;
     private int deposit;
     private String companyCode;
-    private String category;
 }
