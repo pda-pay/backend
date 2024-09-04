@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -163,6 +164,7 @@ public class RepaymentService {
      * @param payment 상환 대상자
      */
     @Transactional
+    @Async
     public void processSuccessfulRepayment(Payment payment) {
         logger.info("상환 성공 처리를 시작합니다. 대상자 ID: {}, 실행 스레드: {}", payment.getId(), Thread.currentThread().getName());
         int repaymentAmount = payment.getPreviousMonthDebt();
@@ -193,6 +195,7 @@ public class RepaymentService {
      * @param payment 상환 대상자
      */
     @Transactional
+    @Async
     public void processPartialRepayment(Payment payment) {
         logger.info("상환 일부 처리를 시작합니다. 대상자 ID: {}, 실행 스레드: {}", payment.getId(), Thread.currentThread().getName());
         int accountDeposit = getAccountDeposit(payment.getRepaymentAccountNumber());
@@ -227,6 +230,7 @@ public class RepaymentService {
      * @param payment 상환 대상자
      */
     @Transactional
+    @Async
     public void processFailedRepayment(Payment payment) {
         logger.info("상환 실패 처리를 시작합니다. 대상자 ID: {}, 실행 스레드: {}", payment.getId(), Thread.currentThread().getName());
         payment.disablePay(); // 서비스 중지
