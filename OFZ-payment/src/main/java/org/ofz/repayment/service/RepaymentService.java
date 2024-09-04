@@ -37,9 +37,7 @@ public class RepaymentService {
     private final RepaymentHistoryRepository repaymentHistoryRepository;
     private final AccountUtils accountUtils;
 
-    public PaymentInfoResponse getPaymentInfo(RepaymentUserRequest repaymentUserRequest) {
-
-        Long userId = repaymentUserRequest.getUserId();
+    public PaymentInfoResponse getPaymentInfo(Long userId) {
 
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
@@ -62,9 +60,7 @@ public class RepaymentService {
                 .build();
     }
 
-    public List<PaymentHistoriesResponse.PaymentHistoryDTO> getPaymentHistory(int month, PaymentHistoryRequest paymentHistoryRequest) {
-
-        Long userId = paymentHistoryRequest.getUserId();
+    public List<PaymentHistoriesResponse.PaymentHistoryDTO> getPaymentHistory(int month, Long userId) {
 
         User user = userRepository
                 .findById(userId)
@@ -73,9 +69,8 @@ public class RepaymentService {
         return paymentHistoryRepository.findPaymentHistoryByUserIdAndMonth(user.getId(), month);
     }
 
-    public RepaymentAccountResponse getPaymentAccount(RepaymentUserRequest repaymentUserRequest) {
+    public RepaymentAccountResponse getPaymentAccount(Long userId) {
 
-        Long userId = repaymentUserRequest.getUserId();
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));
@@ -92,9 +87,8 @@ public class RepaymentService {
                 .build();
     }
 
-    public MonthlyDebtResponse getMonthlyDebt(RepaymentUserRequest repaymentUserRequest) {
+    public MonthlyDebtResponse getMonthlyDebt(Long userId) {
 
-        Long userId = repaymentUserRequest.getUserId();
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));

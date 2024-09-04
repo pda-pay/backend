@@ -16,13 +16,13 @@ public class ManagementController {
     private final ManagementService managementService;
 
     @GetMapping("/users/stocks")
-    public ResponseEntity<UserStockResponse> getUserStocks(@RequestHeader("X-USER-ID") String userId) {
+    public ResponseEntity<UserStockResponse> getUserStocks(@RequestHeader("X-LOGIN-ID") String userId) {
         UserStockResponse userStockResponse = managementService.getUserStocks(userId);
         return ResponseEntity.status(HttpStatus.OK).body(userStockResponse);
     }
 
     @PutMapping("/users/mortgaed-stocks")
-    public ResponseEntity<SavedResponse> saveUserMortgagedStocks(@RequestHeader("X-USER-ID") String userId, @RequestBody SaveMortgagedStockRequest saveMortgagedStockRequest) {
+    public ResponseEntity<SavedResponse> saveUserMortgagedStocks(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveMortgagedStockRequest saveMortgagedStockRequest) {
         saveMortgagedStockRequest.setLoginId(userId);
         SavedResponse saveMortgagedStockResponse = managementService.saveMortgagedStockInformation(saveMortgagedStockRequest);
 
@@ -30,13 +30,13 @@ public class ManagementController {
     }
 
     @GetMapping("/users/stock-priorities")
-    public ResponseEntity<UserMortgagedStockStockPriorityResponse> getUserStockPriorities(@RequestHeader("X-USER-ID") String userId) {
+    public ResponseEntity<UserMortgagedStockStockPriorityResponse> getUserStockPriorities(@RequestHeader("X-LOGIN-ID") String userId) {
         UserMortgagedStockStockPriorityResponse userMortgagedStockStockPriorityResponse = managementService.getUserMortgagedStockStockPriority(userId);
         return ResponseEntity.status(HttpStatus.OK).body(userMortgagedStockStockPriorityResponse);
     }
 
     @PutMapping("/users/stock-priorities")
-    public ResponseEntity<SavedResponse> saveUserStockPriorities(@RequestHeader("X-USER-ID") String userId, @RequestBody SaveStockPriorityRequest saveStockPriorityRequest) {
+    public ResponseEntity<SavedResponse> saveUserStockPriorities(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveStockPriorityRequest saveStockPriorityRequest) {
         saveStockPriorityRequest.setLoginId(userId);
         SavedResponse saveStockPriorityResponse = managementService.saveStockPriorityInformation(saveStockPriorityRequest);
 
@@ -44,14 +44,14 @@ public class ManagementController {
     }
 
     @GetMapping("/users/limit-information")
-    public ResponseEntity<UserLimitResponse> getUserLimitInformation(@RequestHeader("X-USER-ID") String userId) {
+    public ResponseEntity<UserLimitResponse> getUserLimitInformation(@RequestHeader("X-LOGIN-ID") String userId) {
         UserLimitResponse userLimitInformation = managementService.getUserLimitInformation(userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(userLimitInformation);
     }
 
     @PutMapping("/users/limit-information")
-    public ResponseEntity<SavedResponse> saveUserLimitInformation(@RequestHeader("X-USER-ID") String userId, @RequestBody SaveLimitInformationRequest saveLimitInformationRequest) {
+    public ResponseEntity<SavedResponse> saveUserLimitInformation(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveLimitInformationRequest saveLimitInformationRequest) {
         saveLimitInformationRequest.setLoginId(userId);
         SavedResponse saveLimitInformationResponse = managementService.saveLimitInformation(saveLimitInformationRequest);
 
@@ -59,14 +59,14 @@ public class ManagementController {
     }
 
     @GetMapping("/users/accounts")
-    public ResponseEntity<UserAccountInformationResponse> getUserAccountInformation(@RequestHeader("X-USER-ID") String userId) {
+    public ResponseEntity<UserAccountInformationResponse> getUserAccountInformation(@RequestHeader("X-LOGIN-ID") String userId) {
         UserAccountInformationResponse userAccountInformationResponse = managementService.getUserAccountInformation(userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(userAccountInformationResponse);
     }
 
     @PutMapping("/users/accounts")
-    public ResponseEntity<SavedResponse> saveUserRepaymentAccount(@RequestHeader("X-USER-ID") String userId, @RequestBody SaveRepaymentAccountRequest saveRepaymentAccountRequest) {
+    public ResponseEntity<SavedResponse> saveUserRepaymentAccount(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveRepaymentAccountRequest saveRepaymentAccountRequest) {
         saveRepaymentAccountRequest.setLoginId(userId);
         SavedResponse saveRepaymentAccountResponse = managementService.saveRepaymentAccount(saveRepaymentAccountRequest);
 
@@ -74,7 +74,7 @@ public class ManagementController {
     }
 
     @PutMapping("/users/repayment-date")
-    public ResponseEntity<SavedResponse> saveUserRepaymentDate(@RequestHeader("X-USER-ID") String userId, @RequestBody SaveRepaymentDateRequest saveRepaymentDateRequest) {
+    public ResponseEntity<SavedResponse> saveUserRepaymentDate(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveRepaymentDateRequest saveRepaymentDateRequest) {
         saveRepaymentDateRequest.setLoginId(userId);
         SavedResponse saveRepaymentDateResponse = managementService.saveRepaymentDate(saveRepaymentDateRequest);
 
@@ -82,20 +82,20 @@ public class ManagementController {
     }
 
     @GetMapping("/users/information")
-    public ResponseEntity<PaymentInformationResponse> getUserPaymentInformation(@RequestHeader("X-USER-ID") String userId) {
+    public ResponseEntity<PaymentInformationResponse> getUserPaymentInformation(@RequestHeader("X-LOGIN-ID") String userId) {
         PaymentInformationResponse paymentInformationResponse = managementService.getPaymentInformation(userId);
 
         return ResponseEntity.status(HttpStatus.OK).body(paymentInformationResponse);
     }
 
     @GetMapping("/users/join")
-    public ResponseEntity<CheckUserJoinedPaymentServiceResponse> checkUserJoinedPaymentService(@RequestHeader("X-USER-ID") String userId) {
+    public ResponseEntity<CheckUserJoinedPaymentServiceResponse> checkUserJoinedPaymentService(@RequestHeader("X-LOGIN-ID") String userId) {
         CheckUserJoinedPaymentServiceResponse checkUserJoinedPaymentService = managementService.checkUserJoinedPaymentService(userId);
         return ResponseEntity.status(HttpStatus.OK).body(checkUserJoinedPaymentService);
     }
 
     @PostMapping("/users/join")
-    public ResponseEntity<SavedResponse> joinPaymentService(@RequestHeader("X-USER-ID") String userId, @RequestBody JoinPaymentServiceRequest joinPaymentServiceRequest) {
+    public ResponseEntity<SavedResponse> joinPaymentService(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody JoinPaymentServiceRequest joinPaymentServiceRequest) {
         joinPaymentServiceRequest.setLoginId(userId);
         SavedResponse savePaymentServiceResponse = managementService.joinPaymentService(joinPaymentServiceRequest);
 
