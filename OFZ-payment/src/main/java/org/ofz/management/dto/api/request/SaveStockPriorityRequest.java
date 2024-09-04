@@ -9,6 +9,10 @@ import java.util.List;
 @Getter
 @RequiredArgsConstructor
 public class SaveStockPriorityRequest {
-    private final String loginId;
+    private String loginId;
     private final List<StockPriorityDto> stockPriorities;
+
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
+    }
 }

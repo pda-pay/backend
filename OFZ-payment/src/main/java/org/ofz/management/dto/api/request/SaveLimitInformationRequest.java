@@ -6,6 +6,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class SaveLimitInformationRequest {
-    private final String loginId;
+    private String loginId;
     private final int currentLimit;
+
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
+    }
 }
