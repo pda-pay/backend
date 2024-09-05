@@ -1,0 +1,68 @@
+# .github/workflows/deploy-asset.yml
+name: Deploy asset
+
+on:
+  workflow_dispatch:
+  
+  push:
+    branches:
+      - develop
+    paths:
+      - 'OFZ-asset/**'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build and deploy Eureka
+        run: |
+          ./gradlew OFZ-asset:build
+          echo "complete"
+
+      - name: make deployment package
+        run: |
+          ZIP_FILE="OFZ-asset.zip"
+
+          mkdir -p deploy-package
+          
+          cp -r OFZ-asset/build/libs/*.jar deploy-package/
+          cp scripts/asset/appspec.yml deploy-package/          
+          cp scripts/asset/deploy.sh deploy-package/
+
+          cd deploy-package
+          zip -r ../$ZIP_FILE .
+          cd ..
+          ls -la $ZIP_FILE
+
+      - name: Upload to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.CODE_DEPLOY_ACCESS }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CODE_DEPLOY_SECRET }}
+        run: |
+          ZIP_FILE="OFZ-asset.zip"
+          aws s3 cp ./$ZIP_FILE s3://ofz-deploy/$ZIP_FILE --region ap-northeast-2
+
+      - name: Deploy to CodeDeploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.CODE_DEPLOY_ACCESS }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CODE_DEPLOY_SECRET }}
+        run: |
+          ZIP_FILE="OFZ-asset.zip"
+          echo "Deploying $ZIP_FILE using CodeDeploy"
+          aws deploy create-deployment \
+            --application-name ofz-deploy   \
+            --deployment-group-name ofz-asset \
+            --s3-location bucket=ofz-deploy,key=$ZIP_FILE,bundleType=zip \
+            --region ap-northeast-2
