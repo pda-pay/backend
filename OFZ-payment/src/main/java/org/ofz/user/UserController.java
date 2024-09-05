@@ -52,12 +52,12 @@ public class UserController {
         JwtToken jwtToken = jwtTokenProvider.generateToken(userLoginReq.getLoginId());
 
         Cookie accessTokenCookie = new Cookie("accessToken", jwtToken.getAccessToken());
-        accessTokenCookie.setHttpOnly(true);
+//        accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setPath("/");
         accessTokenCookie.setMaxAge(30 * 60 * 60);
 
         Cookie refreshTokenCookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
-        refreshTokenCookie.setHttpOnly(true);
+//        refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setPath("/");
         refreshTokenCookie.setMaxAge(30 * 60 * 60);
 

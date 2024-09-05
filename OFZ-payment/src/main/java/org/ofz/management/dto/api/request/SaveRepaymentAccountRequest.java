@@ -8,7 +8,7 @@ import org.ofz.management.dto.common.AccountDto;
 @RequiredArgsConstructor
 public class SaveRepaymentAccountRequest {
     private String loginId;
-    private final AccountDto repaymentAccount;
+    private AccountDto repaymentAccount;
 
     public void setLoginId(String loginId) {
         this.loginId = loginId;

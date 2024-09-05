@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JoinPaymentServiceRequest {
     private String loginId;
-    private final String paymentPassword;
+    private String paymentPassword;
 
     public void setLoginId(String loginId) {
         this.loginId = loginId;
