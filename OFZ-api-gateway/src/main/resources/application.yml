@@ -31,6 +31,7 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
+              - "https://140pay.site"
               - "http://localhost:5173"
             allow-credentials: true
             allowedHeaders:
