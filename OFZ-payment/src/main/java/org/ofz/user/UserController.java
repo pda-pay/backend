@@ -57,6 +57,7 @@ public class UserController {
                 .maxAge(30 * 60 * 60)
                 .sameSite("None")
                 .secure(true)
+                .httpOnly(true)
                 .build();
 
 //        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
