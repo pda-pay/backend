@@ -101,7 +101,7 @@ public class AccountUtils {
         return response;
     }
 
-    public synchronized AccountDepositResponse fetchDepositToAccount(String accountNumber, int value) {
+    public AccountDepositResponse fetchDepositToAccount(String accountNumber, int value) {
         AccountDepositResponse response = null;
 
         Map<String, Object> request = new HashMap<>();

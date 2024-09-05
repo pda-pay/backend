@@ -33,6 +33,8 @@ jwt:
 
 webclient:
   base-url: ${PARTNERS_URL}
+authentication:
+  signature: ${TRIGGER_PASSWORD}
 
 
 ---

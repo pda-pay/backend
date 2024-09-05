@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class RedisUtil {
     private final RedisTemplate<String, Object> redisTemplate;
     private static final String LOGOUT_PREFIX = "logoutList:";
+    private static final String PREVIOUS_PRICE_PREFIX = "price:";
 
     public void addBlackList(String token, Long expiration){
         redisTemplate.opsForValue().set(LOGOUT_PREFIX + token, "logout", Duration.ofMillis(expiration));
@@ -31,5 +32,10 @@ public class RedisUtil {
 
     public void deletePaymentToken(String token) {
         redisTemplate.delete(token);
+    }
+
+    public Integer fetchStoredPreviousPrice(String stockCode) {
+        String key = PREVIOUS_PRICE_PREFIX + stockCode;
+        return (Integer) redisTemplate.opsForValue().get(key);
     }
 }

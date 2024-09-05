@@ -14,7 +14,7 @@ public class UserAccountsResponse {
 
     public List<UserAccountDto> getBankAccounts() {
         List<UserAccountDto> userAccountDtos = new ArrayList<>();
-        for (UserAccountDto userAccountDto : userAccountDtos) {
+        for (UserAccountDto userAccountDto : accounts) {
             if (userAccountDto.getCategory().equals("01")) {
                 userAccountDtos.add(userAccountDto);
             }

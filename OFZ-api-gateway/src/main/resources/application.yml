@@ -18,6 +18,12 @@ spring:
   application:
     name: api-gateway
 
+  rabbitmq:
+    port: ${RABBITMQ_PORT}
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
   redis:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
@@ -30,6 +36,7 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
+              - "https://140pay.site"
               - "http://localhost:5173"
             allow-credentials: true
             allowedHeaders:
@@ -48,12 +55,20 @@ spring:
               - DELETE
 
       routes:
+        - id: users-loginSession
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/users/validation, /api/users/login, /api/users/signup, /api/users/sms-request, /api/users/sms-verification, /api/payment/socket
+          filters:
+            - StripPrefix=1
+
         - id: users
           uri: lb://payment-service
           predicates:
             - Path=/api/users/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
         - id: payment
           uri: lb://payment-service
@@ -61,6 +76,7 @@ spring:
             - Path=/api/payment/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
             
         - id: franchise
           uri: lb://payment-service
@@ -75,6 +91,7 @@ spring:
             - Path=/api/schedule/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
         - id: notification-service
           uri: lb://notification-service
@@ -82,6 +99,7 @@ spring:
             - Path=/api/notification/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
         - id: asset-service
           uri: lb://asset-service
@@ -89,6 +107,7 @@ spring:
             - Path=/api/asset/**
           filters:
             - StripPrefix=1
+            - LoginJWTFilter
 
 
 server:
@@ -96,7 +115,6 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
-
 ---
 spring:
   config:
@@ -135,3 +153,9 @@ eureka:
       defaultZone: ${OFZ_EUREKA_URL}
   server:
     wait-time-in-ms-when-sync-empty: 5
+
+server:
+  ssl:
+    key-store: file:/home/ubuntu/OFZ-api-gateway/keystore.p12
+    key-store-type: PKCS12
+    key-store-password: ${SSL_PASSWORD}

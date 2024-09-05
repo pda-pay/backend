@@ -84,6 +84,16 @@ public class Payment {
         this.repaymentAccountNumber = repaymentAccountNumber;
     }
 
+    public void deductRepaymentAmount(int repaymentAmount) {
+
+        this.previousMonthDebt -= repaymentAmount;
+
+        if (this.previousMonthDebt < 0) {
+            this.currentMonthDebt += previousMonthDebt;
+            this.previousMonthDebt = 0;
+        }
+    }
+
     public void changeRepaymentDate(int repaymentDate) {
         this.repaymentDate = repaymentDate;
     }

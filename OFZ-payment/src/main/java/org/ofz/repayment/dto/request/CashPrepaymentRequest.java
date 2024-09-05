@@ -11,7 +11,10 @@ public class CashPrepaymentRequest {
     public CashPrepaymentRequest() {}
 
     public CashPrepaymentRequest(Long userId, int amount) {
-        this.userId = userId;
         this.amount = amount;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 }

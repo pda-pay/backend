@@ -6,6 +6,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public class JoinPaymentServiceRequest {
-    private final String loginId;
-    private final String paymentPassword;
+    private String loginId;
+    private String paymentPassword;
+
+    public void setLoginId(String loginId) {
+        this.loginId = loginId;
+    }
 }

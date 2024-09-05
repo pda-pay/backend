@@ -177,7 +177,7 @@ public class ManagementService {
     public SavedResponse saveStockPriorityInformation(SaveStockPriorityRequest saveStockPriorityRequest) {
         PaymentUser paymentUser = checkPaymentUser(saveStockPriorityRequest.getLoginId());
         User user = paymentUser.getUser();
-        List<StockPriorityDto> stockPriorityDtos = saveStockPriorityRequest.getStockPriorityDtos();
+        List<StockPriorityDto> stockPriorityDtos = saveStockPriorityRequest.getStockPriorities();
 
         if (paymentUser.isJoined()) {
             List<StockPriority> stockPriorities = stockPriorityRepository.findAllStockPrioritiesByUserId(user.getId());
