@@ -113,8 +113,8 @@ server:
     key-store-password: ${SSL_PASSWORD}
 
 jwt:
-  secret: ${JWT_SECRET}
----
+  secret: ${JWT_SECRET}---
+
 spring:
   config:
     activate:
