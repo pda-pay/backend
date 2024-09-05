@@ -12,6 +12,7 @@ import org.ofz.user.dto.UserSignupReq;
 import org.ofz.user.dto.UserValidateLoginIdReq;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -51,18 +52,19 @@ public class UserController {
 
         JwtToken jwtToken = jwtTokenProvider.generateToken(userLoginReq.getLoginId());
 
-        Cookie accessTokenCookie = new Cookie("accessToken", jwtToken.getAccessToken());
-//        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setPath("/");
-        accessTokenCookie.setMaxAge(30 * 60 * 60);
+        ResponseCookie accessTokenCookie = ResponseCookie.from( "accessToken", jwtToken.getAccessToken())
+                .path("/")
+                .maxAge(30 * 60 * 60)
+                .sameSite("None")
+                .build();
 
-        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
+//        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
 //        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setPath("/");
-        refreshTokenCookie.setMaxAge(30 * 60 * 60);
+//        refreshTokenCookie.setPath("/");
+//        refreshTokenCookie.setMaxAge(30 * 60 * 60);
 
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
+//        response.addCookie(refreshTokenCookie);
 
         return new ResponseEntity<>(userLoginRes, HttpStatus.OK);
     }
