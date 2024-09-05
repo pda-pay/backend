@@ -28,12 +28,14 @@ jobs:
 
       - name: Build and deploy api-gateway
         run: |
+          cd ./src/main/resources
+          touch ./keystore.p12 
+          echo "${{ secret.KEYSTORE }}" | base64 --decode > ./keystore.p12
           ./gradlew OFZ-api-gateway:build
 
       - name: make deployment package
         run: |
           ZIP_FILE="OFZ-api-gateway.zip"
-
           mkdir -p deploy-package
           
           cp -r OFZ-api-gateway/build/libs/*.jar deploy-package/
