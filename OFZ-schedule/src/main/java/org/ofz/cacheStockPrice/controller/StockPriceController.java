@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/stock-price")
+@RequestMapping("/schedule/stock-price")
 public class StockPriceController {
     @Value("${authentication.signature}")
     private String authentication;
