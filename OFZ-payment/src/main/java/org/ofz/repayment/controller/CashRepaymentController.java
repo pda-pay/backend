@@ -24,18 +24,6 @@ public class CashRepaymentController {
         return new ResponseEntity<>(paymentInfo, HttpStatus.OK);
     }
 
-    @GetMapping("/payment/history")
-    public ResponseEntity<PaymentHistoriesResponse> getPaymentHistories(@RequestParam("month") int month, @RequestHeader("X-USER-ID") String userId) {
-
-        List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories = repaymentService.getPaymentHistory(month, Long.parseLong(userId));
-
-        if (paymentHistories.isEmpty()) {
-            return ResponseEntity.noContent().build();
-        }
-
-        return new ResponseEntity<>(new PaymentHistoriesResponse(paymentHistories), HttpStatus.OK);
-    }
-
     @GetMapping("/payment/accounts")
     public ResponseEntity<RepaymentAccountResponse> getPaymentAccount(@RequestHeader("X-USER-ID") String userId) {
 

@@ -58,15 +58,6 @@ public class RepaymentService {
                 .build();
     }
 
-    public List<PaymentHistoriesResponse.PaymentHistoryDTO> getPaymentHistory(int month, Long userId) {
-
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("유저 정보가 조회되지 않습니다."));
-
-        return paymentHistoryRepository.findPaymentHistoryByUserIdAndMonth(user.getId(), month);
-    }
-
     public RepaymentAccountResponse getPaymentAccount(Long userId) {
 
         Payment payment = paymentRepository
