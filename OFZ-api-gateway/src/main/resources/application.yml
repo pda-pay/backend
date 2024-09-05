@@ -18,6 +18,11 @@ spring:
   application:
     name: api-gateway
 
+  rabbitmq:
+    port: ${RABBITMQ_PORT}
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
 
   redis:
     host: ${REDIS_HOST}
