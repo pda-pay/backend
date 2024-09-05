@@ -10,7 +10,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SaveMortgagedStockRequest {
     private String loginId;
-    private final List<MortgagedStockDto> mortgagedStocks;
+    private List<MortgagedStockDto> mortgagedStocks;
 
     public void setLoginId(String loginId) {
         this.loginId = loginId;

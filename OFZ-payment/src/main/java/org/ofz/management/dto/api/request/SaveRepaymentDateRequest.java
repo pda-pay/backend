@@ -10,7 +10,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SaveRepaymentDateRequest {
     private String loginId;
-    private final int repaymentDate;
+    private int repaymentDate;
 
     public void setLoginId(String loginId) {
         this.loginId = loginId;
