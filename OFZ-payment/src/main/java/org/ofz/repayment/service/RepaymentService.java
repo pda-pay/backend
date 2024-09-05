@@ -6,16 +6,14 @@ import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.repository.PaymentHistoryRepository;
 import org.ofz.repayment.dto.request.CashPrepaymentRequest;
-import org.ofz.repayment.dto.request.PaymentHistoryRequest;
-import org.ofz.repayment.dto.request.RepaymentUserRequest;
 import org.ofz.repayment.dto.response.*;
 import org.ofz.repayment.utils.AccountUtils;
 import org.ofz.repayment.RepaymentHistory;
 import org.ofz.repayment.RepaymentHistoryRepository;
 import org.ofz.repayment.RepaymentType;
-import org.ofz.repayment.exception.repayment.InvalidCashPrepaymentAmountException;
+import org.ofz.repayment.exception.repayment.InvalidPrepaymentAmountException;
 import org.ofz.repayment.exception.repayment.NoRepaymentRecordsException;
-import org.ofz.repayment.exception.repayment.TooHighCashPrepaymentAmountException;
+import org.ofz.repayment.exception.repayment.TooHighPrepaymentAmountException;
 import org.ofz.repayment.exception.user.UserNotFoundException;
 import org.ofz.user.User;
 import org.ofz.user.UserRepository;
@@ -37,7 +35,7 @@ public class RepaymentService {
     private final RepaymentHistoryRepository repaymentHistoryRepository;
     private final AccountUtils accountUtils;
 
-    public PaymentInfoResponse getPaymentInfo(Long userId) {
+    public PaymentInfoForCashResponse getPaymentInfo(Long userId) {
 
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
@@ -52,21 +50,12 @@ public class RepaymentService {
         Pageable pageable = PageRequest.of(0, 2);
         List<PaymentHistoriesResponse.PaymentHistoryDTO> currentPaymentHistories = paymentHistoryRepository.findPaymentHistoryByUserId(userId, pageable);
 
-        return PaymentInfoResponse.builder()
+        return PaymentInfoForCashResponse.builder()
                 .paymentAmount(thisMonthRepaymentAmount)
                 .creditLimit(creditLimit)
                 .accountDeposit(accountDeposit)
                 .paymentHistories(currentPaymentHistories)
                 .build();
-    }
-
-    public List<PaymentHistoriesResponse.PaymentHistoryDTO> getPaymentHistory(int month, Long userId) {
-
-        User user = userRepository
-                .findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("유저 정보가 조회되지 않습니다."));
-
-        return paymentHistoryRepository.findPaymentHistoryByUserIdAndMonth(user.getId(), month);
     }
 
     public RepaymentAccountResponse getPaymentAccount(Long userId) {
@@ -115,7 +104,7 @@ public class RepaymentService {
         int prepaymentAmount = cashPrepaymentRequest.getAmount();
 
         if (prepaymentAmount <= 0) {
-            throw new InvalidCashPrepaymentAmountException("상환할 금액을 다시 설정해주세요.");
+            throw new InvalidPrepaymentAmountException("상환할 금액을 다시 설정해주세요.");
         }
 
         int previousMonthDebt = payment.getPreviousMonthDebt();
@@ -136,7 +125,7 @@ public class RepaymentService {
             int secondCalculatedPrepaymentAmount = currentMonthDebt + calculatedPrepaymentAmount;
 
             if (secondCalculatedPrepaymentAmount < 0) {
-                throw new TooHighCashPrepaymentAmountException("선결제 금액이 너무 높습니다.");
+                throw new TooHighPrepaymentAmountException("선결제 금액이 너무 높습니다.");
             } else {
                 payment.minusCurrentMonthDebt(-calculatedPrepaymentAmount);
             }

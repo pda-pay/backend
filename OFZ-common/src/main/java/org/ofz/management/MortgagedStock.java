@@ -32,4 +32,8 @@ public class MortgagedStock {
         this.stockCode = stockCode;
         this.user = user;
     }
+
+    public void minusQuantity(int deductionQuantity) {
+        this.quantity -= deductionQuantity;
+    }
 }

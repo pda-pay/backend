@@ -27,4 +27,8 @@ public class Stock {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
+    public void minusQuantity(int deductionQuantity) {
+        this.quantity -= deductionQuantity;
+    }
 }

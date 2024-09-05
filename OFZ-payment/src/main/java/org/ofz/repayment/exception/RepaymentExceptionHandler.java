@@ -2,9 +2,8 @@ package org.ofz.repayment.exception;
 
 import lombok.Builder;
 import lombok.Getter;
-import org.ofz.repayment.exception.repayment.InvalidCashPrepaymentAmountException;
-import org.ofz.repayment.exception.repayment.NoRepaymentRecordsException;
-import org.ofz.repayment.exception.repayment.TooHighCashPrepaymentAmountException;
+import org.ofz.management.exception.FetchPreviousStockPriceException;
+import org.ofz.repayment.exception.repayment.*;
 import org.ofz.repayment.exception.user.UserNotFoundException;
 import org.ofz.repayment.exception.webclient.*;
 import org.springframework.http.HttpStatus;
@@ -28,7 +27,7 @@ public class RepaymentExceptionHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> catchTooHighCashPrepaymentAmountException(TooHighCashPrepaymentAmountException e) {
+    public ResponseEntity<ErrorResponseDTO> catchTooHighPrepaymentAmountException(TooHighPrepaymentAmountException e) {
 
         ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
@@ -98,13 +97,82 @@ public class RepaymentExceptionHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponseDTO> catchInvalidCashPrepaymentAmountException(InvalidCashPrepaymentAmountException e) {
+    public ResponseEntity<ErrorResponseDTO> catchInvalidCashPrepaymentAmountException(InvalidPrepaymentAmountException e) {
 
         ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
                 .message(e.getMessage())
                 .build();
 
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchStockPriorityNotFoundException(StockPriorityNotFoundException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchTooHighPawnStockQuantityException(TooHighPawnStockQuantityException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchMortgagedNotFoundException(MortgagedNotFoundException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchStockNotFoundException(StockNotFoundException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchInvalidPawnExistException(InvalidPawnExistException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchFetchRequestSellStockException(FetchRequestSellStockException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchFetchPreviousStockPriceException(FetchPreviousStockPriceException e) {
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Getter

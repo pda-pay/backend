@@ -9,16 +9,16 @@ import java.util.List;
 @Getter
 @Setter
 @Builder
-public class PaymentInfoResponse {
+public class PaymentInfoForCashResponse {
 
     private int paymentAmount;
     private int creditLimit;
     private int accountDeposit;
     List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories;
 
-    public PaymentInfoResponse() {}
+    public PaymentInfoForCashResponse() {}
 
-    public PaymentInfoResponse(int paymentAmount, int creditLimit, int accountDeposit, List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories) {
+    public PaymentInfoForCashResponse(int paymentAmount, int creditLimit, int accountDeposit, List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories) {
         this.paymentAmount = paymentAmount;
         this.creditLimit = creditLimit;
         this.accountDeposit = accountDeposit;
