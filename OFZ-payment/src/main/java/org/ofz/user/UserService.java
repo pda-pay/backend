@@ -1,7 +1,6 @@
 package org.ofz.user;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.jwt.JwtToken;
 import org.ofz.jwt.JwtTokenProvider;
 import org.ofz.redis.RedisUtil;
 import org.ofz.management.entity.Stock;
