@@ -114,7 +114,6 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
-
 ---
 spring:
   config:
