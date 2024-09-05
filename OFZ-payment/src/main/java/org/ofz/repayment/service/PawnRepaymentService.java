@@ -14,6 +14,9 @@ import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.redis.RedisUtil;
+import org.ofz.repayment.RepaymentHistory;
+import org.ofz.repayment.RepaymentHistoryRepository;
+import org.ofz.repayment.RepaymentType;
 import org.ofz.repayment.dto.MortgagedStockDTO;
 import org.ofz.repayment.dto.PresentStockPriceDTO;
 import org.ofz.repayment.dto.SellStockDTO;
@@ -28,6 +31,7 @@ import org.ofz.repayment.utils.StockUtils.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +47,7 @@ public class PawnRepaymentService {
     private final StockUtils stockUtils;
     private final AccountUtils accountUtils;
     private final RedisUtil redisUtil;
+    private final RepaymentHistoryRepository repaymentHistoryRepository;
 
     @Transactional
     public PaymentInfoForPawnResponse getPaymentInfo(Long userId) {
@@ -69,9 +74,11 @@ public class PawnRepaymentService {
                     .findByStockCode(stockCode)
                     .orElseThrow(() -> new StockInformationNotFoundException("존재하는 주식 코드가 아닙니다."));
 
-            // TODO: 2024-09-04 전일 종가 이거 레디스에서 가져올 수 있는 걸로 알고 있음
-            //  int prevPrice = redisUtil.fetchStoredPreviousPrice(stockCode);
-            int previousPrice = stockUtils.fetchPreviousStockPrice(stockCode);
+            Integer previousPrice = redisUtil.fetchStoredPreviousPrice(stockCode);
+
+            if (previousPrice == null) {
+                previousPrice = stockUtils.fetchPreviousStockPrice(stockCode);
+            }
 
             infoForPawnResponse.addMortgagedStock(
                     MortgagedStockDTO.builder()
@@ -162,16 +169,25 @@ public class PawnRepaymentService {
         stockPriorityRepository.deleteAllByUserId(userId);
         mortgagedStockRepository.deleteAllByUserId(userId);
 
+        int previousMonthDebt = payment.getPreviousMonthDebt();
+        int currentMonthDebt = payment.getCurrentMonthDebt();
+        int totalDebt = previousMonthDebt + currentMonthDebt;
+
+        RepaymentHistory repaymentHistory = RepaymentHistory.builder()
+                .repaymentAmount(totalDebt)
+                .createdAt(LocalDateTime.now())
+                .userId(userId)
+                .type(RepaymentType.PRE_PAWN)
+                .build();
+
+        repaymentHistoryRepository.save(repaymentHistory);
+
         for (SellStockDTO sellStock : sellStocks) {
 
             SellAmountDTO sellAmount = stockUtils.fetchRequestSellStocks(sellStock);
 
             sum += sellAmount.getSellAmount();
         }
-
-        int previousMonthDebt = payment.getPreviousMonthDebt();
-        int currentMonthDebt = payment.getCurrentMonthDebt();
-        int totalDebt = previousMonthDebt + currentMonthDebt;
 
         int amountToAccount = 0;
         if (sum - totalDebt > 0) {
