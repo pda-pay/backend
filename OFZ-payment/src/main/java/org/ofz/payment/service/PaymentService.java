@@ -19,6 +19,7 @@ import org.ofz.payment.exception.franchise.FranchiseNotFoundException;
 import org.ofz.payment.exception.payment.ExceededCreditLimitException;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.exception.payment.PaymentPasswordMismatchException;
+import org.ofz.payment.exception.payment.PaymentRestrictedUserException;
 import org.ofz.payment.exception.websocket.*;
 import org.ofz.payment.repository.FranchiseRepository;
 import org.ofz.payment.repository.PaymentHistoryRepository;
@@ -59,6 +60,10 @@ public class PaymentService {
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));
+
+        if (!payment.isPayFlag()) {
+            throw new PaymentRestrictedUserException("간편 결제 서비스 이용이 불가능합니다.");
+        }
 
         Franchise franchise = franchiseRepository
                 .findFranchiseByCode(paymentRequest.getFranchiseCode())
