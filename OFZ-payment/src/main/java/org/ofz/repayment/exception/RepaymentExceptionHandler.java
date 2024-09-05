@@ -2,6 +2,7 @@ package org.ofz.repayment.exception;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.ofz.management.exception.FetchPreviousStockPriceException;
 import org.ofz.repayment.exception.repayment.*;
 import org.ofz.repayment.exception.user.UserNotFoundException;
 import org.ofz.repayment.exception.webclient.*;
@@ -153,6 +154,25 @@ public class RepaymentExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchFetchRequestSellStockException(FetchRequestSellStockException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchFetchPreviousStockPriceException(FetchPreviousStockPriceException e) {
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     @Getter

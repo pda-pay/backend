@@ -3,15 +3,14 @@ package org.ofz.repayment.utils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.ofz.management.exception.FetchPreviousStockPriceException;
+import org.ofz.repayment.exception.webclient.FetchRequestSellStockException;
 import org.ofz.repayment.dto.PresentStockPriceDTO;
 import org.ofz.repayment.dto.SellStockDTO;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class StockUtils {
@@ -36,13 +35,20 @@ public class StockUtils {
 
     public int fetchPreviousStockPrice(String stockCode) {
 
-        PreviousPriceDTO response = webClient.get()
-                .uri("http://" + PARTNERS_URL + "/securities/stocks/" + stockCode)
-                .retrieve()
-                .bodyToMono(PreviousPriceDTO.class).block();
+        PreviousPriceDTO response;
+
+        try {
+            response = webClient.get()
+                    .uri("http://" + PARTNERS_URL + "/securities/stocks/" + stockCode)
+                    .retrieve()
+                    .bodyToMono(PreviousPriceDTO.class).block();
+        } catch (Exception e) {
+
+            throw new FetchPreviousStockPriceException("전일 종가 가져오기 에러 " + e.getMessage());
+        }
 
         if (response == null) {
-            throw new RuntimeException("널이다 씨잇팔~~");
+            throw new FetchPreviousStockPriceException("받아온 전일 종가 데이터가 없습니다.");
         }
 
         return response.getAmount();
@@ -50,14 +56,21 @@ public class StockUtils {
 
     public SellAmountDTO fetchRequestSellStocks(SellStockDTO sellStock) {
 
-        SellAmountDTO sellAmount = webClient.put()
-                .uri("http://" + PARTNERS_URL + "/securities/accounts/stocks")
-                .bodyValue(sellStock)
-                .retrieve()
-                .bodyToMono(SellAmountDTO.class).block();
+        SellAmountDTO sellAmount;
+
+        try {
+             sellAmount = webClient.put()
+                    .uri("http://" + PARTNERS_URL + "/securities/accounts/stocks")
+                    .bodyValue(sellStock)
+                    .retrieve()
+                    .bodyToMono(SellAmountDTO.class).block();
+
+        } catch (Exception e) {
+            throw new FetchRequestSellStockException("증권 매도 요청에 실패했습니다. " + e.getMessage());
+        }
 
         if (sellAmount == null) {
-            throw new RuntimeException("널널널");
+            throw new FetchRequestSellStockException("증권 매도 요청에 실패했습니다.");
         }
 
         return sellAmount;
