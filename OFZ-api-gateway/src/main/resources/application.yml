@@ -18,6 +18,7 @@ spring:
   application:
     name: api-gateway
 
+
   redis:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
@@ -30,6 +31,7 @@ spring:
         corsConfigurations:
           '[/**]':
             allowedOrigins:
+              - "https://140pay.site"
               - "http://localhost:5173"
             allow-credentials: true
             allowedHeaders:
@@ -51,7 +53,7 @@ spring:
         - id: users-loginSession
           uri: lb://payment-service
           predicates:
-            - Path=/api/users/validation, /api/users/login, /api/users/signup, /users/sms-request, /users/sms-verification
+            - Path=/api/users/validation, /api/users/login, /api/users/signup, /api/users/sms-request, /api/users/sms-verification
           filters:
             - StripPrefix=1
 
@@ -108,7 +110,6 @@ server:
 
 jwt:
   secret: ${JWT_SECRET}
-
 ---
 spring:
   config:
@@ -147,3 +148,9 @@ eureka:
       defaultZone: ${OFZ_EUREKA_URL}
   server:
     wait-time-in-ms-when-sync-empty: 5
+
+server:
+  ssl:
+    key-store: file:/home/ubuntu/OFZ-api-gateway/keystore.p12
+    key-store-type: PKCS12
+    key-store-password: ${SSL_PASSWORD}
