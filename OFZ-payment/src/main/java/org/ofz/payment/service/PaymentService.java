@@ -61,6 +61,10 @@ public class PaymentService {
                 .findPaymentByUserId(userId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));
 
+        if (!payment.isPayFlag()) {
+            throw new PaymentRestrictedUserException("간편 결제 서비스 이용이 불가능합니다.");
+        }
+
         Franchise franchise = franchiseRepository
                 .findFranchiseByCode(paymentRequest.getFranchiseCode())
                 .orElseThrow(() -> new FranchiseNotFoundException("가맹점이 조회되지 않습니다."));
