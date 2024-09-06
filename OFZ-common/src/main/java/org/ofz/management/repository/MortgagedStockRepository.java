@@ -47,4 +47,6 @@ public interface MortgagedStockRepository extends JpaRepository<MortgagedStock, 
     void deleteIfQuantityZero(@Param("accountNumber") String accountNumber,
                               @Param("stockCode") String stockCode,
                               @Param("userId") Long userId);
+
+    List<MortgagedStock> findByUserId(Long userId);
 }
