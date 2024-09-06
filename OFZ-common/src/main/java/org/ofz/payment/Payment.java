@@ -109,4 +109,9 @@ public class Payment {
     public void enablePay() {
         payFlag = true;
     }
+
+    public void decreasePreviousMonthDebt(int payedPreviousMonthDebt) {
+        previousMonthDebt -= payedPreviousMonthDebt;
+    }
+    public void resetOverdueDay() {overdueDay = null;}
 }

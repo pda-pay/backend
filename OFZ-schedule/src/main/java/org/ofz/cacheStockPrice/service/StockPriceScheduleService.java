@@ -2,7 +2,7 @@ package org.ofz.cacheStockPrice.service;
 
 import lombok.RequiredArgsConstructor;
 import org.ofz.cacheStockPrice.dto.PreviousStockPriceResponse;
-import org.ofz.management.StockInformationRepository;
+import org.ofz.management.repository.StockInformationRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;

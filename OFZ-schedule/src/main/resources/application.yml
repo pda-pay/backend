@@ -6,14 +6,12 @@ spring:
         - common
       prod:
         - common
-
 ---
 spring:
   config:
     activate:
       on-profile: common
     import: optional:file:.env[.properties]
-
   rabbitmq:
     port: ${RABBITMQ_PORT}
     host: ${RABBITMQ_HOST}
@@ -41,7 +39,6 @@ webclient:
   base-url: ${PARTNERS_URL}
 authentication:
   signature: ${TRIGGER_PASSWORD}
-
 
 ---
 spring:
