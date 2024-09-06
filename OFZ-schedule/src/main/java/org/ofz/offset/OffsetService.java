@@ -10,13 +10,16 @@ import org.ofz.payment.PaymentRepository;
 import org.ofz.repayment.RepaymentHistory;
 import org.ofz.repayment.RepaymentHistoryRepository;
 import org.ofz.repayment.RepaymentType;
+import org.ofz.user.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -45,23 +48,26 @@ public class OffsetService {
     }
 
     @Transactional
+    @Scheduled(cron = "0 0 9 * * 1-5")
+    public void processOffsets(){
+        List<Payment> offsetTargets = paymentRepository.findByOverdueDay();
+        for (Payment offsetTarget : offsetTargets) {
+            processOffset(offsetTarget.getUser().getId());
+        }
+    }
+
+    @Transactional
     public void processOffset(Long userId){
         PaymentOverdueDebtDto overdueAndDebt = getOverdueAndDebt(userId);
-        int remainingDebt = overdueAndDebt.getPreviousMonthDebt();
+        int remainingDebt = getOverdueAndDebt(userId).getPreviousMonthDebt();
 
         List<MortgagedStockProjection> mortgagedStocks = getSortedMortgagedStock(userId);
         List<String> mortgagedStockCodes = getMortgagedStockCodes(mortgagedStocks);
-        for (MortgagedStockProjection mortgagedStock : mortgagedStocks) {
-            System.out.println("mortgagedStock = " + mortgagedStock.getStockCode() + ", " + mortgagedStock.getAccountNumber() + ", " + mortgagedStock.getQuantity());
-        }
 
         try {
             Payment payment = findPaymentByUserId(userId);
             CurrentStockPriceReq mortgagedStockCodesReq = new CurrentStockPriceReq(mortgagedStockCodes);
-            System.out.println("mortgagedStockCodesReq = " + mortgagedStockCodesReq);
-            // mortgagedStockCodesReq는 담보증권의 종목코드 리스트 JSON
             CurrentStockPriceRes currentPriceOfMortgagedStocks = getCurrentStockRes(mortgagedStockCodesReq);
-            System.out.println("currentPriceOfMortgagedStocks = " + currentPriceOfMortgagedStocks);
 
             int totalPayedDebt = 0;
             for (MortgagedStockProjection mortgagedStockProjection : mortgagedStocks) {
@@ -136,6 +142,9 @@ public class OffsetService {
     }
 
     private CurrentStockPriceRes getCurrentStockRes(CurrentStockPriceReq currentStockPriceReq) {
+        if (currentStockPriceReq.getStockCodes().isEmpty()) {
+            return new CurrentStockPriceRes(new ArrayList<>());
+        }
         return Optional.ofNullable(
                 webClient.post()
                         .uri(partnersUrl + "/securities/stocks/current")
@@ -165,6 +174,7 @@ public class OffsetService {
         ).map(SellStockRes::getSellAmount).orElseThrow(() -> new RuntimeException("주식 매도 요청 실패"));
     }
 
+    @Transactional
     private void updateStockTables(String accountNumber, String stockCode, int quantityToSell, Long userId) {
         stockPriorityRepository.reduceQuantity(accountNumber, stockCode, quantityToSell, userId);
         stockPriorityRepository.deleteIfQuantityZero(accountNumber, stockCode, userId);

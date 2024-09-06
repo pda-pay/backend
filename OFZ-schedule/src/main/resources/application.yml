@@ -13,7 +13,11 @@ spring:
     activate:
       on-profile: common
     import: optional:file:.env[.properties]
-
+  rabbitmq:
+    port: ${RABBITMQ_PORT}
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
   application:
     name: schedule-service
 
