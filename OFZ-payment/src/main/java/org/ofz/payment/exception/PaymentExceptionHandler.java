@@ -172,6 +172,16 @@ public class PaymentExceptionHandler {
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchPaymentRestrictedUserException(PaymentRestrictedUserException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.FORBIDDEN);
+    }
+
     @Getter
     private static class ErrorResponseDTO {
 
