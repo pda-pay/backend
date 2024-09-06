@@ -24,6 +24,7 @@ spring:
     username: ${RABBITMQ_USERNAME}
     password: ${RABBITMQ_PASSWORD}
 
+
   redis:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
