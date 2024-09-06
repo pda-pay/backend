@@ -21,7 +21,7 @@ public class ManagementController {
         return ResponseEntity.status(HttpStatus.OK).body(userStockResponse);
     }
 
-    @PutMapping("/users/mortgaed-stocks")
+    @PutMapping("/users/mortgaged-stocks")
     public ResponseEntity<SavedResponse> saveUserMortgagedStocks(@RequestHeader("X-LOGIN-ID") String userId, @RequestBody SaveMortgagedStockRequest saveMortgagedStockRequest) {
         saveMortgagedStockRequest.setLoginId(userId);
         SavedResponse saveMortgagedStockResponse = managementService.saveMortgagedStockInformation(saveMortgagedStockRequest);
