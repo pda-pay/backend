@@ -99,4 +99,12 @@ public class Payment {
     public void enablePay() {
         payFlag = true;
     }
+
+    public void changeRateFlag(boolean flag) {
+        this.rateFlag = flag;
+    }
+
+    public void changePayFlag(boolean flag) {
+        this.payFlag = flag;
+    }
 }
