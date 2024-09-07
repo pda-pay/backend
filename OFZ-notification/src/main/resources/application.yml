@@ -14,6 +14,11 @@ spring:
 
   application:
     name: notification-service
+
+firebase:
+  config:
+    path: classpath:onefourzero-9b623-firebase-adminsdk-vdkb4-3f6b9e3d49.json
+
 server:
   port: 8084
 
