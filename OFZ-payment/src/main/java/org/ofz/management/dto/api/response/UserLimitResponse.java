@@ -2,12 +2,11 @@ package org.ofz.management.dto.api.response;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 public class UserLimitResponse {
     private final int currentLimit;
-    private final double totalLimit;
+    private final int totalLimit;
     private final int totalMortgagedPrice;
     private final double mortgagedMaintenanceRate;
     private final int totalPaymentAmount;
@@ -15,7 +14,7 @@ public class UserLimitResponse {
     @Builder
     public UserLimitResponse(int currentLimit, double totalLimit, int totalMortgagedPrice, int totalPaymentAmount) {
         this.currentLimit = currentLimit;
-        this.totalLimit = totalLimit;
+        this.totalLimit = (int) totalLimit;
         this.totalMortgagedPrice = totalMortgagedPrice;
         this.mortgagedMaintenanceRate = calculateMortgageMaintenanceRate(currentLimit, totalMortgagedPrice);
         this.totalPaymentAmount = totalPaymentAmount;
@@ -26,7 +25,7 @@ public class UserLimitResponse {
             throw new ArithmeticException("currentLimit zero");
         }
 
-        double rate = totalMortgagedPrice / currentLimit;
-        return Math.round(rate * 1000.0) / 1000.0;
+        double rate = ((double) totalMortgagedPrice / currentLimit) * 100;
+        return Math.round(rate * 100.0) / 100.0;
     }
 }
