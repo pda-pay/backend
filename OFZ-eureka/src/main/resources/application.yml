@@ -8,11 +8,6 @@ spring:
         - common
 ---
 spring:
-  config:
-    activate:
-      on-profile: common
-
-  application:
     name: eureka-server
 
 server:
