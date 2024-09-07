@@ -1,4 +1,4 @@
-package org.ofz.offset.projection;
+package org.ofz.management.projection;
 
 public interface MortgagedStockProjection {
     String getStockCode();
