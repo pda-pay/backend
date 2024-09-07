@@ -1,11 +1,11 @@
-package org.ofz;
+package org.ofz.service;
 
 import lombok.RequiredArgsConstructor;
+import org.ofz.dto.CacheTokenDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.List;
 
 @RequiredArgsConstructor
 @Service

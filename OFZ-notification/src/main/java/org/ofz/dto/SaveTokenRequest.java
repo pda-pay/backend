@@ -1,4 +1,4 @@
-package org.ofz;
+package org.ofz.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

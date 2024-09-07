@@ -1,7 +1,10 @@
-package org.ofz;
+package org.ofz.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.ofz.dto.CacheTokenDto;
+import org.ofz.dto.SaveTokenRequest;
+import org.ofz.dto.SaveUserTokenResponse;
+import org.ofz.service.CacheTokenService;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
