@@ -54,17 +54,15 @@ public class UserController {
 
         ResponseCookie accessTokenCookie = ResponseCookie.from( "accessToken", jwtToken.getAccessToken())
                 .path("/")
-                .maxAge(30 * 60 * 60)
+//                .domain("localhost")
+                .maxAge(12 * 60 * 60)
                 .sameSite("None")
+                .secure(true)
+                .httpOnly(true)
                 .build();
 
-//        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtToken.getRefreshToken());
-//        refreshTokenCookie.setHttpOnly(true);
-//        refreshTokenCookie.setPath("/");
-//        refreshTokenCookie.setMaxAge(30 * 60 * 60);
 
         response.addHeader("Set-Cookie", accessTokenCookie.toString());
-//        response.addCookie(refreshTokenCookie);
 
         return new ResponseEntity<>(userLoginRes, HttpStatus.OK);
     }

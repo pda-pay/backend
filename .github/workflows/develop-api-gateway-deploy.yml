@@ -2,13 +2,12 @@
 name: Deploy api-gateway
 
 on:
-  workflow_dispatch:
-  
   push:
     branches:
       - develop
     paths:
       - 'OFZ-api-gateway/**'
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -28,12 +27,13 @@ jobs:
 
       - name: Build and deploy api-gateway
         run: |
+          # touch ./OFZ-api-gateway/src/main/resources/keystore.p12 
+          # echo "${{ secrets.KEYSTORE }}" | base64 --decode > ./OFZ-api-gateway/src/main/resources/keystore.p12 
           ./gradlew OFZ-api-gateway:build
 
       - name: make deployment package
         run: |
           ZIP_FILE="OFZ-api-gateway.zip"
-
           mkdir -p deploy-package
           
           cp -r OFZ-api-gateway/build/libs/*.jar deploy-package/

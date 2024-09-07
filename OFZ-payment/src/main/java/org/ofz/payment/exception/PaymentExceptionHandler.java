@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.ofz.payment.exception.franchise.FranchiseNotFoundException;
 import org.ofz.payment.exception.franchise.FranchisePasswordMismatchException;
+import org.ofz.payment.exception.history.MissingParameterException;
 import org.ofz.payment.exception.payment.*;
 import org.ofz.payment.exception.websocket.*;
 import org.springframework.http.HttpStatus;
@@ -159,6 +160,26 @@ public class PaymentExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchMissingParameterException(MissingParameterException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchPaymentRestrictedUserException(PaymentRestrictedUserException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.FORBIDDEN);
     }
 
     @Getter
