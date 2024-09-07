@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.ofz.redis.RedisUtil;
 
 import java.util.List;
 
@@ -32,13 +33,9 @@ public class MarginRequirementService {
     private StockInformationRepository stockInformationRepository;
 
     @Autowired
-    private RedisTemplate<String, Integer> redisTemplate;
+    private RedisUtil redisUtil;
 
-    // Redis에서 저장된 주식 가격을 가져오는 메소드
-    private Integer fetchStoredPrice(String stockCode) {
-        String key = "price:" + stockCode;
-        return redisTemplate.opsForValue().get(key);
-    }
+
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
@@ -53,14 +50,15 @@ public class MarginRequirementService {
 
             // 담보 총액 계산
             int mortgageSum = mortgagedStocks.stream()
-                    .mapToInt(stock -> stock.getQuantity() * fetchStoredPrice(stock.getStockCode()))
+                    .mapToInt(stock -> stock.getQuantity() * redisUtil.fetchStoredPreviousPrice(stock.getStockCode()))
                     .sum();
+
 
             // 최대 한도 계산
             double maxLimit = mortgagedStocks.stream()
                     .mapToDouble(stock -> {
                         String stockCode = stock.getStockCode();
-                        int stockPrice = fetchStoredPrice(stockCode);
+                        int stockPrice = redisUtil.fetchStoredPreviousPrice(stock.getStockCode());
                         StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
                                 .orElseThrow(() -> new IllegalArgumentException("Stock information not found for stockCode: " + stockCode));
                         return StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPrice) * stock.getQuantity();
