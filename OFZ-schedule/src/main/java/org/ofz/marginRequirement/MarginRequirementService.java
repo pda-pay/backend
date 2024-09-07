@@ -4,13 +4,15 @@ import org.ofz.management.entity.StockInformation;
 import org.ofz.management.repository.MortgagedStockRepository;
 import org.ofz.management.repository.StockInformationRepository;
 import org.ofz.management.utils.StockStability;
+import org.ofz.marginRequirement.exception.CreditLimitException;
+import org.ofz.marginRequirement.exception.PriceNotFoundException;
+import org.ofz.marginRequirement.exception.StockInformationNotFoundException;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.management.entity.MortgagedStock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,8 +37,6 @@ public class MarginRequirementService {
     @Autowired
     private RedisUtil redisUtil;
 
-
-
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
     public void processAllUserLimits() {
@@ -45,49 +45,72 @@ public class MarginRequirementService {
         List<Payment> allPayments = paymentRepository.findAll();
 
         for (Payment payment : allPayments) {
-            Long userId = payment.getUser().getId();
-            List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findByUserId(userId);
+            try {
+                Long userId = payment.getUser().getId();
+                List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findByUserId(userId);
 
-            // 담보 총액 계산
-            int mortgageSum = mortgagedStocks.stream()
-                    .mapToInt(stock -> stock.getQuantity() * redisUtil.fetchStoredPreviousPrice(stock.getStockCode()))
-                    .sum();
+                if (mortgagedStocks == null || mortgagedStocks.isEmpty()) {
+                    logger.warn("유저 ID: {}에 대해 담보된 주식이 없습니다.", userId);
+                    continue;
+                }
 
+                // 담보 총액 계산
+                int mortgageSum = mortgagedStocks.stream()
+                        .mapToInt(stock -> {
+                            Integer price = redisUtil.fetchStoredPreviousPrice(stock.getStockCode());
+                            if (price == null) {
+                                throw new PriceNotFoundException("유저 ID: " + userId + ", 주식 코드: " + stock.getStockCode() + "에 대한 가격 정보를 찾을 수 없습니다.");
+                            }
+                            return stock.getQuantity() * price;
+                        })
+                        .sum();
 
-            // 최대 한도 계산
-            double maxLimit = mortgagedStocks.stream()
-                    .mapToDouble(stock -> {
-                        String stockCode = stock.getStockCode();
-                        int stockPrice = redisUtil.fetchStoredPreviousPrice(stock.getStockCode());
-                        StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
-                                .orElseThrow(() -> new IllegalArgumentException("Stock information not found for stockCode: " + stockCode));
-                        return StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPrice) * stock.getQuantity();
-                    })
-                    .sum();
+                // 최대 한도 계산
+                double maxLimit = mortgagedStocks.stream()
+                        .mapToDouble(stock -> {
+                            String stockCode = stock.getStockCode();
+                            Integer stockPrice = redisUtil.fetchStoredPreviousPrice(stockCode);
+                            if (stockPrice == null) {
+                                throw new PriceNotFoundException("주식 코드: " + stockCode + "의 가격 정보를 찾을 수 없습니다.");
+                            }
+                            StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
+                                    .orElseThrow(() -> new StockInformationNotFoundException("Stock information not found for stockCode: " + stockCode));
+                            return StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPrice) * stock.getQuantity();
+                        })
+                        .sum();
 
-            // 현재 한도 비율 계산
-            double currentLimitRatio = (mortgageSum / (double) payment.getCreditLimit()) * 100;
+                // 현재 한도 비율 계산
+                double creditLimit = payment.getCreditLimit();
+                if (creditLimit == 0) {
+                    throw new CreditLimitException("유저 ID: " + userId + ", 크레딧 한도가 0입니다.");
+                }
+                double currentLimitRatio = (mortgageSum / creditLimit) * 100;
 
-            // 최대 한도 비율 계산
-            double maxLimitRatio = (mortgageSum / maxLimit) * 100;
+                // 최대 한도 비율 계산
+                if (maxLimit == 0) {
+                    logger.error("유저 ID: {}, 최대 한도가 0입니다.", userId);
+                    continue;
+                }
+                double maxLimitRatio = (mortgageSum / maxLimit) * 100;
 
-            logger.info("유저 ID: {}, 현재 한도 비율: {}, 최대 한도 비율: {}", userId, currentLimitRatio, maxLimitRatio);
+                logger.info("유저 ID: {}, 현재 한도 비율: {}, 최대 한도 비율: {}", userId, currentLimitRatio, maxLimitRatio);
 
-            // 140% 이하인지 확인하여 플래그 변경
-            if (currentLimitRatio <= 140) {
-                payment.disableRateFlag();
-                logger.info("유저 ID: {}, 현재 한도 비율이 140% 이하이므로 rateFlag를 false로 설정합니다.", userId);
-            } else {
-                payment.enableRateFlag();
-                logger.info("유저 ID: {}, 현재 한도 비율이 140% 초과이므로 rateFlag를 true로 설정합니다.", userId);
+                // 140% 이하인지 확인하여 플래그 변경
+                if (currentLimitRatio <= 140) {
+                    payment.disableRateFlag();
+                    logger.info("유저 ID: {}, 현재 한도 비율이 140% 이하이므로 rateFlag를 false로 설정합니다.", userId);
+                } else {
+                    payment.enableRateFlag();
+                    logger.info("유저 ID: {}, 현재 한도 비율이 140% 초과이므로 rateFlag를 true로 설정합니다.", userId);
+                }
+
+                paymentRepository.save(payment);
+
+            } catch (PriceNotFoundException | StockInformationNotFoundException | CreditLimitException e) {
+                logger.error("유저 ID: {}의 한도 비율 계산 중 오류 발생: {}", payment.getUser().getId(), e.getMessage(), e);
+            } catch (Exception e) {
+                logger.error("유저 ID: {}의 한도 비율 계산 중 알 수 없는 오류 발생: {}", payment.getUser().getId(), e.getMessage(), e);
             }
-
-            paymentRepository.save(payment);
-
-            // 차후 알림 추가 시
-            // 현재 한도 비율 => 낮추면 좋을 최대 한도 비율 전달
-            //
-
         }
 
         logger.info("모든 유저의 담보 한도 비율 계산이 완료되었습니다.");
