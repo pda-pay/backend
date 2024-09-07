@@ -55,7 +55,7 @@ public class UserController {
         ResponseCookie accessTokenCookie = ResponseCookie.from( "accessToken", jwtToken.getAccessToken())
                 .path("/")
 //                .domain("localhost")
-                .maxAge(30 * 60 * 60)
+                .maxAge(12 * 60 * 60)
                 .sameSite("None")
                 .secure(true)
                 .httpOnly(true)
