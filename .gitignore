@@ -41,4 +41,4 @@ out/
 
 ### Private KEY ###
 keystore.p12
-OFZ-notification/src/main/resources/firebase/onefourzero-9b623-firebase-adminsdk-vdkb4-3f6b9e3d49.json
+OFZ-notification/src/main/resources/firebase/*
