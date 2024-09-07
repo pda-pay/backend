@@ -109,4 +109,16 @@ public class Payment {
     public void enablePay() {
         payFlag = true;
     }
+
+    public void breakRate() {
+        this.rateFlag = false;
+    }
+
+    public void fixRate() {
+        this.rateFlag = true;
+    }
+
+    public int getTotalDebt() {
+        return this.previousMonthDebt + this.currentMonthDebt;
+    }
 }
