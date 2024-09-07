@@ -114,4 +114,11 @@ public class Payment {
         previousMonthDebt -= payedPreviousMonthDebt;
     }
     public void resetOverdueDay() {overdueDay = null;}
+    public void changeRateFlag(boolean flag) {
+        this.rateFlag = flag;
+    }
+
+    public void changePayFlag(boolean flag) {
+        this.payFlag = flag;
+    }
 }
