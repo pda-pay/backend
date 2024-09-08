@@ -50,7 +50,7 @@ public class MarginRequirementService {
         return marginRequirementHistoryRepository.findAll();
     }
 
-    // margin_requirement가 160 이하인 유저 조회
+    // margin_requirement가 limit 이하인 유저 조회
     public List<MarginRequirementHistory> getUsersWithMarginRequirementUnder(int limit) {
         try {
             List<MarginRequirementHistory> results = marginRequirementHistoryRepository.findByMarginRequirementLessThanEqual(limit);
@@ -111,8 +111,8 @@ public class MarginRequirementService {
                         .sum();
 
                 // 현재 한도 비율 계산
-                double creditLimit = payment.getCreditLimit();
-                final double currentLimitRatio;
+                final int creditLimit = payment.getCreditLimit();
+                double currentLimitRatio;
                 int marginRequirement;
                 if (creditLimit == 0) {
                     logger.error("유저 ID: {}, 크레딧 한도가 0이므로 margin_requirement를 -1로 설정합니다.", userId);
@@ -125,10 +125,10 @@ public class MarginRequirementService {
 
                 // 기존의 MarginRequirementHistory 찾기 또는 새로 생성
                 MarginRequirementHistory history = marginRequirementHistoryRepository.findByUserId(userId)
-                        .orElseGet(() -> new MarginRequirementHistory(userId, mortgageSum, (int) Math.floor(currentLimitRatio), marginRequirement));
+                        .orElseGet(() -> new MarginRequirementHistory(userId, mortgageSum, creditLimit, marginRequirement));
 
-                // mortgageSum, currentLimitRatio 및 margin_requirement 값 업데이트
-                history.updateValues(mortgageSum, (int) Math.floor(currentLimitRatio), marginRequirement);
+                // mortgageSum, currentLimit 및 margin_requirement 값 업데이트
+                history.updateValues(mortgageSum, creditLimit, marginRequirement);
 
                 // 최대 한도 비율 계산
                 if (maxLimit == 0) {
