@@ -5,10 +5,7 @@ import org.ofz.management.repository.MortgagedStockRepository;
 import org.ofz.management.repository.StockInformationRepository;
 import org.ofz.management.utils.StockStability;
 import org.ofz.marginRequirement.entity.MarginRequirementHistory;
-import org.ofz.marginRequirement.exception.DatabaseAccessException;
-import org.ofz.marginRequirement.exception.GenericServiceException;
-import org.ofz.marginRequirement.exception.PriceNotFoundException;
-import org.ofz.marginRequirement.exception.StockInformationNotFoundException;
+import org.ofz.marginRequirement.exception.*;
 import org.ofz.marginRequirement.repository.MarginRequirementHistoryRepository;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
@@ -58,6 +55,10 @@ public class MarginRequirementService {
                 logger.warn("쿼리 결과가 null입니다. 빈 리스트를 반환합니다.");
                 return Collections.emptyList();
             }
+//            if (results == null || results.isEmpty()) {
+//                logger.warn("쿼리 결과가 없습니다. 한도: {}", limit);
+//                throw new NoDataFoundException("해당 조건에 맞는 데이터가 존재하지 않습니다.");
+//            }
             return results;
         } catch (DataAccessException e) {
             logger.error("데이터베이스 접근 중 오류 발생: {}", e.getMessage(), e);
@@ -119,7 +120,7 @@ public class MarginRequirementService {
                     marginRequirement = -1;
                     currentLimitRatio = 0;
                 } else {
-                    currentLimitRatio = (mortgageSum / creditLimit) * 100;
+                    currentLimitRatio = ((double) mortgageSum / creditLimit) * 100;
                     marginRequirement = (int) Math.floor(currentLimitRatio);
                 }
 
