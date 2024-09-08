@@ -1,10 +1,10 @@
 package org.ofz.repayment.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
-import org.ofz.management.StockPriority;
-import org.ofz.management.StockInformation;
+import org.ofz.management.entity.MortgagedStock;
+import org.ofz.management.entity.StockPriority;
+import org.ofz.management.entity.StockInformation;
 import org.ofz.management.utils.SecuritiesCategory;
 import org.ofz.management.utils.StockStability;
 
@@ -27,22 +27,40 @@ public class MortgagedStockDTO {
     public MortgagedStockDTO() {
     }
 
-    @Builder
-    public MortgagedStockDTO(StockPriority stockPriority, StockInformation stockInformation, int previousPrice, int presentValue) {
-        this.stockRank = stockPriority.getStockRank();
-        this.accountNumber = stockPriority.getAccountNumber();
-        this.quantity = stockPriority.getQuantity();
-        this.stockCode = stockPriority.getStockCode();
-        this.stockName = stockInformation.getName();
-        this.companyCode = stockPriority.getCompanyCode();
-        this.companyName = String.valueOf(SecuritiesCategory.getCompanyNamefromCode(companyCode));
-        this.stabilityLevel = stockInformation.getStabilityLevel();
-        this.presentValue = presentValue;
-        this.limitPrice = calculateLimitPrice(previousPrice);
-        this.percent = StockStability.getPercentByGroup(stabilityLevel);
+    public static MortgagedStockDTO fromMortgagedStock(MortgagedStock mortgagedStock, StockInformation stockInformation, int previousPrice, int presentValue) {
+        return new MortgagedStockDTO(
+                0,
+                mortgagedStock.getAccountNumber(),
+                mortgagedStock.getQuantity(),
+                mortgagedStock.getStockCode(),
+                stockInformation.getName(),
+                mortgagedStock.getCompanyCode(),
+                String.valueOf(SecuritiesCategory.getCompanyNamefromCode(mortgagedStock.getCompanyCode())),
+                stockInformation.getStabilityLevel(),
+                presentValue,
+                calculateLimitPrice(stockInformation.getStabilityLevel(), previousPrice),
+                StockStability.getPercentByGroup(stockInformation.getStabilityLevel())
+        );
     }
 
-    private double calculateLimitPrice(int previousPrice) {
+    public static MortgagedStockDTO fromStockPriority(StockPriority stockPriority, StockInformation stockInformation, int previousPrice, int presentValue) {
+        return new MortgagedStockDTO(
+                stockPriority.getStockRank(),
+                stockPriority.getAccountNumber(),
+                stockPriority.getQuantity(),
+                stockPriority.getStockCode(),
+                stockInformation.getName(),
+                stockPriority.getCompanyCode(),
+                String.valueOf(SecuritiesCategory.getCompanyNamefromCode(stockPriority.getCompanyCode())),
+                stockInformation.getStabilityLevel(),
+                presentValue,
+                calculateLimitPrice(stockInformation.getStabilityLevel(), previousPrice),
+                StockStability.getPercentByGroup(stockInformation.getStabilityLevel())
+        );
+    }
+
+    // 가격 계산 로직
+    private static double calculateLimitPrice(int stabilityLevel, int previousPrice) {
         double limitRate = StockStability.getPercentByGroup(stabilityLevel);
         double price = previousPrice * limitRate;
         return Math.round(price * 100.0) / 100.0;
