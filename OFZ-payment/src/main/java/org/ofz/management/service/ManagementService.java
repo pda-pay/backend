@@ -97,14 +97,23 @@ public class ManagementService {
     public SavedResponse saveMortgagedStockInformation(SaveMortgagedStockRequest saveMortgagedStockRequest) {
         PaymentUser paymentUser = checkPaymentUser(saveMortgagedStockRequest.getLoginId());
         User user = paymentUser.getUser();
+        String loginId = saveMortgagedStockRequest.getLoginId();
         List<MortgagedStockDto> mortgagedStockDtos = saveMortgagedStockRequest.getMortgagedStocks();
 
         if (paymentUser.isJoined()) {
+            Payment payment = paymentUser.getPayment();
             List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
+            List<StockPriority> stockPriorities = stockPriorityRepository.findStockPrioritiesByUserIdOrderByStockRank(user.getId());
+            payment.changeCreditLimit(0);
+            stockPriorityRepository.deleteAll(stockPriorities);
             mortgagedStockRepository.deleteAll(mortgagedStocks);
+            paymentRepository.save(payment);
+
             saveMortgagedStocks(mortgagedStockDtos, user);
         } else {
-            cacheService.cacheMortgagedStocks(user.getLoginId(), mortgagedStockDtos);
+            cacheService.cacheMortgagedStocks(loginId, mortgagedStockDtos);
+            cacheService.deleteCachedStockPriorities(loginId);
+            cacheService.deleteCachedLimit(loginId);
         }
 
         return SavedResponse.success(saveMortgagedStockRequest.getLoginId());
