@@ -82,6 +82,28 @@ public class MarginRequirementExceptionHandler {
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+    // 데이터베이스 접근 오류에 대한 핸들러
+    @ExceptionHandler(DatabaseAccessException.class)
+    public ResponseEntity<ErrorResponseDTO> handleCustomDatabaseAccessException(DatabaseAccessException ex) {
+        logger.error("데이터베이스 접근 오류: {}", ex.getMessage(), ex);
+        ErrorResponseDTO errorResponse = ErrorResponseDTO.builder()
+                .timestamp(LocalDateTime.now())
+                .message("데이터베이스 접근 중 오류가 발생했습니다. 관리자에게 문의하세요.")
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // 일반적인 서비스 오류에 대한 핸들러
+    @ExceptionHandler(GenericServiceException.class)
+    public ResponseEntity<ErrorResponseDTO> handleGenericServiceException(GenericServiceException ex) {
+        logger.error("서비스 오류: {}", ex.getMessage(), ex);
+        ErrorResponseDTO errorResponse = ErrorResponseDTO.builder()
+                .timestamp(LocalDateTime.now())
+                .message("서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해주세요.")
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
 
     // 기타 예외에 대한 핸들러
     @ExceptionHandler(Exception.class)
