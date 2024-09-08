@@ -21,7 +21,7 @@ import org.ofz.repayment.RepaymentType;
 import org.ofz.repayment.dto.MortgagedStockDTO;
 import org.ofz.repayment.dto.PresentStockPriceDTO;
 import org.ofz.repayment.dto.SellStockDTO;
-import org.ofz.repayment.dto.projection.QuantityAndStockCodeOfMortgagedStock;
+import org.ofz.management.projection.QuantityAndStockCodeOfMortgagedStock;
 import org.ofz.repayment.dto.request.PawnPrepaymentRequest;
 import org.ofz.repayment.dto.request.PawnPrepaymentRequest.*;
 import org.ofz.repayment.dto.response.PawnRepaymentResponse;
@@ -141,7 +141,6 @@ public class PawnRepaymentService {
 //            throw new ClosedDaysException("금일은 휴장일입니다.");
 //        }
 
-        // 결제할 선정된 금액
         int repaymentAmount = pawnPrepaymentRequest.getRepaymentAmount();
 
         if (repaymentAmount < 0) {
@@ -164,8 +163,6 @@ public class PawnRepaymentService {
 
         int sum = 0;
 
-        // TODO: 2024-09-06 삼성전자를 다 팔아서 데이터가 잘 날아가는지 확인해 보자 
-
         for (SelectedStock selectedStock : selectedStocks) {
 
             int stockRank = selectedStock.getStockRank();
@@ -181,7 +178,6 @@ public class PawnRepaymentService {
                     .findStockByAccountNumberAndStockCode(accountNumber, stockCode)
                     .orElseThrow(() -> new StockNotFoundException("계좌 번호와 주식 코드로 증권이 조회되지 않습니다."));
 
-            // 우선 순위가 아닌 것
             if (stockRank == 0) {
                 MortgagedStock mortgagedStock = mortgagedStockRepository
                         .findMortgagedStockByAccountNumberAndStockCodeAndUserId(accountNumber, stockCode, userId)
@@ -194,7 +190,6 @@ public class PawnRepaymentService {
                 int mortgagedStockQuantity = mortgagedStock.getQuantity();
                 checkMortgagedDiffPriority(mortgagedStockQuantity, priorityMortgagedStockQuantity, deductionQuantity);
                 mortgagedStock.minusQuantity(deductionQuantity);
-                // 저장 -> 우선 순위 담보가 없는데 0개가 되면 레코드 삭제
 
                 if (mortgagedStock.getQuantity() == 0) {
                     mortgagedStockRepository.delete(mortgagedStock);
@@ -205,7 +200,6 @@ public class PawnRepaymentService {
                 int stockQuantity = stock.getQuantity();
                 checkStockDiffMortgage(stockQuantity, deductionQuantity);
                 stock.minusQuantity(deductionQuantity);
-                // 저장 -> 0개가 되면 레코드 삭제
 
                 if (stock.getQuantity() == 0) {
                     stockRepository.delete(stock);
@@ -231,12 +225,10 @@ public class PawnRepaymentService {
                     )
                     .orElseThrow(() -> new StockPriorityNotFoundException("우선 순위로 잡은 주식이 조회되지 않습니다."));
 
-            // 모기지 스톡
             MortgagedStock mortgagedStock = mortgagedStockRepository
                     .findMortgagedStockByAccountNumberAndStockCodeAndUserId(accountNumber, stockCode, userId)
                     .orElseThrow(() -> new MortgagedNotFoundException("계좌 번호화 주식 코드로 담보 증권이 조회되지 않습니다."));
 
-            // 우선 순위
             int currentStockPriorityQuantity = stockPriority.getQuantity();
             if (currentStockPriorityQuantity - deductionQuantity < 0) {
                 throw new TooHighPawnStockQuantityException("차감하려는 수량이 현재 잡혀 있는 주식 수량보다 높습니다. (우선 순위 주식): " + stockCode);
@@ -248,7 +240,6 @@ public class PawnRepaymentService {
                 stockPriorityRepository.save(stockPriority);
             }
 
-            // 모기지
             int currentMortgagedStockQuantity = mortgagedStock.getQuantity();
             if (currentMortgagedStockQuantity - deductionQuantity < 0) {
                 throw new TooHighPawnStockQuantityException("차감하려는 수량이 현재 잡혀 있는 주식 수량보다 높습니다. (담보로 잡은 주식)");
@@ -260,7 +251,6 @@ public class PawnRepaymentService {
                 mortgagedStockRepository.save(mortgagedStock);
             }
 
-            // 그냥 스톡
             int currentStockQuantity = stock.getQuantity();
             if (currentStockQuantity - deductionQuantity < 0) {
                 throw new TooHighPawnStockQuantityException("차감하려는 수량이 현재 잡혀 있는 주식 수량보다 높습니다. (보유 주식)");
@@ -311,11 +301,7 @@ public class PawnRepaymentService {
             realRepaymentAmount = sum;
         }
 
-        // TODO: 2024-09-06 담보 유지 비율 계산 로직이 필요
-        //  담보 비율 로직이 깨지지 않았다면 payFlag 는 false 로 바꿔 주지 않음
-        //  깨진다면 한도를 0으로 바꿔 두고 플래그를 false 로 바꿔야 함
-
-        boolean marginRequirement = true; // true 이면 비율이 깨지지 않았다는 것!
+        boolean marginRequirement = true;
         int userCreditLimit = payment.getCreditLimit();
         int finalTotalDebt = payment.getTotalDebt();
 
@@ -325,8 +311,13 @@ public class PawnRepaymentService {
             payment.changeCreditLimit(0);
         }
 
-        if (!marginRequirement || (!hasMortgagedStock && finalTotalDebt > 0) || payment.getCreditLimit() == 0) {
-            payment.breakRate();
+        if (!marginRequirement || (!hasMortgagedStock && finalTotalDebt > 0) || (payment.getCreditLimit() == 0 && finalTotalDebt > 0)) {
+            payment.changeRateFlag(false);
+            payment.disablePay();
+        }
+
+        if (!hasMortgagedStock && finalTotalDebt == 0) {
+            payment.changeRateFlag(true);
             payment.disablePay();
         }
 
