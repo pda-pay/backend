@@ -11,5 +11,7 @@ public class RepaymentAccountResponse {
 
     private int totalDebt;
     private String accountNumber;
+    private String accountName;
     private String companyCode;
+    public int accountDeposit;
 }

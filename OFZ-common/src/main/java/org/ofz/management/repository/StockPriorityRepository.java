@@ -19,8 +19,6 @@ public interface StockPriorityRepository extends JpaRepository<StockPriority, Lo
             Long userId
     );
 
-    void deleteAllByUserId(Long userId);
-
     @Modifying
     @Query("UPDATE StockPriority s SET s.quantity = s.quantity - :quantityToSell " +
             "WHERE s.accountNumber = :accountNumber AND s.stockCode = :stockCode AND s.user.id = :userId")
@@ -35,4 +33,13 @@ public interface StockPriorityRepository extends JpaRepository<StockPriority, Lo
     void deleteIfQuantityZero(@Param("accountNumber") String accountNumber,
                               @Param("stockCode") String stockCode,
                               @Param("userId") Long userId);
+
+    boolean existsByUserId(Long userId);
+
+    List<StockPriority> findStockPrioritiesByUserIdOrderByStockRank(Long userId);
+
+    @Query("SELECT SUM(sp.quantity) AS sum FROM StockPriority sp " +
+            "WHERE sp.user.id = :userId AND sp.accountNumber = :accountNumber " +
+            "AND sp.stockCode = :stockCode")
+    Optional<Integer> findStockPriorityQuantityByUserIdAndAccountNumberAndStockCode(Long userId, String accountNumber, String stockCode);
 }

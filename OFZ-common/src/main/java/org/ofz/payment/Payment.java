@@ -110,6 +110,10 @@ public class Payment {
         payFlag = true;
     }
 
+    public int getTotalDebt() {
+        return this.previousMonthDebt + this.currentMonthDebt;
+    }
+
     public void decreasePreviousMonthDebt(int payedPreviousMonthDebt) {
         previousMonthDebt -= payedPreviousMonthDebt;
     }
@@ -121,4 +125,9 @@ public class Payment {
     public void changePayFlag(boolean flag) {
         this.payFlag = flag;
     }
+
+    public void disableRateFlag() {rateFlag = false;}
+
+    public void enableRateFlag() {rateFlag = true;}
+
 }
