@@ -3,10 +3,7 @@ package org.ofz.marginRequirement;
 import org.ofz.marginRequirement.entity.MarginRequirementHistory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,6 +23,14 @@ public class MarginRequirementController {
     public ResponseEntity<List<MarginRequirementHistory>> getAllUserMarginRequirements() {
         List<MarginRequirementHistory> marginRequirements = marginRequirementService.getAllUserMarginRequirements();
         return ResponseEntity.ok(marginRequirements);
+    }
+
+    // margin_requirement가 특정 값 이하인 유저 조회
+    @GetMapping("/user-margin-requirements-under")
+    public ResponseEntity<List<MarginRequirementHistory>> getUsersWithMarginRequirementUnder(
+            @RequestParam(value = "limit", defaultValue = "160") int limit) {
+        List<MarginRequirementHistory> usersUnderLimit = marginRequirementService.getUsersWithMarginRequirementUnder(limit);
+        return ResponseEntity.ok(usersUnderLimit);
     }
 
     @PostMapping("/process-all-user-limits")
