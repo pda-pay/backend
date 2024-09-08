@@ -2,6 +2,7 @@ package org.ofz.management.repository;
 
 import org.ofz.management.entity.MortgagedStock;
 import org.ofz.management.projection.MortgagedStockProjection;
+import org.ofz.management.projection.QuantityAndStockCodeOfMortgagedStock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -13,9 +14,7 @@ import java.util.Optional;
 public interface MortgagedStockRepository extends JpaRepository<MortgagedStock, Long> {
     List<MortgagedStock> findAllMortgagedStocksByUserId(Long userId);
 
-    Optional<MortgagedStock> findMortgagedStockByAccountNumberAndStockCode(String accountNumber, String stockCode);
-
-    void deleteAllByUserId(Long userId);
+    Optional<MortgagedStock> findMortgagedStockByAccountNumberAndStockCodeAndUserId(String accountNumber, String stockCode, Long userId);
 
     @Query("SELECT p.stockCode AS stockCode, p.quantity AS quantity, p.accountNumber AS accountNumber " +
             "FROM StockPriority p " +
@@ -47,4 +46,10 @@ public interface MortgagedStockRepository extends JpaRepository<MortgagedStock, 
     void deleteIfQuantityZero(@Param("accountNumber") String accountNumber,
                               @Param("stockCode") String stockCode,
                               @Param("userId") Long userId);
+
+    boolean existsByUserId(Long userId);
+
+    List<MortgagedStock> findMortgagedStocksByUserIdOrderByStockCode(Long userId);
+
+    List<QuantityAndStockCodeOfMortgagedStock> findMortgagedStocksByUserId(Long userId);
 }

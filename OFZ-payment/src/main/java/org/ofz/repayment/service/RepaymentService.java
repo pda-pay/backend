@@ -1,6 +1,7 @@
 package org.ofz.repayment.service;
 
 import lombok.RequiredArgsConstructor;
+import org.ofz.management.utils.BankCategory;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
@@ -68,11 +69,15 @@ public class RepaymentService {
         int totalDebt = payment.getPreviousMonthDebt() + payment.getCurrentMonthDebt();
 
         AccountResponse response = getPaymentAccountData(accountNumber);
+        int accountDeposit = getPaymentAccountData(accountNumber).getDeposit();
+        String companyCode = response.getCompanyCode();
 
         return RepaymentAccountResponse.builder()
                 .totalDebt(totalDebt)
                 .accountNumber(response.getAccountNumber())
-                .companyCode(response.getCompanyCode())
+                .accountName(BankCategory.fromCode(companyCode))
+                .companyCode(companyCode)
+                .accountDeposit(accountDeposit)
                 .build();
     }
 
