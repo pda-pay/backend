@@ -4,9 +4,11 @@ import org.ofz.management.entity.StockInformation;
 import org.ofz.management.repository.MortgagedStockRepository;
 import org.ofz.management.repository.StockInformationRepository;
 import org.ofz.management.utils.StockStability;
+import org.ofz.marginRequirement.entity.MarginRequirementHistory;
 import org.ofz.marginRequirement.exception.CreditLimitException;
 import org.ofz.marginRequirement.exception.PriceNotFoundException;
 import org.ofz.marginRequirement.exception.StockInformationNotFoundException;
+import org.ofz.marginRequirement.repository.MarginRequirementHistoryRepository;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.management.entity.MortgagedStock;
@@ -36,6 +38,15 @@ public class MarginRequirementService {
 
     @Autowired
     private RedisUtil redisUtil;
+
+    @Autowired
+    private MarginRequirementHistoryRepository marginRequirementHistoryRepository;
+
+    // 전체 유저의 margin requirement 조회 메소드
+    public List<MarginRequirementHistory> getAllUserMarginRequirements() {
+        // 필요한 경우 로직 추가 (예: 필터링, 변환)
+        return marginRequirementHistoryRepository.findAll();
+    }
 
     @Scheduled(cron = "0 0 0 * * ?") // 매일 자정 실행
     @Transactional
@@ -81,10 +92,25 @@ public class MarginRequirementService {
 
                 // 현재 한도 비율 계산
                 double creditLimit = payment.getCreditLimit();
+                double currentLimitRatio = 0;
+                int marginRequirement;
                 if (creditLimit == 0) {
-                    throw new CreditLimitException("유저 ID: " + userId + ", 크레딧 한도가 0입니다.");
+                    logger.error("유저 ID: {}, 크레딧 한도가 0이므로 margin_requirement를 -1로 설정합니다.", userId);
+                    marginRequirement = -1;
+                } else {
+                    currentLimitRatio = (mortgageSum / creditLimit) * 100;
+                    marginRequirement = (int) Math.floor(currentLimitRatio);
                 }
-                double currentLimitRatio = (mortgageSum / creditLimit) * 100;
+
+                // 기존의 MarginRequirementHistory 찾기 또는 새로 생성
+                MarginRequirementHistory history = marginRequirementHistoryRepository.findByUserId(userId)
+                        .orElse(new MarginRequirementHistory(userId, marginRequirement));
+
+                // margin_requirement 값 업데이트
+                history.changeMarginRequirement(marginRequirement);
+
+                // 업데이트된 값 저장
+                marginRequirementHistoryRepository.save(history);
 
                 // 최대 한도 비율 계산
                 if (maxLimit == 0) {
@@ -115,4 +141,6 @@ public class MarginRequirementService {
 
         logger.info("모든 유저의 담보 한도 비율 계산이 완료되었습니다.");
     }
+
+
 }
