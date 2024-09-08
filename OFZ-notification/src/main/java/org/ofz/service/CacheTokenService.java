@@ -1,7 +1,7 @@
 package org.ofz.service;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.dto.CacheTokenDto;
+import org.ofz.dto.redis.CacheTokenDto;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,5 +21,9 @@ public class CacheTokenService {
 
     public CacheTokenDto getCachedToken(String userLoginId) {
         return (CacheTokenDto) redisTemplate.opsForValue().get(configureNoticeTokenKey(userLoginId));
+    }
+
+    public void deleteCachedToken(String userLoginId) {
+        redisTemplate.delete(configureNoticeTokenKey(userLoginId));
     }
 }
