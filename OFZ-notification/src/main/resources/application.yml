@@ -11,22 +11,42 @@ spring:
   config:
     activate:
       on-profile: common
-
+    import: optional:file:.env[.properties]
+  rabbitmq:
+    port: ${RABBITMQ_PORT}
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
   application:
     name: notification-service
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
 
 firebase:
   config:
-    path: classpath:onefourzero-9b623-firebase-adminsdk-vdkb4-3f6b9e3d49.json
+    url: ${FIREBASE_FCM_URL}
+    path: ${FIREBASE_JSON_PATH}
+
+jwt:
+  secret: ${JWT_SECRET}
 
 server:
-  port: 8084
+  port: 8899
 
 ---
 spring:
   config:
     activate:
       on-profile: local
+
+  datasource:
+    url: ${LOCAL_PAYMENT_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
 
 eureka:
   instance:
