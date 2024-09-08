@@ -36,7 +36,7 @@ public class ManagementCacheService {
     }
 
     public void cacheMortgagedStocks(String userLoginId, List<MortgagedStockDto> mortgagedStockDtos) {
-        redisTemplate.opsForValue().set(configureMortgagedStockKey(userLoginId), mortgagedStockDtos, Duration.ofMinutes(10));
+        redisTemplate.opsForValue().set(configureMortgagedStockKey(userLoginId), mortgagedStockDtos, Duration.ofMinutes(30));
     }
 
     public List<MortgagedStockDto> getCachedMortgagedStocks(String userLoginId) {
@@ -44,7 +44,7 @@ public class ManagementCacheService {
     }
 
     public void cacheStockPriorities(String userLoginId, List<StockPriorityDto> stockPriorityDtos) {
-        redisTemplate.opsForValue().set(configureStockPriorityKey(userLoginId), stockPriorityDtos, Duration.ofMinutes(10));
+        redisTemplate.opsForValue().set(configureStockPriorityKey(userLoginId), stockPriorityDtos, Duration.ofMinutes(30));
     }
 
     public List<StockPriorityDto> getCachedStockPriorities(String userLoginId) {
@@ -52,7 +52,7 @@ public class ManagementCacheService {
     }
 
     public void cacheLimit(String userLoginId, Integer limit) {
-        redisTemplate.opsForValue().set(configureLimitKey(userLoginId), limit, Duration.ofMinutes(10));
+        redisTemplate.opsForValue().set(configureLimitKey(userLoginId), limit, Duration.ofMinutes(30));
     }
 
     public Integer getCachedLimit(String userLoginId) {
@@ -60,7 +60,7 @@ public class ManagementCacheService {
     }
 
     public void cacheAccount(String userLoginId, AccountDto accountDto) {
-        redisTemplate.opsForValue().set(configureAccountKey(userLoginId), accountDto, Duration.ofMinutes(10));
+        redisTemplate.opsForValue().set(configureAccountKey(userLoginId), accountDto, Duration.ofMinutes(30));
     }
 
     public AccountDto getCachedAccount(String userLoginId) {
@@ -68,7 +68,7 @@ public class ManagementCacheService {
     }
 
     public void cacheDate(String userLoginId, Integer date) {
-        redisTemplate.opsForValue().set(configureDateKey(userLoginId), date, Duration.ofMinutes(10));
+        redisTemplate.opsForValue().set(configureDateKey(userLoginId), date, Duration.ofMinutes(30));
     }
 
     public Integer getCachedDate(String userLoginId) {

@@ -2,9 +2,9 @@ package org.ofz.repayment.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.ofz.management.MortgagedStock;
-import org.ofz.management.StockPriority;
-import org.ofz.management.StockInformation;
+import org.ofz.management.entity.MortgagedStock;
+import org.ofz.management.entity.StockPriority;
+import org.ofz.management.entity.StockInformation;
 import org.ofz.management.utils.SecuritiesCategory;
 import org.ofz.management.utils.StockStability;
 

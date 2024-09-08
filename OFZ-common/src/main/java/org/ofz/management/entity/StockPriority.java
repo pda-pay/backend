@@ -1,4 +1,4 @@
-package org.ofz.management;
+package org.ofz.management.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

@@ -110,15 +110,19 @@ public class Payment {
         payFlag = true;
     }
 
-    public void breakRate() {
-        this.rateFlag = false;
-    }
-
-    public void fixRate() {
-        this.rateFlag = true;
-    }
-
     public int getTotalDebt() {
         return this.previousMonthDebt + this.currentMonthDebt;
+    }
+
+    public void decreasePreviousMonthDebt(int payedPreviousMonthDebt) {
+        previousMonthDebt -= payedPreviousMonthDebt;
+    }
+    public void resetOverdueDay() {overdueDay = null;}
+    public void changeRateFlag(boolean flag) {
+        this.rateFlag = flag;
+    }
+
+    public void changePayFlag(boolean flag) {
+        this.payFlag = flag;
     }
 }

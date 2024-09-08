@@ -18,6 +18,12 @@ spring:
   application:
     name: api-gateway
 
+  rabbitmq:
+    port: ${RABBITMQ_PORT}
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
 
   redis:
     host: ${REDIS_HOST}
@@ -53,7 +59,7 @@ spring:
         - id: users-loginSession
           uri: lb://payment-service
           predicates:
-            - Path=/api/users/validation, /api/users/login, /api/users/signup, /api/users/sms-request, /api/users/sms-verification
+            - Path=/api/users/validation, /api/users/login, /api/users/signup, /api/users/sms-request, /api/users/sms-verification, /api/payment/socket
           filters:
             - StripPrefix=1
 
