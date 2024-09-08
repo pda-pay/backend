@@ -1,4 +1,4 @@
-package org.ofz.dto;
+package org.ofz.dto.redis;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
