@@ -5,7 +5,6 @@ import org.ofz.management.repository.MortgagedStockRepository;
 import org.ofz.management.repository.StockInformationRepository;
 import org.ofz.management.utils.StockStability;
 import org.ofz.marginRequirement.entity.MarginRequirementHistory;
-import org.ofz.marginRequirement.exception.CreditLimitException;
 import org.ofz.marginRequirement.exception.PriceNotFoundException;
 import org.ofz.marginRequirement.exception.StockInformationNotFoundException;
 import org.ofz.marginRequirement.repository.MarginRequirementHistoryRepository;
@@ -44,7 +43,6 @@ public class MarginRequirementService {
 
     // 전체 유저의 margin requirement 조회 메소드
     public List<MarginRequirementHistory> getAllUserMarginRequirements() {
-        // 필요한 경우 로직 추가 (예: 필터링, 변환)
         return marginRequirementHistoryRepository.findAll();
     }
 
@@ -56,8 +54,8 @@ public class MarginRequirementService {
         List<Payment> allPayments = paymentRepository.findAll();
 
         for (Payment payment : allPayments) {
+            final Long userId = payment.getUser().getId();
             try {
-                Long userId = payment.getUser().getId();
                 List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findByUserId(userId);
 
                 if (mortgagedStocks == null || mortgagedStocks.isEmpty()) {
@@ -132,15 +130,15 @@ public class MarginRequirementService {
 
                 paymentRepository.save(payment);
 
-            } catch (PriceNotFoundException | StockInformationNotFoundException | CreditLimitException e) {
-                logger.error("유저 ID: {}의 한도 비율 계산 중 오류 발생: {}", payment.getUser().getId(), e.getMessage(), e);
+            } catch (PriceNotFoundException | StockInformationNotFoundException e) {
+                logger.error("유저 ID: {}의 한도 비율 계산 중 오류 발생: {}", userId, e.getMessage(), e);
+            } catch (ArithmeticException e) {
+                logger.error("유저 ID: {}의 계산 중 나누기 오류 발생: {}", userId, e.getMessage(), e);
             } catch (Exception e) {
-                logger.error("유저 ID: {}의 한도 비율 계산 중 알 수 없는 오류 발생: {}", payment.getUser().getId(), e.getMessage(), e);
+                logger.error("유저 ID: {}의 한도 비율 계산 중 알 수 없는 오류 발생: {}", userId, e.getMessage(), e);
             }
         }
 
         logger.info("모든 유저의 담보 한도 비율 계산이 완료되었습니다.");
     }
-
-
 }
