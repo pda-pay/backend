@@ -50,7 +50,7 @@ public class FCMService {
                                 .build()
                         )
                         .data(FcmMessageDto.Data.builder()
-                                .category(notificationMessage.getCategory())
+                                .category(notificationMessage.getCategory().name())
                                 .build())
                         .build())
                 .build();

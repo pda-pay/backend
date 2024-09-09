@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.ofz.notificationBox.NotificationType;
+import org.ofz.rabbitMQ.NotificationType;
 
 import java.time.LocalDate;
 

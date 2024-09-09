@@ -1,4 +1,4 @@
-package org.ofz.notificationBox;
+package org.ofz.rabbitMQ;
 
 public enum NotificationType {
     결제,
