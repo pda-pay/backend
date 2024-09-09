@@ -1,5 +1,6 @@
 package org.ofz.rabbitMQ;
 
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -9,12 +10,15 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 public class Publisher<T extends Queueable> {
+
     private final RabbitTemplate rabbitTemplate;
     private final RabbitAdmin rabbitAdmin;
+
     private void configureQueue(String queueName) {
         Map<String, Object> args = new HashMap<>();
         args.put("x-message-ttl", Duration.ofHours(24).toMillis());
@@ -25,7 +29,10 @@ public class Publisher<T extends Queueable> {
     }
 
     public void sendMessage(T queueable) {
-        configureQueue(queueable.getQeueueName());
-        rabbitTemplate.convertAndSend(queueable.getQeueueName(), queueable);
+        String queueName = queueable.getQueueName();
+        if (!Objects.requireNonNull(rabbitAdmin.getQueueProperties(queueName)).isEmpty()) {
+            configureQueue(queueName);
+        }
+        rabbitTemplate.convertAndSend(queueable.getQueueName(), queueable);
     }
 }

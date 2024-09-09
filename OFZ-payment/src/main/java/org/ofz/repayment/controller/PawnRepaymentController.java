@@ -1,7 +1,7 @@
 package org.ofz.repayment.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.repayment.dto.request.PawnPrepaymentRequest;
+import org.ofz.repayment.dto.request.PawnRepaymentRequest;
 import org.ofz.repayment.dto.response.PawnRepaymentResponse;
 import org.ofz.repayment.dto.response.PaymentInfoForPawnResponse;
 import org.ofz.repayment.service.PawnRepaymentService;
@@ -25,9 +25,9 @@ public class PawnRepaymentController {
 
     // 담보 결제 시도
     @PostMapping("/payment/pawn")
-    public ResponseEntity<PawnRepaymentResponse> prepayWithPawn(@RequestHeader("X-USER-ID") String userId, @RequestBody PawnPrepaymentRequest pawnPrepaymentRequest) {
+    public ResponseEntity<PawnRepaymentResponse> prepayWithPawn(@RequestHeader("X-USER-ID") String userId, @RequestBody PawnRepaymentRequest pawnRepaymentRequest) {
 
-        PawnRepaymentResponse response = pawnRepaymentService.prepayWithPawn(Long.parseLong(userId), pawnPrepaymentRequest);
+        PawnRepaymentResponse response = pawnRepaymentService.repayWithPawn(Long.parseLong(userId), pawnRepaymentRequest);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
