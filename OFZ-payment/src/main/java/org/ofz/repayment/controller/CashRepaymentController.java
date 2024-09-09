@@ -1,14 +1,12 @@
 package org.ofz.repayment.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.repayment.dto.request.CashPrepaymentRequest;
+import org.ofz.repayment.dto.request.CashRepaymentRequest;
 import org.ofz.repayment.dto.response.*;
 import org.ofz.repayment.service.RepaymentService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,11 +39,11 @@ public class CashRepaymentController {
     }
 
     @PostMapping("/payment/cash")
-    public ResponseEntity<CashRepaymentResponse> prepayWithCash(@RequestHeader("X-USER-ID") String userId, @RequestBody CashPrepaymentRequest cashPrepaymentRequest) {
+    public ResponseEntity<CashRepaymentResponse> prepayWithCash(@RequestHeader("X-USER-ID") String userId, @RequestBody CashRepaymentRequest cashrepaymentRequest) {
 
-        cashPrepaymentRequest.setUserId(Long.parseLong(userId));
+        cashrepaymentRequest.setUserId(Long.parseLong(userId));
 
-        CashRepaymentResponse cashRepaymentResponse = repaymentService.prepayWithCash(cashPrepaymentRequest);
+        CashRepaymentResponse cashRepaymentResponse = repaymentService.repayWithCash(cashrepaymentRequest);
 
         return new ResponseEntity<>(cashRepaymentResponse, HttpStatus.OK);
     }

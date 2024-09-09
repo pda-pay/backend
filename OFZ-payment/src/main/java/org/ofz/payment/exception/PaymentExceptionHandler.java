@@ -2,12 +2,15 @@ package org.ofz.payment.exception;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ofz.payment.exception.franchise.FranchiseNotFoundException;
 import org.ofz.payment.exception.franchise.FranchisePasswordMismatchException;
 import org.ofz.payment.exception.history.MissingParameterException;
 import org.ofz.payment.exception.payment.*;
 import org.ofz.payment.exception.websocket.*;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.SimplePaymentLogDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -17,7 +20,10 @@ import java.time.LocalDateTime;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class PaymentExceptionHandler {
+
+    private final Publisher<SimplePaymentLogDTO> publisher;
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponseDTO> catchSocketIdNullException(SocketIdNullException e) {
@@ -100,8 +106,17 @@ public class PaymentExceptionHandler {
     public ResponseEntity<PaymentFailResponseDTO> catchExceededCreditLimitException(ExceededCreditLimitException e) {
         log.error("exception class: {}", e.getClass());
 
+        publisher.sendMessage(SimplePaymentLogDTO.builder()
+                .id(0L)
+                .loginId(e.getUser().getLoginId())
+                .amount(e.getTriedAmount())
+                .franchiseCode(e.getFranchise().getCode())
+                .isSuccess("잔액 부족")
+                .date(LocalDateTime.now())
+                .build());
+
         PaymentFailResponseDTO failDTO = PaymentFailResponseDTO.builder()
-                .franchiseName(e.getFranchiseName())
+                .franchiseName(e.getFranchise().getName())
                 .triedAmount(e.getTriedAmount())
                 .message(e.getMessage())
                 .build();
@@ -188,7 +203,8 @@ public class PaymentExceptionHandler {
         private LocalDateTime timestamp;
         private String message;
 
-        public ErrorResponseDTO() {}
+        public ErrorResponseDTO() {
+        }
 
         @Builder
         public ErrorResponseDTO(String message) {
@@ -205,7 +221,8 @@ public class PaymentExceptionHandler {
         private int triedAmount;
         private String message;
 
-        public PaymentFailResponseDTO() {}
+        public PaymentFailResponseDTO() {
+        }
 
         @Builder
         public PaymentFailResponseDTO(String franchiseName, int triedAmount, String message) {

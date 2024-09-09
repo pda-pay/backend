@@ -10,7 +10,7 @@ public class Example implements Queueable {
     private String message;
     private String example;
     @Override
-    public String getQeueueName() {
+    public String getQueueName() {
         return "example";
     }
 }

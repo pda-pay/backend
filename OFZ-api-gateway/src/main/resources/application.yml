@@ -101,6 +101,13 @@ spring:
             - StripPrefix=1
             - LoginJWTFilter
 
+        - id: notification-service-admin
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notification/payment, /api/notification/repayment
+          filters:
+            - StripPrefix=1
+
         - id: notification-service
           uri: lb://notification-service
           predicates:

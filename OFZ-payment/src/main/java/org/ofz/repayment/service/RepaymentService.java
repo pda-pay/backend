@@ -6,7 +6,9 @@ import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.repository.PaymentHistoryRepository;
-import org.ofz.repayment.dto.request.CashPrepaymentRequest;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.RepaymentHistoryLogDTO;
+import org.ofz.repayment.dto.request.CashRepaymentRequest;
 import org.ofz.repayment.dto.response.*;
 import org.ofz.repayment.utils.AccountUtils;
 import org.ofz.repayment.RepaymentHistory;
@@ -35,6 +37,7 @@ public class RepaymentService {
     private final UserRepository userRepository;
     private final RepaymentHistoryRepository repaymentHistoryRepository;
     private final AccountUtils accountUtils;
+    private final Publisher<RepaymentHistoryLogDTO> publisher;
 
     public PaymentInfoForCashResponse getPaymentInfo(Long userId) {
 
@@ -99,14 +102,19 @@ public class RepaymentService {
     }
 
     @Transactional
-    public CashRepaymentResponse prepayWithCash(CashPrepaymentRequest cashPrepaymentRequest) {
+    public CashRepaymentResponse repayWithCash(CashRepaymentRequest cashRepaymentRequest) {
 
-        Long userId = cashPrepaymentRequest.getUserId();
+        Long userId = cashRepaymentRequest.getUserId();
+
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("유저가 조회되지 않습니다."));
+
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
                 .orElseThrow(() -> new PaymentNotFoundException("결제 정보를 찾을 수 없습니다."));
 
-        int prepaymentAmount = cashPrepaymentRequest.getAmount();
+        int prepaymentAmount = cashRepaymentRequest.getAmount();
 
         if (prepaymentAmount <= 0) {
             throw new InvalidPrepaymentAmountException("상환할 금액을 다시 설정해주세요.");
@@ -145,15 +153,28 @@ public class RepaymentService {
 
         response.setMessage("현금 선결제가 완료되었습니다.");
 
+        LocalDateTime nowTime = LocalDateTime.now();
+
         RepaymentHistory repaymentHistory = RepaymentHistory.builder()
                 .repaymentAmount(prepaymentAmount)
-                .createdAt(LocalDateTime.now())
+                .createdAt(nowTime)
                 .userId(userId)
                 .type(RepaymentType.PRE_CASH)
                 .build();
 
-        repaymentHistoryRepository.save(repaymentHistory);
+        RepaymentHistory savedrepaymentHistory = repaymentHistoryRepository.save(repaymentHistory);
         paymentRepository.save(payment);
+
+        RepaymentHistoryLogDTO log = RepaymentHistoryLogDTO.builder()
+                .id(savedrepaymentHistory.getId())
+                .loginId(user.getLoginId())
+                .amount(prepaymentAmount)
+                .accountNumber(accountNumber)
+                .type(RepaymentType.PRE_CASH.kor)
+                .date(nowTime)
+                .build();
+
+        publisher.sendMessage(log);
 
         return response;
     }
