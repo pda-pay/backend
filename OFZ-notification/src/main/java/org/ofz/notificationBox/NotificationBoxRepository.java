@@ -13,6 +13,6 @@ public interface NotificationBoxRepository extends JpaRepository<Notification, L
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM Notification n WHERE n.id IN :ids")
-    void deleteNotificationsByIds(List<Long> ids);
+    @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.id IN :ids")
+    void deleteNotificationsByUserIdAndIds(Long userId, List<Long> ids);
 }
