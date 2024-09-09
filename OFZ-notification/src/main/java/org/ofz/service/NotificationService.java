@@ -5,7 +5,7 @@ import org.ofz.dto.redis.CacheTokenDto;
 import org.ofz.dto.api.SaveTokenRequest;
 import org.ofz.dto.api.TokenResponse;
 import org.ofz.notificationBox.NotificationBoxRepository;
-import org.ofz.notificationBox.NotificationType;
+import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.notificationBox.entity.Notification;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -39,17 +39,17 @@ public class NotificationService {
 
     @RabbitListener(queues = QUEUE_NAME)
     public void receiveMessage(NotificationMessage notificationMessage) {
-        CacheTokenDto cacheTokenDto = cacheTokenService.getCachedToken(notificationMessage.getUserId());
+        CacheTokenDto cacheTokenDto = cacheTokenService.getCachedToken(notificationMessage.getLoginId());
 
         if (isExistCacheToken(cacheTokenDto)) {
             fcmService.sendFcmMessageByNotificationMessage(notificationMessage, cacheTokenDto.getToken());
         }
 
         Notification notification = Notification.builder()
-                .loginId(notificationMessage.getUserId())
+                .loginId(notificationMessage.getLoginId())
                 .title(notificationMessage.getTitle())
                 .content(notificationMessage.getBody())
-                .notificationType(NotificationType.valueOf(notificationMessage.getCategory()))
+                .notificationType(notificationMessage.getCategory())
                 .build();
         notificationBoxRepository.save(notification);
     }

@@ -2,7 +2,7 @@ package org.ofz.notificationBox.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import org.ofz.notificationBox.NotificationType;
+import org.ofz.rabbitMQ.NotificationType;
 
 import java.time.LocalDate;
 

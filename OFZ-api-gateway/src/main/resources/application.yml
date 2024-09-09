@@ -104,7 +104,7 @@ spring:
         - id: notification-service-admin
           uri: lb://notification-service
           predicates:
-            - Path=/api/notification/payment, /api/notification/repayment
+            - Path=/api/notification/payment, /api/notification/repayment, /api/notification/offset/all-payed, /api/notification/offset/not-all-payed
           filters:
             - StripPrefix=1
 
