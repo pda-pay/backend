@@ -14,7 +14,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class RepaymentSseService implements SseService<RepaymentHistoryLogDTO> {
 
-    private final static String REPAYMENT_ID = "repayment";
+    private final static String QUEUE_NAME = "repayment";
     private SseEmitter prepaymentEmitter;
 
     @Override
@@ -34,7 +34,7 @@ public class RepaymentSseService implements SseService<RepaymentHistoryLogDTO> {
             try {
 
                 prepaymentEmitter.send(SseEmitter.event().
-                        name(REPAYMENT_ID).
+                        name(QUEUE_NAME).
                         data(log));
             } catch (IOException e) {
 
@@ -44,7 +44,7 @@ public class RepaymentSseService implements SseService<RepaymentHistoryLogDTO> {
         }
     }
 
-    @RabbitListener(queues = REPAYMENT_ID)
+    @RabbitListener(queues = QUEUE_NAME)
     public void receiveMessage(RepaymentHistoryLogDTO log) {
 
         try {
