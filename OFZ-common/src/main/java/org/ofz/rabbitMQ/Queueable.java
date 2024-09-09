@@ -1,5 +1,5 @@
 package org.ofz.rabbitMQ;
 
 public interface Queueable {
-    String getQeueueName();
+    String getQueueName();
 }
