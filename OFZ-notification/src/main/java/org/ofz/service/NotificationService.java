@@ -39,14 +39,14 @@ public class NotificationService {
 
     @RabbitListener(queues = QUEUE_NAME)
     public void receiveMessage(NotificationMessage notificationMessage) {
-        CacheTokenDto cacheTokenDto = cacheTokenService.getCachedToken(notificationMessage.getUserId());
+        CacheTokenDto cacheTokenDto = cacheTokenService.getCachedToken(notificationMessage.getLoginId());
 
         if (isExistCacheToken(cacheTokenDto)) {
             fcmService.sendFcmMessageByNotificationMessage(notificationMessage, cacheTokenDto.getToken());
         }
 
         Notification notification = Notification.builder()
-                .loginId(notificationMessage.getUserId())
+                .loginId(notificationMessage.getLoginId())
                 .title(notificationMessage.getTitle())
                 .content(notificationMessage.getBody())
                 .notificationType(NotificationType.valueOf(notificationMessage.getCategory()))

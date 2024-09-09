@@ -14,25 +14,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ManagementCacheService {
     private final RedisTemplate<String, Object> redisTemplate;
-    private static final String prifixKey = "payment:";
+    private static final String prefixKey = "payment:";
     private String configureMortgagedStockKey(String userLoginId) {
-        return prifixKey + String.format("%s:", userLoginId) + "mortgagedStock";
+        return prefixKey + String.format("%s:", userLoginId) + "mortgagedStock";
     }
 
     private String configureStockPriorityKey(String userLoginId) {
-        return prifixKey + String.format("%s:", userLoginId) + "stockPriority";
+        return prefixKey + String.format("%s:", userLoginId) + "stockPriority";
     }
 
     private String configureLimitKey(String userLoginId) {
-        return prifixKey + String.format("%s:", userLoginId) + "limit";
+        return prefixKey + String.format("%s:", userLoginId) + "limit";
     }
 
     private String configureAccountKey(String userLoginId) {
-        return prifixKey + String.format("%s:", userLoginId) + "account";
+        return prefixKey + String.format("%s:", userLoginId) + "account";
     }
 
     private String configureDateKey(String userLoginId) {
-        return prifixKey + String.format("%s:", userLoginId) + "date";
+        return prefixKey + String.format("%s:", userLoginId) + "date";
     }
 
     public void cacheMortgagedStocks(String userLoginId, List<MortgagedStockDto> mortgagedStockDtos) {
