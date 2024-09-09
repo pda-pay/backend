@@ -14,6 +14,8 @@ import org.ofz.management.utils.StockStability;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.RepaymentHistoryLogDTO;
 import org.ofz.redis.RedisUtil;
 import org.ofz.repayment.RepaymentHistory;
 import org.ofz.repayment.RepaymentHistoryRepository;
@@ -22,15 +24,18 @@ import org.ofz.repayment.dto.MortgagedStockDTO;
 import org.ofz.repayment.dto.PresentStockPriceDTO;
 import org.ofz.repayment.dto.SellStockDTO;
 import org.ofz.management.projection.QuantityAndStockCodeOfMortgagedStock;
-import org.ofz.repayment.dto.request.PawnPrepaymentRequest;
-import org.ofz.repayment.dto.request.PawnPrepaymentRequest.*;
+import org.ofz.repayment.dto.request.PawnRepaymentRequest;
+import org.ofz.repayment.dto.request.PawnRepaymentRequest.*;
 import org.ofz.repayment.dto.response.PawnRepaymentResponse;
 import org.ofz.repayment.dto.response.PaymentInfoForPawnResponse;
 import org.ofz.repayment.exception.repayment.*;
+import org.ofz.repayment.exception.user.UserNotFoundException;
 import org.ofz.repayment.service.utils.DateChecker;
 import org.ofz.repayment.utils.AccountUtils;
 import org.ofz.repayment.utils.StockUtils;
 import org.ofz.repayment.utils.StockUtils.*;
+import org.ofz.user.User;
+import org.ofz.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +55,8 @@ public class PawnRepaymentService {
     private final AccountUtils accountUtils;
     private final RedisUtil redisUtil;
     private final RepaymentHistoryRepository repaymentHistoryRepository;
+    private final Publisher<RepaymentHistoryLogDTO> publisher;
+    private final UserRepository userRepository;
 
     public PaymentInfoForPawnResponse getPaymentInfo(Long userId) {
 
@@ -135,13 +142,17 @@ public class PawnRepaymentService {
     }
 
     @Transactional
-    public PawnRepaymentResponse prepayWithPawn(Long userId, PawnPrepaymentRequest pawnPrepaymentRequest) {
+    public PawnRepaymentResponse repayWithPawn(Long userId, PawnRepaymentRequest pawnRepaymentRequest) {
 
-//        if (DateChecker.isWeekend()) {
-//            throw new ClosedDaysException("금일은 휴장일입니다.");
-//        }
+        if (DateChecker.isWeekend()) {
+            throw new ClosedDaysException("금일은 휴장일입니다.");
+        }
 
-        int repaymentAmount = pawnPrepaymentRequest.getRepaymentAmount();
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("유저가 조회되지 않습니다."));
+
+        int repaymentAmount = pawnRepaymentRequest.getRepaymentAmount();
 
         if (repaymentAmount < 0) {
             throw new InvalidPrepaymentAmountException("상환할 금액을 다시 설정해주세요.");
@@ -157,7 +168,7 @@ public class PawnRepaymentService {
             throw new InvalidPrepaymentAmountException("결제 가능 금액보다 높은 금액으로 설정할 수 없습니다.");
         }
 
-        List<SelectedStock> selectedStocks = pawnPrepaymentRequest.getSelectedStocks();
+        List<SelectedStock> selectedStocks = pawnRepaymentRequest.getSelectedStocks();
 
         List<SellStockDTO> sellStocks = new ArrayList<>();
 
@@ -321,15 +332,30 @@ public class PawnRepaymentService {
             payment.disablePay();
         }
 
+        LocalDateTime nowTime = LocalDateTime.now();
+
         RepaymentHistory repaymentHistory = RepaymentHistory.builder()
                 .repaymentAmount(realRepaymentAmount)
-                .createdAt(LocalDateTime.now())
+                .createdAt(nowTime)
                 .userId(userId)
                 .type(RepaymentType.PRE_PAWN)
                 .build();
 
-        repaymentHistoryRepository.save(repaymentHistory);
+        RepaymentHistory savedrepaymentHistory = repaymentHistoryRepository.save(repaymentHistory);
         paymentRepository.save(payment);
+
+        // TODO: 2024-09-09 결제 플래그가 정지가 되면 알람을 보내주기
+
+        RepaymentHistoryLogDTO log = RepaymentHistoryLogDTO.builder()
+                .id(savedrepaymentHistory.getId())
+                .loginId(user.getLoginId())
+                .amount(realRepaymentAmount)
+                .accountNumber(payment.getRepaymentAccountNumber())
+                .type(RepaymentType.PRE_PAWN.kor)
+                .date(nowTime)
+                .build();
+
+        publisher.sendMessage(log);
 
         return PawnRepaymentResponse.builder()
                 .repaymentAmount(repaymentAmount)

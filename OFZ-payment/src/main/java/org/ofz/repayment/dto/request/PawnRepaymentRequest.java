@@ -9,7 +9,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PawnPrepaymentRequest {
+public class PawnRepaymentRequest {
 
     private int repaymentAmount;
     private List<SelectedStock> selectedStocks;

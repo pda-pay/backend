@@ -3,14 +3,14 @@ package org.ofz.repayment.dto.request;
 import lombok.Getter;
 
 @Getter
-public class CashPrepaymentRequest {
+public class CashRepaymentRequest {
 
     private Long userId;
     private int amount;
 
-    public CashPrepaymentRequest() {}
+    public CashRepaymentRequest() {}
 
-    public CashPrepaymentRequest(Long userId, int amount) {
+    public CashRepaymentRequest(Long userId, int amount) {
         this.amount = amount;
     }
 
