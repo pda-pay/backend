@@ -56,7 +56,7 @@ public class FCMService {
                 .build();
 
         Mono<FcmSendResponse> fcmSendResponseMono = webClient.post()
-                .uri("{fcmSendUrl}", fcmSendUrl)
+                .uri(fcmSendUrl)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .bodyValue(fcmMessageDto)

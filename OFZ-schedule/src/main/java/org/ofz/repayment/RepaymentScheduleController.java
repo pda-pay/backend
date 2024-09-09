@@ -18,6 +18,7 @@ public class RepaymentScheduleController {
         this.repaymentScheduleService = repaymentScheduleService;
     }
 
+    
     @PostMapping("/process")
     public ResponseEntity<RepaymentRes> processRepayments() {
         RepaymentRes response = repaymentScheduleService.processRepayments();

@@ -8,7 +8,6 @@ import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Queueable;
 
 @Getter
-@AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class NotificationMessage implements Queueable {
@@ -17,8 +16,16 @@ public class NotificationMessage implements Queueable {
     private String body;
     private NotificationType category;
 
+    @Builder
+    public NotificationMessage(String loginId, String title, String body, String category) {
+        this.loginId = loginId;
+        this.title = title;
+        this.body = body;
+        this.category = category;
+    }
+
     @Override
     public String getQueueName() {
-        return "nofication";
+        return "notification";
     }
 }

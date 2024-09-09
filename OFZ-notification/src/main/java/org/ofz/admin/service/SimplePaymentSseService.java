@@ -14,7 +14,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class SimplePaymentSseService implements SseService<SimplePaymentLogDTO> {
 
-    private final static String SIMPLE_PAYMENT_ID = "simple";
+    private final static String QUEUE_NAME = "simple";
     private SseEmitter simplePaymentEmitter;
 
     @Override
@@ -34,7 +34,7 @@ public class SimplePaymentSseService implements SseService<SimplePaymentLogDTO> 
             try {
 
                 simplePaymentEmitter.send(SseEmitter.event().
-                        name(SIMPLE_PAYMENT_ID).
+                        name(QUEUE_NAME).
                         data(log));
             } catch (IOException e) {
 
@@ -44,7 +44,7 @@ public class SimplePaymentSseService implements SseService<SimplePaymentLogDTO> 
         }
     }
 
-    @RabbitListener(queues = SIMPLE_PAYMENT_ID)
+    @RabbitListener(queues = QUEUE_NAME)
     public void receiveMessage(SimplePaymentLogDTO log) {
 
         try {

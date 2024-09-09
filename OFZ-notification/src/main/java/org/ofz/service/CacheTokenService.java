@@ -12,9 +12,9 @@ import java.time.Duration;
 public class CacheTokenService {
     private final RedisTemplate<String, Object> redisTemplate;
     private String configureNoticeTokenKey(String userLoginId) {
-        return prifixKey + userLoginId;
+        return prefixKey + userLoginId;
     }
-    private static final String prifixKey = "notification:";
+    private static final String prefixKey = "notification:";
     public void cacheToken(CacheTokenDto cacheTokenDto) {
         redisTemplate.opsForValue().set(configureNoticeTokenKey(cacheTokenDto.getUserLoginId()), cacheTokenDto, Duration.ofDays(30));
     }

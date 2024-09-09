@@ -15,6 +15,7 @@ import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.ofz.rabbitMQ.rabbitDto.RepaymentHistoryLogDTO;
 import org.ofz.redis.RedisUtil;
 import org.ofz.repayment.RepaymentHistory;
@@ -55,7 +56,8 @@ public class PawnRepaymentService {
     private final AccountUtils accountUtils;
     private final RedisUtil redisUtil;
     private final RepaymentHistoryRepository repaymentHistoryRepository;
-    private final Publisher<RepaymentHistoryLogDTO> publisher;
+    private final Publisher<RepaymentHistoryLogDTO> logPublisher;
+    private final Publisher<NotificationMessage> notifyPublisher;
     private final UserRepository userRepository;
 
     public PaymentInfoForPawnResponse getPaymentInfo(Long userId) {
@@ -322,14 +324,34 @@ public class PawnRepaymentService {
             payment.changeCreditLimit(0);
         }
 
+        NotificationMessage message = null;
+
         if (!marginRequirement || (!hasMortgagedStock && finalTotalDebt > 0) || (payment.getCreditLimit() == 0 && finalTotalDebt > 0)) {
             payment.changeRateFlag(false);
             payment.disablePay();
+
+            message = NotificationMessage.builder()
+                    .loginId(user.getLoginId())
+                    .title("간편 결제 서비스 정지")
+                    .body("상환해야 할 금액이 남아 있지만, 담보가 없습니다. 한도 및 담보를 다시 설정해 주세요.")
+                    .category("담보")
+                    .build();
         }
 
         if (!hasMortgagedStock && finalTotalDebt == 0) {
             payment.changeRateFlag(true);
             payment.disablePay();
+
+            message = NotificationMessage.builder()
+                    .loginId(user.getLoginId())
+                    .title("간편 결제 서비스 정지")
+                    .body("한도 및 담보를 다시 설정해 주세요.")
+                    .category("담보")
+                    .build();
+        }
+
+        if (message != null) {
+            notifyPublisher.sendMessage(message);
         }
 
         LocalDateTime nowTime = LocalDateTime.now();
@@ -344,8 +366,6 @@ public class PawnRepaymentService {
         RepaymentHistory savedrepaymentHistory = repaymentHistoryRepository.save(repaymentHistory);
         paymentRepository.save(payment);
 
-        // TODO: 2024-09-09 결제 플래그가 정지가 되면 알람을 보내주기
-
         RepaymentHistoryLogDTO log = RepaymentHistoryLogDTO.builder()
                 .id(savedrepaymentHistory.getId())
                 .loginId(user.getLoginId())
@@ -355,7 +375,7 @@ public class PawnRepaymentService {
                 .date(nowTime)
                 .build();
 
-        publisher.sendMessage(log);
+        logPublisher.sendMessage(log);
 
         return PawnRepaymentResponse.builder()
                 .repaymentAmount(repaymentAmount)
