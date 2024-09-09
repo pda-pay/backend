@@ -89,9 +89,9 @@ spring:
       on-profile: prod
 
   datasource:
-    url: ${PAYMENT_DB_URL}
-    username: ${PAYMENT_DB_USERNAME}
-    password: ${PAYMENT_DB_PASSWORD}
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 eureka:
