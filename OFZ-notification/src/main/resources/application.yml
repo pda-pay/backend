@@ -95,11 +95,6 @@ spring:
     activate:
       on-profile: prod
 
-  datasource:
-    url: ${PAYMENT_DB_URL}
-    username: ${PAYMENT_DB_USERNAME}
-    password: ${PAYMENT_DB_PASSWORD}
-
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 eureka:
