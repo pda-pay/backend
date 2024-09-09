@@ -9,11 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface NotificationBoxRepository extends JpaRepository<Notification, Long> {
-    @Query("SELECT n FROM Notification n WHERE n.userId = :userId ORDER BY n.createdAt DESC")
-    List<Notification> findAllByUserIdOrderByCreatedAtDesc(Long userId);
+
+    @Query("SELECT n FROM Notification n WHERE n.loginId = :loginId ORDER BY n.createdAt DESC")
+    List<Notification> findAllByLoginIdOrderByCreatedAtDesc(String loginId);
 
     @Transactional
     @Modifying
-    @Query("DELETE FROM Notification n WHERE n.userId = :userId AND n.id IN :ids")
-    void deleteNotificationsByUserIdAndIds(Long userId, List<Long> ids);
+    @Query("DELETE FROM Notification n WHERE n.loginId = :loginId AND n.id IN :ids")
+    void deleteNotificationsByLoginIdAndIds(String loginId, List<Long> ids);
 }

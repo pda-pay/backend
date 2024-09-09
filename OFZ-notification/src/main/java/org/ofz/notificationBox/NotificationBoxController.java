@@ -16,15 +16,15 @@ public class NotificationBoxController {
     private final NotificationBoxService notificationBoxService;
 
     @GetMapping("/notification")
-    public ResponseEntity<NotificationRes> getNotifications(@RequestHeader("X-USER-ID") Long userId) {
-        List<NotificationDto> notifications = notificationBoxService.getNotifications(userId);
+    public ResponseEntity<NotificationRes> getNotifications(@RequestHeader("X-LOGIN-ID") String loginId) {
+        List<NotificationDto> notifications = notificationBoxService.getNotificationsByLoginId(loginId);
         NotificationRes response = new NotificationRes(notifications);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/notification")
-    public ResponseEntity<Void> deleteNotifications(@RequestBody NotificationDeleteReq notificationDeleteReq, @RequestHeader("X-USER-ID") Long userId){
-        notificationBoxService.deleteNotificationsByIds(userId, notificationDeleteReq.getIds());
+    public ResponseEntity<Void> deleteNotifications(@RequestBody NotificationDeleteReq notificationDeleteReq, @RequestHeader("X-LOGIN-ID") String loginId) {
+        notificationBoxService.deleteNotificationsByLoginIdAndIds(loginId, notificationDeleteReq.getIds());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }
