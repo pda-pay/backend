@@ -37,6 +37,9 @@ public class AssetHistory {
     @Column(name = "mortgage_sum_rate_of_change")
     private double mortgageSumRateOfChange;
 
+    @Column(name = "max_limit", nullable = false)
+    private int maxLimit;
+
     public void updateMortgageSumRateOfChange(double rateOfChange) {
         this.mortgageSumRateOfChange = rateOfChange;
     }

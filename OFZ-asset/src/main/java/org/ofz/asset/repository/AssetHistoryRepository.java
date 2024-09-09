@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -25,23 +27,15 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
 
     // 각 유저의 최신 데이터만 조회
     @Query(value = "SELECT * FROM asset_history ah " +
-            "WHERE ah.created_at = (SELECT MAX(ah2.created_at) FROM asset_history ah2 WHERE ah2.user_id = ah.user_id AND DATE(ah2.created_at) = CURDATE())",
+            "WHERE ah.created_at = (" +
+            "SELECT MAX(ah2.created_at) " +
+            "FROM asset_history ah2 " +
+            "WHERE ah2.user_id = ah.user_id AND DATE(ah2.created_at) = CURDATE())",
             nativeQuery = true)
     List<AssetHistory> findAllLatestByUser();
 
-//    @Query("SELECT ah FROM AssetHistory ah WHERE ah.mortgageSumRateOfChange < :limit " +
-//            "AND DATE(ah.createdAt) = CURRENT_DATE")
-//    @Query(value = "SELECT * FROM asset_history ah " +
-//        "WHERE ah.id IN (" +
-//        "    SELECT MAX(sub_ah.id) " +
-//        "    FROM asset_history sub_ah " +
-//        "    WHERE DATE(sub_ah.created_at) = CURRENT_DATE " +
-//        "    AND sub_ah.mortgage_sum_rate_of_change <= :limit " +
-//        "    GROUP BY sub_ah.user_id" +
-//        ")", nativeQuery = true)
-//    List<AssetHistory> findByMortgageSumRateOfChangeLessThan(@Param("limit") double limit);
-
-    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.createdAt, ah.mortgageSumRateOfChange) " +
+    // 담보총액 변동율이 특정 값 이하인 유저 조회
+    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSumRateOfChange) " +
             "FROM AssetHistory ah " +
             "WHERE ah.id IN (" +
             "    SELECT MAX(subAh.id) " +
@@ -51,6 +45,14 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
             "    GROUP BY subAh.userId" +
             ")")
     List<AssetHistoryRateRes> findByMortgageSumRateOfChangeLessThan(@Param("limit") double limit);
+
+    // 어제부터 어제-10일 전까지의 데이터를 가져오는 쿼리
+    @Query("SELECT ah FROM AssetHistory ah WHERE ah.userId = :userId " +
+            "AND ah.createdAt BETWEEN :startDate AND :endDate " +
+            "ORDER BY ah.createdAt DESC")
+    List<AssetHistory> findDataForLast10Days(@Param("userId") Long userId,
+                                             @Param("startDate") LocalDateTime startDate,
+                                             @Param("endDate") LocalDateTime endDate);
 
 }
 
