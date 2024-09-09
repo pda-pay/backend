@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.ofz.dto.redis.CacheTokenDto;
 import org.ofz.dto.api.SaveTokenRequest;
 import org.ofz.dto.api.TokenResponse;
-import org.ofz.rabbitMQ.rabbitDto.Example;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;

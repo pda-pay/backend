@@ -46,9 +46,6 @@ jwt:
 server:
   port: 8084
 
-jwt:
-  secret: ${JWT_SECRET}
-
 ---
 spring:
   config:
