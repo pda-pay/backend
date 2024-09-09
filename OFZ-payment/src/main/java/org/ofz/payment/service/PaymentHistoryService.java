@@ -18,14 +18,14 @@ public class PaymentHistoryService {
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final UserRepository userRepository;
 
-    public List<PaymentHistoriesResponse.PaymentHistoryDTO> getPaymentHistory(int year, int month, Long userId) {
+    public List<PaymentHistoriesResponse.PaymentHistoryDTO> getPaymentHistory(int year, int month, String loginId) {
 
         if (year == 0 || month == 0) {
             throw new MissingParameterException("조회하고자 하는 연도/월을 설정해주세요.");
         }
 
         User user = userRepository
-                .findById(userId)
+                .findByLoginId(loginId)
                 .orElseThrow(() -> new UserNotFoundException("유저 정보가 조회되지 않습니다."));
 
         return paymentHistoryRepository.findPaymentHistoryByUserIdAndYearAndMonth(user.getId(), year, month);

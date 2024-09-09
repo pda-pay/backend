@@ -22,9 +22,9 @@ public class PaymentHistoryController {
     public ResponseEntity<PaymentHistoriesResponse> getPaymentHistories(
             @RequestParam(value = "year", required = false, defaultValue = "0") int year,
             @RequestParam(value = "month", required = false, defaultValue = "0") int month,
-            @RequestHeader("X-USER-ID") String userId)
+            @RequestHeader("X-LOGIN-ID") String loginId)
     {
-        List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories = paymentHistoryService.getPaymentHistory(year, month, Long.parseLong(userId));
+        List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories = paymentHistoryService.getPaymentHistory(year, month, loginId);
 
         if (paymentHistories.isEmpty()) {
             return ResponseEntity.noContent().build();
