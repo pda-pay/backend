@@ -45,6 +45,7 @@ public class NotificationService {
             fcmService.sendFcmMessageByNotificationMessage(notificationMessage, cacheTokenDto.getToken());
         }
 
+
         Notification notification = Notification.builder()
                 .loginId(notificationMessage.getLoginId())
                 .title(notificationMessage.getTitle())
