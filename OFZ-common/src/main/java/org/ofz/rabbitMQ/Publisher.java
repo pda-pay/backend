@@ -17,22 +17,10 @@ import java.util.Objects;
 public class Publisher<T extends Queueable> {
 
     private final RabbitTemplate rabbitTemplate;
-    private final RabbitAdmin rabbitAdmin;
-
-    private void configureQueue(String queueName) {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-message-ttl", Duration.ofHours(24).toMillis());
-        args.put("x-max-length", 10000);
-        args.put("x-max-length-bytes", 1048576);
-        Queue queue = new Queue(queueName, true, false, false, args);
-        rabbitAdmin.declareQueue(queue);
-    }
 
     public void sendMessage(T queueable) {
         String queueName = queueable.getQueueName();
-        if (!Objects.requireNonNull(rabbitAdmin.getQueueProperties(queueName)).isEmpty()) {
-            configureQueue(queueName);
-        }
-        rabbitTemplate.convertAndSend(queueable.getQueueName(), queueable);
+
+        rabbitTemplate.convertAndSend(queueName, queueable);
     }
 }
