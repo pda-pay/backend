@@ -97,14 +97,23 @@ public class ManagementService {
     public SavedResponse saveMortgagedStockInformation(SaveMortgagedStockRequest saveMortgagedStockRequest) {
         PaymentUser paymentUser = checkPaymentUser(saveMortgagedStockRequest.getLoginId());
         User user = paymentUser.getUser();
+        String loginId = saveMortgagedStockRequest.getLoginId();
         List<MortgagedStockDto> mortgagedStockDtos = saveMortgagedStockRequest.getMortgagedStocks();
 
         if (paymentUser.isJoined()) {
+            Payment payment = paymentUser.getPayment();
             List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
+            List<StockPriority> stockPriorities = stockPriorityRepository.findStockPrioritiesByUserIdOrderByStockRank(user.getId());
+            payment.changeCreditLimit(0);
+            stockPriorityRepository.deleteAll(stockPriorities);
             mortgagedStockRepository.deleteAll(mortgagedStocks);
+            paymentRepository.save(payment);
+
             saveMortgagedStocks(mortgagedStockDtos, user);
         } else {
-            cacheService.cacheMortgagedStocks(user.getLoginId(), mortgagedStockDtos);
+            cacheService.cacheMortgagedStocks(loginId, mortgagedStockDtos);
+            cacheService.deleteCachedStockPriorities(loginId);
+            cacheService.deleteCachedLimit(loginId);
         }
 
         return SavedResponse.success(saveMortgagedStockRequest.getLoginId());
@@ -196,33 +205,53 @@ public class ManagementService {
         final User user = paymentUser.getUser();
         final long userId = user.getId();
         double totalLimit = 0;
+        int totalMortgagedPrice = 0;
         int currentLimit = 0;
+        int totalPaymentAmount = 0;
 
         if (paymentUser.isJoined()) {
+            Payment payment = paymentUser.getPayment();
             List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findAllMortgagedStocksByUserId(user.getId());
             for (MortgagedStock mortgagedStock : mortgagedStocks) {
                 final String stockCode = mortgagedStock.getStockCode();
                 final int stockPreviousPrice = fetchStoredPrice(stockCode);
+                final int mortgagedStockQuantity = mortgagedStock.getQuantity();
                 StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
                         .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
                 final double stockMaxLimit = StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPreviousPrice);
-                totalLimit += stockMaxLimit * mortgagedStock.getQuantity();
+                totalLimit += stockMaxLimit * mortgagedStockQuantity;
+                totalMortgagedPrice += stockPreviousPrice * mortgagedStockQuantity;
             }
             currentLimit = paymentUser.getPayment().getCreditLimit();
+            totalPaymentAmount = payment.getPreviousMonthDebt() + payment.getCurrentMonthDebt();
 
-            return new UserLimitResponse((int) Math.round(totalLimit), currentLimit);
+            return UserLimitResponse.builder()
+                    .currentLimit(currentLimit)
+                    .totalLimit(totalLimit)
+                    .totalMortgagedPrice(totalMortgagedPrice)
+                    .totalPaymentAmount(totalPaymentAmount)
+                    .build();
         } else {
             List<MortgagedStockDto> mortgagedStockDtos = cacheService.getCachedMortgagedStocks(userLoginId);
             for (MortgagedStockDto mortgagedStockDto : mortgagedStockDtos) {
                 final String stockCode = mortgagedStockDto.getStockCode();
                 final int stockPreviousPrice = fetchStoredPrice(stockCode);
+                final int mortgagedStockQuantity = mortgagedStockDto.getQuantity();
                 StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
                         .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
                 final double stockMaxLimit = StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPreviousPrice);
-                totalLimit += stockMaxLimit * mortgagedStockDto.getQuantity();
+                totalLimit += stockMaxLimit * mortgagedStockQuantity;
+                totalMortgagedPrice += stockPreviousPrice * mortgagedStockQuantity;
             }
 
-            return new UserLimitResponse((int) Math.round(totalLimit), currentLimit);
+            currentLimit = (int) totalLimit;
+
+            return UserLimitResponse.builder()
+                    .currentLimit(currentLimit)
+                    .totalLimit(totalLimit)
+                    .totalMortgagedPrice(totalMortgagedPrice)
+                    .totalPaymentAmount(totalPaymentAmount)
+                    .build();
         }
     }
 
@@ -236,6 +265,8 @@ public class ManagementService {
         if (paymentUser.isJoined()) {
             Payment payment = paymentUser.getPayment();
             payment.changeCreditLimit(currentLimit);
+            payment.changePayFlag(true);
+            payment.changeRateFlag(true);
             paymentRepository.save(payment);
         } else {
             cacheService.cacheLimit(userLoginId, currentLimit);
@@ -394,7 +425,15 @@ public class ManagementService {
     @Transactional
     public CheckUserJoinedPaymentServiceResponse checkUserJoinedPaymentService(String userLoginId) {
         final PaymentUser paymentUser = checkPaymentUser(userLoginId);
-        return new CheckUserJoinedPaymentServiceResponse(userLoginId, paymentUser.isJoined());
+        final User user = paymentUser.getUser();
+
+        if (paymentUser.isJoined()) {
+            Payment payment = paymentUser.getPayment();
+            boolean isPaymentAccess = payment.isPayFlag() && payment.isRateFlag();
+            return new CheckUserJoinedPaymentServiceResponse(userLoginId, user.getName(), paymentUser.isJoined(), isPaymentAccess);
+        } else {
+           return new CheckUserJoinedPaymentServiceResponse(userLoginId, user.getName(), false, false);
+        }
     }
 
     @Transactional

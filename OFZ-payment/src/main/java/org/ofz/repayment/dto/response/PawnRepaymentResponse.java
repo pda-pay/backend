@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class PawnRepaymentResponse {
 
     private int repaymentAmount;
+    private int totalSellAmount;
     private int realRepaymentAmount;
     private int amountToAccount;
     private String message;

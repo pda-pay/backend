@@ -12,6 +12,7 @@ spring:
     activate:
       on-profile: common
     import: optional:file:.env[.properties]
+
   rabbitmq:
     port: ${RABBITMQ_PORT}
     host: ${RABBITMQ_HOST}
@@ -19,6 +20,12 @@ spring:
     password: ${RABBITMQ_PASSWORD}
   application:
     name: notification-service
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
   redis:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
@@ -37,13 +44,35 @@ jwt:
   secret: ${JWT_SECRET}
 
 server:
-  port: 8899
+  port: 8084
+
+jwt:
+  secret: ${JWT_SECRET}
 
 ---
 spring:
   config:
     activate:
       on-profile: local
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: ${LOCAL_PAYMENT_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+secret:
+  key:
+    base64: ${SECRET_KEY_BASE64}
+
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
+jwt:
+  secret: ${JWT_SECRET}
 
   datasource:
     url: ${NOTIFICATION_DB_URL}
@@ -68,6 +97,13 @@ spring:
   config:
     activate:
       on-profile: prod
+
+  datasource:
+    url: ${PAYMENT_DB_URL}
+    username: ${PAYMENT_DB_USERNAME}
+    password: ${PAYMENT_DB_PASSWORD}
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
 eureka:
   instance:
