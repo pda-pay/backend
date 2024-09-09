@@ -21,11 +21,11 @@ public class AssetHistoryController {
     }
 
     // 특정 유저의 mortgage_sum 변동률 조회
-    @GetMapping("/rate-of-change/{userId}")
-    public ResponseEntity<Double> getMortgageSumRateOfChange(@PathVariable Long userId) {
-        double rateOfChange = assetHistoryService.getMortgageSumRateOfChange(userId);
-        return ResponseEntity.ok(rateOfChange);
-    }
+//    @GetMapping("/rate-of-change/{userId}")
+//    public ResponseEntity<Double> getMortgageSumRateOfChange(@PathVariable Long userId) {
+//        double rateOfChange = assetHistoryService.getMortgageSumRateOfChange(userId);
+//        return ResponseEntity.ok(rateOfChange);
+//    }
 
     // 전체 유저의 최신 mortgage_sum_rate_of_change 조회
     @GetMapping("/rate-of-change/all")
@@ -49,8 +49,8 @@ public class AssetHistoryController {
     }
 
     // 특정 유저의 어제부터 어제-10일 전까지 10개의 데이터 조회
-    @GetMapping("/history/{userId}/last-10-days")
-    public ResponseEntity<List<AssetHistoryLast10DaysRes>> getLast10DaysData(@PathVariable Long userId) {
+    @GetMapping("/history/last-10-days")
+    public ResponseEntity<List<AssetHistoryLast10DaysRes>> getLast10DaysData(@RequestHeader("X-USER-ID") Long userId) {
         List<AssetHistoryLast10DaysRes> data = assetHistoryService.getLast10DaysData(userId);
         return ResponseEntity.ok(data);
     }
