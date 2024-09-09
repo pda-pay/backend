@@ -72,9 +72,9 @@ spring:
       on-profile: prod
 
   datasource:
-    url: ${PAYMENT_DB_URL}
-    username: ${PAYMENT_DB_USERNAME}
-    password: ${PAYMENT_DB_PASSWORD}
+    url: ${LOCAL_ASSET_DB_URL}
+    username: ${LOCAL_ASSET_DB_USERNAME}
+    password: ${LOCAL_ASSET_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 
