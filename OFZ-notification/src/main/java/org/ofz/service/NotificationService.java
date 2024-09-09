@@ -4,10 +4,12 @@ import lombok.RequiredArgsConstructor;
 import org.ofz.dto.redis.CacheTokenDto;
 import org.ofz.dto.api.SaveTokenRequest;
 import org.ofz.dto.api.TokenResponse;
+import org.ofz.notificationBox.NotificationBoxRepository;
+import org.ofz.notificationBox.NotificationType;
+import org.ofz.notificationBox.entity.Notification;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.IOException;
 
@@ -16,6 +18,7 @@ import java.io.IOException;
 public class NotificationService {
     private final CacheTokenService cacheTokenService;
     private final FCMService fcmService;
+    private final NotificationBoxRepository notificationBoxRepository;
     private final static String QUEUE_NAME = "notification";
 
     public TokenResponse saveUserToken(String userId, SaveTokenRequest saveTokenRequest) {
@@ -37,9 +40,21 @@ public class NotificationService {
     @RabbitListener(queues = QUEUE_NAME)
     public void receiveMessage(NotificationMessage notificationMessage) {
         CacheTokenDto cacheTokenDto = cacheTokenService.getCachedToken(notificationMessage.getUserId());
-        if (cacheTokenDto == null) {
 
+        if (isExistCacheToken(cacheTokenDto)) {
+            fcmService.sendFcmMessageByNotificationMessage(notificationMessage, cacheTokenDto.getToken());
         }
-        fcmService.sendFcmMessageByNotificationMessage(notificationMessage, cacheTokenDto.getToken());
+
+        Notification notification = Notification.builder()
+                .loginId(notificationMessage.getUserId())
+                .title(notificationMessage.getTitle())
+                .content(notificationMessage.getBody())
+                .notificationType(NotificationType.valueOf(notificationMessage.getCategory()))
+                .build();
+        notificationBoxRepository.save(notification);
+    }
+
+    private boolean isExistCacheToken(CacheTokenDto cacheTokenDto) {
+        return cacheTokenDto == null ? false : true;
     }
 }

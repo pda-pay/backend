@@ -1,6 +1,7 @@
 package org.ofz.notificationBox.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.ofz.notificationBox.NotificationType;
@@ -27,4 +28,13 @@ public class Notification {
 
     @Enumerated(EnumType.STRING)
     private NotificationType category;
+
+    @Builder
+    public Notification(String loginId, String title, String content, NotificationType notificationType) {
+        this.loginId = loginId;
+        this.title = title;
+        this.content = content;
+        this.category = notificationType;
+        this.createdAt = LocalDate.now();
+    }
 }
