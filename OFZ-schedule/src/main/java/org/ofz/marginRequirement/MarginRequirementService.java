@@ -98,7 +98,7 @@ public class MarginRequirementService {
                         .sum();
 
                 // 최대 한도 계산
-                double maxLimit = mortgagedStocks.stream()
+                double maxLimitDouble = mortgagedStocks.stream()
                         .mapToDouble(stock -> {
                             String stockCode = stock.getStockCode();
                             Integer stockPrice = redisUtil.fetchStoredPreviousPrice(stockCode);
@@ -110,6 +110,8 @@ public class MarginRequirementService {
                             return StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPrice) * stock.getQuantity();
                         })
                         .sum();
+
+                int maxLimit = (int) Math.floor(maxLimitDouble);
 
                 // 현재 한도 비율 계산
                 final int creditLimit = payment.getCreditLimit();
@@ -126,10 +128,10 @@ public class MarginRequirementService {
 
                 // 기존의 MarginRequirementHistory 찾기 또는 새로 생성
                 MarginRequirementHistory history = marginRequirementHistoryRepository.findByUserId(userId)
-                        .orElseGet(() -> new MarginRequirementHistory(userId, mortgageSum, creditLimit, marginRequirement));
+                        .orElseGet(() -> new MarginRequirementHistory(userId, mortgageSum, creditLimit, maxLimit, marginRequirement));
 
                 // mortgageSum, currentLimit 및 margin_requirement 값 업데이트
-                history.updateValues(mortgageSum, creditLimit, marginRequirement);
+                history.updateValues(mortgageSum, creditLimit, maxLimit, marginRequirement);
 
                 // 최대 한도 비율 계산
                 if (maxLimit == 0) {
