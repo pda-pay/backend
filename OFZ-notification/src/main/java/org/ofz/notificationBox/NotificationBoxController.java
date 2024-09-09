@@ -15,16 +15,16 @@ import java.util.List;
 public class NotificationBoxController {
     private final NotificationBoxService notificationBoxService;
 
-    @GetMapping("/notification/{userId}")
-    public ResponseEntity<NotificationRes> getNotifications(@PathVariable(value = "userId") Long userId) {
+    @GetMapping("/notification")
+    public ResponseEntity<NotificationRes> getNotifications(@RequestHeader("X-USER-ID") Long userId) {
         List<NotificationDto> notifications = notificationBoxService.getNotifications(userId);
         NotificationRes response = new NotificationRes(notifications);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @DeleteMapping("/notification")
-    public ResponseEntity<Void> deleteNotifications(@RequestBody NotificationDeleteReq notificationDeleteReq){
-        notificationBoxService.deleteNotificationsByIds(notificationDeleteReq.getIds());
+    public ResponseEntity<Void> deleteNotifications(@RequestBody NotificationDeleteReq notificationDeleteReq, @RequestHeader("X-USER-ID") Long userId){
+        notificationBoxService.deleteNotificationsByIds(userId, notificationDeleteReq.getIds());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

@@ -28,7 +28,7 @@ public class NotificationBoxService {
     }
 
     @Transactional
-    public void deleteNotificationsByIds(List<Long> ids) {
-        notificationBoxRepository.deleteNotificationsByIds(ids);
+    public void deleteNotificationsByIds(Long userId, List<Long> ids) {
+        notificationBoxRepository.deleteNotificationsByUserIdAndIds(userId, ids);
     }
 }
