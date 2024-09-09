@@ -25,7 +25,12 @@ import org.ofz.payment.repository.FranchiseRepository;
 import org.ofz.payment.repository.PaymentHistoryRepository;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.utils.PaymentTokenUtils;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.SimplePaymentLogDTO;
+import org.ofz.repayment.exception.user.UserNotFoundException;
 import org.ofz.repayment.utils.AccountUtils;
+import org.ofz.user.User;
+import org.ofz.user.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.socket.TextMessage;
@@ -44,6 +49,8 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final FranchiseRepository franchiseRepository;
     private final PaymentHistoryRepository paymentHistoryRepository;
+    private final UserRepository userRepository;
+    private final Publisher<SimplePaymentLogDTO> publisher;
     private final PaymentTokenUtils paymentTokenUtils;
     private final AccountUtils accountUtils;
 
@@ -56,6 +63,10 @@ public class PaymentService {
         String token = paymentRequest.getToken();
         paymentTokenUtils.validateToken(token);
         Long userId = paymentTokenUtils.extractUserId(token);
+
+        User user = userRepository
+                .findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("유저가 조회되지 않습니다."));
 
         Payment payment = paymentRepository
                 .findPaymentByUserId(userId)
@@ -75,7 +86,7 @@ public class PaymentService {
         int leftCreditLimit = creditLimit - (currentMonthDebt + paymentAmount);
 
         if (creditLimit < currentMonthDebt + paymentAmount) {
-            throw new ExceededCreditLimitException(franchise.getName(), paymentAmount, "한도 초과");
+            throw new ExceededCreditLimitException(user, franchise, paymentAmount, "한도 초과");
         }
 
         payment.plusCurrentMonthDebt(paymentAmount);
@@ -93,12 +104,13 @@ public class PaymentService {
         accountUtils.fetchDepositToAccount(ownerAccountNumber, paymentAmount);
         paymentTokenUtils.deleteToken(token);
         paymentRepository.save(payment);
-        paymentHistoryRepository.save(paymentHistory);
+        PaymentHistory savedPaymentHistory = paymentHistoryRepository.save(paymentHistory);
 
+        LocalDateTime date = LocalDateTime.now();
         PaymentResponse paymentResponse = PaymentResponse.builder()
                 .franchiseName(franchise.getName())
                 .paymentAmount(paymentAmount)
-                .date(LocalDateTime.now())
+                .date(date)
                 .leftCreditLimit(leftCreditLimit)
                 .message("결제가 완료되었습니다.")
                 .build();
@@ -107,6 +119,21 @@ public class PaymentService {
 
         session.sendMessage(new TextMessage(message));
         session.close();
+
+        // MQ
+        String userLoginId = user.getLoginId();
+        int franchiseCode = franchise.getCode();
+
+        SimplePaymentLogDTO paymentLog = SimplePaymentLogDTO.builder()
+                .id(savedPaymentHistory.getId())
+                .loginId(userLoginId)
+                .amount(paymentAmount)
+                .franchiseCode(franchiseCode)
+                .isSuccess("결제 성공")
+                .date(date)
+                .build();
+
+        publisher.sendMessage(paymentLog);
 
         return paymentResponse;
     }
