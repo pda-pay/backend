@@ -54,9 +54,9 @@ spring:
     import: optional:file:.env[.properties]
 
   datasource:
-    url: ${LOCAL_PAYMENT_DB_URL}
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PASSWORD}
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
 
     driver-class-name: com.mysql.cj.jdbc.Driver
 
