@@ -17,7 +17,7 @@ public class NotificationMessage implements Queueable {
     private NotificationType category;
 
     @Builder
-    public NotificationMessage(String loginId, String title, String body, String category) {
+    public NotificationMessage(String loginId, String title, String body, NotificationType category) {
         this.loginId = loginId;
         this.title = title;
         this.body = body;
