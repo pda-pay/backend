@@ -15,8 +15,8 @@ public class NotificationBoxService {
     private final NotificationBoxRepository notificationBoxRepository;
 
     @Transactional
-    public List<NotificationDto> getNotifications(Long userId){
-        List<Notification> notifications = notificationBoxRepository.findAllByUserId(userId);
+    public List<NotificationDto> getNotificationsByLoginId(String loginId) {
+        List<Notification> notifications = notificationBoxRepository.findAllByLoginIdOrderByCreatedAtDesc(loginId);
         return notifications.stream().map(notification ->
                 new NotificationDto(
                         notification.getId(),
@@ -28,7 +28,7 @@ public class NotificationBoxService {
     }
 
     @Transactional
-    public void deleteNotificationsByIds(Long userId, List<Long> ids) {
-        notificationBoxRepository.deleteNotificationsByUserIdAndIds(userId, ids);
+    public void deleteNotificationsByLoginIdAndIds(String loginId, List<Long> ids) {
+        notificationBoxRepository.deleteNotificationsByLoginIdAndIds(loginId, ids);
     }
 }

@@ -43,6 +43,10 @@ public class ManagementCacheService {
         return (List<MortgagedStockDto>) redisTemplate.opsForValue().get(configureMortgagedStockKey(userLoginId));
     }
 
+    public void deleteCachedMortgagedStocks(String userLoginId) {
+        redisTemplate.delete(configureMortgagedStockKey(userLoginId));
+    }
+
     public void cacheStockPriorities(String userLoginId, List<StockPriorityDto> stockPriorityDtos) {
         redisTemplate.opsForValue().set(configureStockPriorityKey(userLoginId), stockPriorityDtos, Duration.ofMinutes(30));
     }
@@ -51,12 +55,20 @@ public class ManagementCacheService {
         return (List<StockPriorityDto>) redisTemplate.opsForValue().get(configureStockPriorityKey(userLoginId));
     }
 
+    public void deleteCachedStockPriorities(String userLoginId) {
+        redisTemplate.delete(configureStockPriorityKey(userLoginId));
+    }
+
     public void cacheLimit(String userLoginId, Integer limit) {
         redisTemplate.opsForValue().set(configureLimitKey(userLoginId), limit, Duration.ofMinutes(30));
     }
 
     public Integer getCachedLimit(String userLoginId) {
         return (Integer) redisTemplate.opsForValue().get(configureLimitKey(userLoginId));
+    }
+
+    public void deleteCachedLimit(String userLoginId) {
+        redisTemplate.delete(configureLimitKey(userLoginId));
     }
 
     public void cacheAccount(String userLoginId, AccountDto accountDto) {
