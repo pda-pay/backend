@@ -5,7 +5,6 @@ import com.google.common.net.HttpHeaders;
 import lombok.RequiredArgsConstructor;
 import org.ofz.dto.fcm.FcmMessageDto;
 import org.ofz.dto.fcm.FcmSendResponse;
-import org.ofz.rabbitMQ.rabbitDto.Example;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
