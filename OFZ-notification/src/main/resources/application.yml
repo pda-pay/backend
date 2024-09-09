@@ -30,11 +30,21 @@ spring:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
 
-server:
-  port: 8084
+  datasource:
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
+
+firebase:
+  config:
+    url: ${FIREBASE_FCM_URL}
+    path: ${FIREBASE_JSON_PATH}
 
 jwt:
   secret: ${JWT_SECRET}
+
+server:
+  port: 8084
 
 ---
 spring:
@@ -60,6 +70,14 @@ secret:
 
 jwt:
   secret: ${JWT_SECRET}
+
+  datasource:
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
 
 eureka:
   instance:
