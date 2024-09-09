@@ -15,7 +15,7 @@ public class NotificationMessage implements Queueable {
     private String category;
 
     @Override
-    public String getQeueueName() {
+    public String getQueueName() {
         return "nofication";
     }
 }
