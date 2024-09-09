@@ -86,6 +86,13 @@ spring:
           filters:
             - StripPrefix=1
 
+        - id: schedule-service-admin
+          uri: lb://schedule-service
+          predicates:
+            - Path= /api/schedule/user-margin-requirements-under, /api/schedule/all-user-margin-requirements
+          filters:
+            - StripPrefix=1
+
         - id: schedule-service
           uri: lb://schedule-service
           predicates:

@@ -47,6 +47,8 @@ public interface MortgagedStockRepository extends JpaRepository<MortgagedStock, 
                               @Param("stockCode") String stockCode,
                               @Param("userId") Long userId);
 
+    List<MortgagedStock> findByUserId(Long userId);
+
     boolean existsByUserId(Long userId);
 
     List<MortgagedStock> findMortgagedStocksByUserIdOrderByStockCode(Long userId);
