@@ -10,6 +10,8 @@ import org.ofz.marginRequirement.repository.MarginRequirementHistoryRepository;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.management.entity.MortgagedStock;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.AssetMqDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,13 @@ public class MarginRequirementService {
 
     @Autowired
     private MarginRequirementHistoryRepository marginRequirementHistoryRepository;
+
+    private Publisher<AssetMqDTO> publisher;
+
+    @Autowired
+    public MarginRequirementService(Publisher<AssetMqDTO> publisher) {
+        this.publisher = publisher;
+    }
 
     // 전체 유저의 margin requirement 조회 메소드
     public List<MarginRequirementHistory> getAllUserMarginRequirements() {
@@ -154,6 +163,18 @@ public class MarginRequirementService {
                 marginRequirementHistoryRepository.save(history);
                 paymentRepository.save(payment);
 
+                // 메시지 큐로 전송할 DTO 생성 및 전송
+                AssetMqDTO assetMqDTO = AssetMqDTO.builder()
+                        .userId(userId)
+                        .mortgageSum(mortgageSum)
+                        .todayLimit(creditLimit)
+                        .maxLimit(maxLimit)
+                        .margin_requirement(marginRequirement)
+                        .build();
+
+                sendMessage(assetMqDTO); // 메시지 큐에 데이터 전송
+                logger.info("유저 ID: {}의 데이터를 메시지 큐에 전송했습니다.", userId);
+
             } catch (PriceNotFoundException | StockInformationNotFoundException e) {
                 logger.error("유저 ID: {}의 한도 비율 계산 중 오류 발생: {}", userId, e.getMessage(), e);
             } catch (ArithmeticException e) {
@@ -164,5 +185,15 @@ public class MarginRequirementService {
         }
 
         logger.info("모든 유저의 담보 한도 비율 계산이 완료되었습니다.");
+    }
+
+    // 메소드에서 메시지 전송
+    public void sendMessage(AssetMqDTO assetMqDTO) {
+        try {
+            publisher.sendMessage(assetMqDTO); // 메시지 큐로 데이터 전송
+            logger.info("메시지 전송 성공: {}", assetMqDTO);
+        } catch (Exception e) {
+            logger.error("메시지 전송 실패: {}", e.getMessage(), e);
+        }
     }
 }
