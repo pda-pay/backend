@@ -6,12 +6,13 @@ import org.ofz.asset.entity.AssetHistory;
 import org.ofz.asset.exception.DatabaseAccessException;
 import org.ofz.asset.exception.GenericServiceException;
 import org.ofz.asset.repository.AssetHistoryRepository;
-import org.ofz.asset.exception.NoDataFoundException;
+import org.ofz.rabbitMQ.rabbitDto.AssetMqDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -69,6 +70,7 @@ public class AssetHistoryService {
      * @param userId 유저 ID
      * @return mortgage_sum 변동률
      */
+    @Transactional
     public double getMortgageSumRateOfChange(Long userId) {
         try {
             List<AssetHistory> recentHistories = assetHistoryRepository.findTop2ByUserIdOrderByCreatedAtDesc(userId);
@@ -111,6 +113,7 @@ public class AssetHistoryService {
      * @param userId 유저 ID
      * @return 어제부터 어제-10일 전까지의 데이터 리스트
      */
+    @Transactional
     public List<AssetHistoryLast10DaysRes> getLast10DaysData(Long userId) {
         LocalDate endDate = LocalDate.now().minusDays(1);
         LocalDate startDate = endDate.minusDays(9);
@@ -146,6 +149,7 @@ public class AssetHistoryService {
     /**
      * 모든 유저의 변동률을 계산하고 저장
      */
+    @Transactional
     public void calculateAndSaveRateOfChangeForAllUsers() {
         List<Long> allUserIds = assetHistoryRepository.findAllUserId();
         for (Long userId : allUserIds) {
@@ -159,6 +163,31 @@ public class AssetHistoryService {
                 logger.error("User ID: {} 처리 중 예기치 않은 오류 발생: {}", userId, e.getMessage(), e);
                 throw new GenericServiceException("서버 내부 오류가 발생했습니다.", e);
             }
+        }
+    }
+
+    /**
+     * 메시지 큐로부터 AssetMqDTO 수신하여 AssetHistory 엔티티에 저장
+     * @param assetMqDTO 메시지 큐로부터 수신한 DTO
+     */
+    @Transactional
+    public void saveAssetHistoryFromMq(AssetMqDTO assetMqDTO) {
+        try {
+            AssetHistory assetHistory = new AssetHistory(
+                    null,
+                    assetMqDTO.getUserId(),
+                    assetMqDTO.getMortgageSum(),
+                    assetMqDTO.getTodayLimit(),
+                    assetMqDTO.getMargin_requirement(),
+                    LocalDateTime.now(),
+                    null,
+                    0.0, // 변동률은 초기값 0으로 설정
+                    assetMqDTO.getMaxLimit()
+            );
+            assetHistoryRepository.save(assetHistory);
+            logger.info("Asset history for user ID: {} saved successfully.", assetMqDTO.getUserId());
+        } catch (Exception e) {
+            logger.error("Error saving asset history from MQ: {}", e.getMessage(), e);
         }
     }
 }

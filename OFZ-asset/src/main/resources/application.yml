@@ -45,16 +45,9 @@ spring:
     import: optional:file:.env[.properties]
 
   datasource:
-#    url: ${LOCAL_PAYMENT_DB_URL}
     url: ${LOCAL_ASSET_DB_URL}
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  datasource2:
-    url: ${LOCAL_ASSET_DB_URL}
-    username: ${LOCAL_DB_USERNAME}
-    password: ${LOCAL_DB_PASSWORD}
+    username: ${LOCAL_ASSET_DB_USERNAME}
+    password: ${LOCAL_ASSET_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 secret:
@@ -79,9 +72,9 @@ spring:
       on-profile: prod
 
   datasource:
-    url: ${PAYMENT_DB_URL}
-    username: ${PAYMENT_DB_USERNAME}
-    password: ${PAYMENT_DB_PASSWORD}
+    url: ${LOCAL_ASSET_DB_URL}
+    username: ${LOCAL_ASSET_DB_USERNAME}
+    password: ${LOCAL_ASSET_DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 
