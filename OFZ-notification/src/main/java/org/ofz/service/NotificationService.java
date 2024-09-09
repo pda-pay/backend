@@ -38,6 +38,9 @@ public class NotificationService {
     @RabbitListener(queues = QUEUE_NAME)
     public void receiveMessage(NotificationMessage notificationMessage) {
         CacheTokenDto cacheTokenDto = cacheTokenService.getCachedToken(notificationMessage.getUserId());
+        if (cacheTokenDto == null) {
+
+        }
         fcmService.sendFcmMessageByNotificationMessage(notificationMessage, cacheTokenDto.getToken());
     }
 }

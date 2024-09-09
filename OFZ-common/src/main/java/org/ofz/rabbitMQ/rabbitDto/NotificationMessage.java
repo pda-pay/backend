@@ -12,6 +12,7 @@ public class NotificationMessage implements Queueable {
     private String userId;
     private String title;
     private String body;
+    private String category;
 
     @Override
     public String getQeueueName() {
