@@ -9,9 +9,9 @@ import java.util.TimeZone;
 @SpringBootApplication
 @EnableDiscoveryClient
 public class ApiGatewayApplication {
+
     public static void main(String[] args) {
         TimeZone.setDefault(TimeZone.getTimeZone("Asia/Seoul"));
         SpringApplication.run(ApiGatewayApplication.class, args);
     }
-
 }

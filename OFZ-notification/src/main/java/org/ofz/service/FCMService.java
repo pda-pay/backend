@@ -50,13 +50,13 @@ public class FCMService {
                                 .build()
                         )
                         .data(FcmMessageDto.Data.builder()
-                                .category(notificationMessage.getCategory())
+                                .category(notificationMessage.getCategory().name())
                                 .build())
                         .build())
                 .build();
 
         Mono<FcmSendResponse> fcmSendResponseMono = webClient.post()
-                .uri("{fcmSendUrl}", fcmSendUrl)
+                .uri(fcmSendUrl)
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + getAccessToken())
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .bodyValue(fcmMessageDto)

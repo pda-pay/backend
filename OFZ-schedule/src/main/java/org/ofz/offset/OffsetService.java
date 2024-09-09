@@ -7,6 +7,10 @@ import org.ofz.management.repository.StockRepository;
 import org.ofz.offset.dto.*;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.AllPayedOffsetLogDto;
+import org.ofz.rabbitMQ.rabbitDto.NotAllPayedOffsetLogDto;
+import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.ofz.repayment.RepaymentHistory;
 import org.ofz.repayment.RepaymentHistoryRepository;
 import org.ofz.repayment.RepaymentType;
@@ -19,11 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import static org.ofz.rabbitMQ.NotificationType.*;
 
 @Service
 public class OffsetService {
@@ -33,18 +38,24 @@ public class OffsetService {
     private final StockPriorityRepository stockPriorityRepository;
     private final StockRepository stockRepository;
     private final WebClient webClient;
+    private final Publisher<NotificationMessage> notificationpublisher;
+    private final Publisher<AllPayedOffsetLogDto> allPayedAdminPublisher;
+    private final Publisher<NotAllPayedOffsetLogDto> notAllPayedAdminPublisher;
 
     @Value("${webclient.base-url}")
     private String partnersUrl;
 
     @Autowired
-    public OffsetService(RepaymentHistoryRepository repaymentHistoryRepository, PaymentRepository paymentRepository, MortgagedStockRepository mortgagedStockRepository, StockPriorityRepository stockPriorityRepository, StockRepository stockRepository, WebClient.Builder webClientBuilder) {
+    public OffsetService(RepaymentHistoryRepository repaymentHistoryRepository, PaymentRepository paymentRepository, MortgagedStockRepository mortgagedStockRepository, StockPriorityRepository stockPriorityRepository, StockRepository stockRepository, WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationpublisher, Publisher<AllPayedOffsetLogDto> allPayedAdminPublisher, Publisher<NotAllPayedOffsetLogDto> notAllPayedAdminPublisher) {
         this.repaymentHistoryRepository = repaymentHistoryRepository;
         this.paymentRepository = paymentRepository;
         this.mortgagedStockRepository = mortgagedStockRepository;
         this.stockPriorityRepository = stockPriorityRepository;
         this.stockRepository = stockRepository;
         this.webClient = webClientBuilder.baseUrl(partnersUrl).build();
+        this.notificationpublisher = notificationpublisher;
+        this.allPayedAdminPublisher = allPayedAdminPublisher;
+        this.notAllPayedAdminPublisher = notAllPayedAdminPublisher;
     }
 
     @Transactional
@@ -52,12 +63,13 @@ public class OffsetService {
     public void processOffsets(){
         List<Payment> offsetTargets = paymentRepository.findByOverdueDay();
         for (Payment offsetTarget : offsetTargets) {
-            processOffset(offsetTarget.getUser().getId());
+            processOffset(offsetTarget.getUser());
         }
     }
 
     @Transactional
-    public void processOffset(Long userId){
+    public void processOffset(User user){
+        Long userId = user.getId();
         PaymentOverdueDebtDto overdueAndDebt = getOverdueAndDebt(userId);
         int remainingDebt = getOverdueAndDebt(userId).getPreviousMonthDebt();
 
@@ -87,24 +99,33 @@ public class OffsetService {
                 updateStockTables(accountNumber, stockCode, quantityToSell, userId);
                 payment.changeCreditLimit(0);
 
-                // 한도가 0으로 바뀌었으니 재설정하라고 알림
-
-
-                if(remainingDebt <= 0) {
+                if(remainingDebt <= 0) { // 반대매매로 전부 상환한 사용자
                     int excessPayment = Math.abs(remainingDebt);
                     totalPayedDebt -= excessPayment;
 
                     renewPaymentIfAllPayed(payment, totalPayedDebt);
                     recordRepaymentHistory(payment, totalPayedDebt);
                     increaseDeposit(mortgagedStockProjection.getAccountNumber(), excessPayment);
+
+                    // 사용자에게 알림
+                    notifyToAllPayedUser(user, excessPayment);
+
+                    // 관리자에게 메시지
+                    notifyToAdminForAllPayedUser(user, mortgagedStockProjection, excessPayment);
+
                     break;
                 }
             }
 
-            if(remainingDebt > 0) {
+            if(remainingDebt > 0) { // 반대매매로도 모두 상환하지 못한 사용자
                 renewPaymentIfNotAllPayed(payment, totalPayedDebt);
                 recordRepaymentHistory(payment, totalPayedDebt);
-                // 채무 불이행 알림
+
+                // 사용자에게 알림
+                notifyToNotAllPayedUser(user);
+
+                // 관리자에게 메시지
+                notifyToAdminForNotAllPayedUser(user, totalPayedDebt);
             }
         } catch (WebClientResponseException e) {
             throw new RuntimeException("더미 서버 API 호출 실패: " + e.getMessage());
@@ -217,4 +238,80 @@ public class OffsetService {
                 .build();
         repaymentHistoryRepository.save(repaymentHistory);
     }
+
+    private void notifyToAllPayedUser(User user, int excessPayment) {
+        NotificationMessage notificationAllPayedRepaymentMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("반대매매로 채무가 모두 상환되었습니다.")
+                .body("반대매매가 일어나서 채무가 모두 상환되었습니다." +
+                        (excessPayment > 0 ? "\n매도 후" + excessPayment + "만큼의 금액이 남아 해당 증권을 보유한 계좌로 입금되었습니다." : ""))
+                .category(상환)
+                .build();
+        notificationpublisher.sendMessage(notificationAllPayedRepaymentMessage);
+
+        NotificationMessage notificationAllPayedMortgageChangeMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("반대매매로 인해 보유 주식 및 담보 주식이 변경되었습니다.")
+                .body("반대매매로 인해 담보 주식이 매도되었습니다. 보유 주식 및 담보 주식이 변경되었으니 확인해주세요.")
+                .category(담보)
+                .build();
+        notificationpublisher.sendMessage(notificationAllPayedMortgageChangeMessage);
+
+        NotificationMessage notificationAllPayedLimitChangeMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("반대매매로 인해 한도가 0으로 변경되었습니다.")
+                .body("반대매매가 일어나서 한도가 0으로 변경되었습니다. 결제 서비스를 이용하려면 재설정해주세요.")
+                .category(한도)
+                .build();
+        notificationpublisher.sendMessage(notificationAllPayedLimitChangeMessage);
+    }
+
+    private void notifyToNotAllPayedUser(User user) {
+        NotificationMessage notificationNotAllPayedRepaymentMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("반대매매가 일어났지만 채무가 모두 상환되지 못했습니다.")
+                .body("반대매매가 일어나서 채무가 일부 상환되었지만 담보가 부족하여 모두 상환되지 못했어요. 담보를 더 잡거나 선결제를 진행해주세요.")
+                .category(상환)
+                .build();
+        notificationpublisher.sendMessage(notificationNotAllPayedRepaymentMessage);
+
+        NotificationMessage notificationNotAllPayedMortgageChangeMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("반대매매로 인해 보유 주식 및 담보 주식이 변경되었습니다.")
+                .body("반대매매로 인해 담보 주식이 매도되었습니다. 보유 주식 및 담보 주식이 변경되었으니 확인해주세요.")
+                .category(담보)
+                .build();
+        notificationpublisher.sendMessage(notificationNotAllPayedMortgageChangeMessage);
+
+        NotificationMessage notificationAllPayedLimitChangeMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("반대매매로 인해 한도가 0으로 변경되었습니다.")
+                .body("반대매매가 일어나서 한도가 0으로 변경되었습니다. 담보를 재설정하고 한도를 설정해주세요.")
+                .category(한도)
+                .build();
+        notificationpublisher.sendMessage(notificationNotAllPayedMortgageChangeMessage);
+    }
+
+    private void notifyToAdminForNotAllPayedUser(User user, int totalPayedDebt) {
+        NotAllPayedOffsetLogDto notAllPayedAdminLog = NotAllPayedOffsetLogDto.builder()
+                .loginId(user.getLoginId())
+                .title(user.getLoginId() + " 사용자에 대해 반대매매가 진행되었지만 채무를 모두 상환하지 못했습니다.")
+                .contentsAboutStock(user.getLoginId() + " 사용자의 보유 주식 및 담보가 변경되었습니다.")
+                .contentsAboutPayment(user.getLoginId() + " 사용자의 " + "이전 달 채무가 " + totalPayedDebt + "만큼 감소했습니다.")
+                .build();
+        notAllPayedAdminPublisher.sendMessage(notAllPayedAdminLog);
+    }
+
+    private void notifyToAdminForAllPayedUser(User user, MortgagedStockProjection mortgagedStockProjection, int excessPayment) {
+        AllPayedOffsetLogDto allPayedAdminLog = AllPayedOffsetLogDto.builder()
+                .loginId(user.getLoginId())
+                .title(user.getLoginId() + " 사용자가 반대매매를 통해 채무를 모두 상환했습니다.")
+                .contentsAboutStock(user.getLoginId() + " 사용자의 보유 주식 및 담보가 변경되었습니다.")
+                .contentsAboutAccount(user.getLoginId() + " 사용자의 " + mortgagedStockProjection.getAccountNumber() + " 계좌의 잔고가 " + excessPayment + "만큼 증가했습니다.")
+                .contentsAboutPayment(user.getLoginId() + " 사용자의 " + "이전 달 채무가 0으로, 연체일이 null으로, payFlag가 true으로 변경되었습니다.")
+                .build();
+        allPayedAdminPublisher.sendMessage(allPayedAdminLog);
+    }
+
 }
+
