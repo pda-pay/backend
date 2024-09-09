@@ -9,7 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 public interface NotificationBoxRepository extends JpaRepository<Notification, Long> {
-    List<Notification> findAllByUserId(Long userId);
+    @Query("SELECT n FROM Notification n WHERE n.userId = :userId ORDER BY n.createdAt DESC")
+    List<Notification> findAllByUserIdOrderByCreatedAtDesc(Long userId);
 
     @Transactional
     @Modifying

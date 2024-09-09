@@ -16,7 +16,7 @@ public class NotificationBoxService {
 
     @Transactional
     public List<NotificationDto> getNotifications(Long userId){
-        List<Notification> notifications = notificationBoxRepository.findAllByUserId(userId);
+        List<Notification> notifications = notificationBoxRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
         return notifications.stream().map(notification ->
                 new NotificationDto(
                         notification.getId(),
