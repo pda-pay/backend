@@ -41,14 +41,15 @@ public class OffsetService {
     private final StockRepository stockRepository;
     private final WebClient webClient;
     private final Publisher<NotificationMessage> notificationpublisher;
-    private final Publisher<AllPayedOffsetLogDto> allPayedAdminPublisher;
-    private final Publisher<NotAllPayedOffsetLogDto> notAllPayedAdminPublisher;
+    private final Publisher<RepaymentHistoryLogDTO> publisher;
+//    private final Publisher<AllPayedOffsetLogDto> allPayedAdminPublisher;
+//    private final Publisher<NotAllPayedOffsetLogDto> notAllPayedAdminPublisher;
 
     @Value("${webclient.base-url}")
     private String partnersUrl;
 
     @Autowired
-    public OffsetService(RepaymentHistoryRepository repaymentHistoryRepository, PaymentRepository paymentRepository, MortgagedStockRepository mortgagedStockRepository, StockPriorityRepository stockPriorityRepository, StockRepository stockRepository, WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationpublisher, Publisher<AllPayedOffsetLogDto> allPayedAdminPublisher, Publisher<NotAllPayedOffsetLogDto> notAllPayedAdminPublisher) {
+    public OffsetService(RepaymentHistoryRepository repaymentHistoryRepository, PaymentRepository paymentRepository, MortgagedStockRepository mortgagedStockRepository, StockPriorityRepository stockPriorityRepository, StockRepository stockRepository, WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationpublisher, Publisher<RepaymentHistoryLogDTO> publisher) {
         this.repaymentHistoryRepository = repaymentHistoryRepository;
         this.paymentRepository = paymentRepository;
         this.mortgagedStockRepository = mortgagedStockRepository;
@@ -56,12 +57,13 @@ public class OffsetService {
         this.stockRepository = stockRepository;
         this.webClient = webClientBuilder.baseUrl(partnersUrl).build();
         this.notificationpublisher = notificationpublisher;
-        this.allPayedAdminPublisher = allPayedAdminPublisher;
-        this.notAllPayedAdminPublisher = notAllPayedAdminPublisher;
+        this.publisher = publisher;
+//        this.allPayedAdminPublisher = allPayedAdminPublisher;
+//        this.notAllPayedAdminPublisher = notAllPayedAdminPublisher;
     }
 
     @Transactional
-    @Scheduled(cron = "0 42 15 * * 1-5")
+    @Scheduled(cron = "0 52 15 * * 1-5")
     public void processOffsets(){
         List<Payment> offsetTargets = paymentRepository.findByOverdueDay();
         for (Payment offsetTarget : offsetTargets) {
@@ -315,6 +317,7 @@ public class OffsetService {
                 .type(RepaymentType.OFFSET.kor)
                 .date(nowTime)
                 .build();
+        publisher.sendMessage(log);
     }
 }
 
