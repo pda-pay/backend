@@ -52,7 +52,7 @@ public class RepaymentSseService implements SseService<RepaymentHistoryLogDTO> {
         try {
             Thread.sleep(1000);
             sendLogEvent(log);
-        } catch (InterruptedException e) {
+        } catch (Exception e) {
             Thread.currentThread().interrupt();
             System.out.println("선상환 메시지 큐 에러: " + e.getMessage());
         }
