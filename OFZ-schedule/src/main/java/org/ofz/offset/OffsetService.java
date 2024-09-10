@@ -12,6 +12,7 @@ import org.ofz.rabbitMQ.Publisher;
 import org.ofz.rabbitMQ.rabbitDto.AllPayedOffsetLogDto;
 import org.ofz.rabbitMQ.rabbitDto.NotAllPayedOffsetLogDto;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
+import org.ofz.rabbitMQ.rabbitDto.RepaymentHistoryLogDTO;
 import org.ofz.repayment.RepaymentHistory;
 import org.ofz.repayment.RepaymentHistoryRepository;
 import org.ofz.repayment.RepaymentType;
@@ -60,7 +61,7 @@ public class OffsetService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 12 15 * * 1-5")
+    @Scheduled(cron = "0 42 15 * * 1-5")
     public void processOffsets(){
         List<Payment> offsetTargets = paymentRepository.findByOverdueDay();
         for (Payment offsetTarget : offsetTargets) {
@@ -110,10 +111,6 @@ public class OffsetService {
 
                     // 사용자에게 알림
                     notifyToAllPayedUser(user, excessPayment);
-
-                    // 관리자에게 메시지
-                    notifyToAdminForAllPayedUser(user, mortgagedStockProjection, excessPayment);
-
                     break;
                 }
             }
@@ -124,10 +121,9 @@ public class OffsetService {
 
                 // 사용자에게 알림
                 notifyToNotAllPayedUser(user);
-
-                // 관리자에게 메시지
-                notifyToAdminForNotAllPayedUser(user, totalPayedDebt);
             }
+            // 관리자에게 메시지
+            sendMessageToAdmin(user, payment, totalPayedDebt, userId);
         } catch (WebClientResponseException e) {
             throw new RuntimeException("더미 서버 API 호출 실패: " + e.getMessage());
         }
@@ -299,26 +295,26 @@ public class OffsetService {
         notificationpublisher.sendMessage(notificationNotAllPayedMortgageChangeMessage);
     }
 
-    private void notifyToAdminForNotAllPayedUser(User user, int totalPayedDebt) {
-        NotAllPayedOffsetLogDto notAllPayedAdminLog = NotAllPayedOffsetLogDto.builder()
-                .loginId(user.getLoginId())
-                .title(user.getLoginId() + " 사용자에 대해 반대매매가 진행되었지만 채무를 모두 상환하지 못했습니다.")
-                .contentsAboutStock(user.getLoginId() + " 사용자의 보유 주식 및 담보가 변경되었습니다.")
-                .contentsAboutPayment(user.getLoginId() + " 사용자의 " + "이전 달 채무가 " + totalPayedDebt + "만큼 감소했습니다.")
+    private void sendMessageToAdmin(User user, Payment payment, int totalPayedDebt, Long userId) {
+        String bankAccount = payment.getRepaymentAccountNumber();
+        LocalDateTime nowTime = LocalDateTime.now();
+        RepaymentHistory repaymentHistory = RepaymentHistory.builder()
+                .repaymentAmount(totalPayedDebt)
+                .createdAt(nowTime)
+                .userId(userId)
+                .type(RepaymentType.OFFSET)
                 .build();
-        notAllPayedAdminPublisher.sendMessage(notAllPayedAdminLog);
-    }
 
-    private void notifyToAdminForAllPayedUser(User user, MortgagedStockProjection mortgagedStockProjection, int excessPayment) {
-        AllPayedOffsetLogDto allPayedAdminLog = AllPayedOffsetLogDto.builder()
+        RepaymentHistory savedrepaymentHistory = repaymentHistoryRepository.save(repaymentHistory);
+
+        RepaymentHistoryLogDTO log = RepaymentHistoryLogDTO.builder()
+                .id(savedrepaymentHistory.getId())
                 .loginId(user.getLoginId())
-                .title(user.getLoginId() + " 사용자가 반대매매를 통해 채무를 모두 상환했습니다.")
-                .contentsAboutStock(user.getLoginId() + " 사용자의 보유 주식 및 담보가 변경되었습니다.")
-                .contentsAboutAccount(user.getLoginId() + " 사용자의 " + mortgagedStockProjection.getAccountNumber() + " 계좌의 잔고가 " + excessPayment + "만큼 증가했습니다.")
-                .contentsAboutPayment(user.getLoginId() + " 사용자의 " + "이전 달 채무가 0으로, 연체일이 null으로, payFlag가 true으로 변경되었습니다.")
+                .amount(totalPayedDebt)
+                .accountNumber(bankAccount)
+                .type(RepaymentType.OFFSET.kor)
+                .date(nowTime)
                 .build();
-        allPayedAdminPublisher.sendMessage(allPayedAdminLog);
     }
-
 }
 
