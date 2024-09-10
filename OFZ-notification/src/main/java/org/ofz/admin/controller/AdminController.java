@@ -40,15 +40,4 @@ public class AdminController {
 
         return emitter;
     }
-
-    @GetMapping(value = "/margin-requirement", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter marginRequirementLog() {
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        marginRequirementSseService.addEmitter(emitter);
-
-        emitter.onCompletion(marginRequirementSseService::removeEmitter);
-        emitter.onTimeout(marginRequirementSseService::removeEmitter);
-
-        return emitter;
-    }
 }
