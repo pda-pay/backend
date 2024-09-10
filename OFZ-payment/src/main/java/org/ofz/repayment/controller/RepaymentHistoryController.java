@@ -2,7 +2,7 @@ package org.ofz.repayment.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.ofz.repayment.dto.response.RepaymentHistoryResponse;
-import org.ofz.repayment.service.RepaymentService;
+import org.ofz.repayment.service.RepaymentHistoryService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,14 +13,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class RepaymentHistoryController {
 
-    private final RepaymentService repaymentService;
+    private final RepaymentHistoryService repaymentHistoryService;
 
     @GetMapping("/payment/repayment-history")
     public ResponseEntity<RepaymentHistoryResponse> getRepaymentHistory(@RequestHeader("X-USER-ID") String userId) {
 
         Long id = Long.parseLong(userId);
 
-        RepaymentHistoryResponse response = repaymentService.getRepaymentHistory(id);
+        RepaymentHistoryResponse response = repaymentHistoryService.getRepaymentHistory(id);
 
         if (response == null) {
             return ResponseEntity.noContent().build();
