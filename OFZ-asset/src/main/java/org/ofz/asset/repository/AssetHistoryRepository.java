@@ -30,30 +30,22 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
             "WHERE ah.created_at = (" +
             "SELECT MAX(ah2.created_at) " +
             "FROM asset_history ah2 " +
-            "WHERE ah2.user_id = ah.user_id AND DATE(ah2.created_at) = CURDATE())",
+            "WHERE ah2.user_id = ah.user_id AND DATE(ah2.created_at) = :targetDate)",  // CURDATE() 대신 :targetDate 사용
             nativeQuery = true)
-    List<AssetHistory> findAllLatestByUser();
+    List<AssetHistory> findAllLatestByUser(@Param("targetDate") String targetDate);  // targetDate 파라미터 추가
+
 
     // 담보총액 변동율이 특정 값 이하인 유저 조회
-//    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSum, ah.todayLimit, ah.marginRequirement, ah.mortgageSumRateOfChange) " +
-//            "FROM AssetHistory ah " +
-//            "WHERE ah.id IN (" +
-//            "    SELECT MAX(subAh.id) " +
-//            "    FROM AssetHistory subAh " +
-//            "    WHERE FUNCTION('DATE', subAh.createdAt) = CURRENT_DATE " +
-//            "    AND subAh.mortgageSumRateOfChange <= :limit " +
-//            "    GROUP BY subAh.userId" +
-//            ")")
     @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSum, ah.todayLimit, ah.marginRequirement, ah.mortgageSumRateOfChange) " +
             "FROM AssetHistory ah " +
             "WHERE ah.id IN (" +
             "    SELECT MAX(subAh.id) " +
             "    FROM AssetHistory subAh " +
-            "    WHERE FUNCTION('DATE', subAh.createdAt) = FUNCTION('CURRENT_DATE') " + // Use CURRENT_DATE directly in JPQL
+            "    WHERE FUNCTION('DATE', subAh.createdAt) = :targetDate " +  // 'CURRENT_DATE' 대신 파라미터 사용
             "    AND subAh.mortgageSumRateOfChange <= :limit " +
             "    GROUP BY subAh.userId" +
             ")")
-    List<AssetHistoryRateRes> findByMortgageSumRateOfChangeLessThan(@Param("limit") double limit);
+    List<AssetHistoryRateRes> findByMortgageSumRateOfChangeLessThan(@Param("limit") double limit, @Param("targetDate") String targetDate);
 
     // 어제부터 어제-10일 전까지의 데이터를 가져오는 쿼리
     @Query("SELECT ah FROM AssetHistory ah WHERE ah.userId = :userId " +
