@@ -51,6 +51,7 @@ public class FCMService {
                         )
                         .data(FcmMessageDto.Data.builder()
                                 .category(notificationMessage.getCategory().name())
+                                .page(notificationMessage.getPage().kor)
                                 .build())
                         .build())
                 .build();

@@ -14,6 +14,7 @@ import org.ofz.management.utils.StockStability;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
+import org.ofz.rabbitMQ.NotificationPage;
 import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Publisher;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
@@ -336,6 +337,7 @@ public class PawnRepaymentService {
                     .title("간편 결제 서비스 정지")
                     .body("상환해야 할 금액이 남아 있지만, 담보가 없습니다. 한도 및 담보를 다시 설정해 주세요.")
                     .category(NotificationType.담보)
+                    .page(NotificationPage.ALL_MENU)
                     .build();
         }
 
@@ -348,6 +350,7 @@ public class PawnRepaymentService {
                     .title("간편 결제 서비스 정지")
                     .body("한도 및 담보를 다시 설정해 주세요.")
                     .category(NotificationType.담보)
+                    .page(NotificationPage.ALL_MENU)
                     .build();
         }
 
