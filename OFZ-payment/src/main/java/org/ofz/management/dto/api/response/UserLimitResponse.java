@@ -22,7 +22,7 @@ public class UserLimitResponse {
 
     private double calculateMortgageMaintenanceRate(int currentLimit, int totalMortgagedPrice) {
         if (currentLimit == 0) {
-            throw new ArithmeticException("currentLimit zero");
+            return 0;
         }
 
         double rate = ((double) totalMortgagedPrice / currentLimit) * 100;
