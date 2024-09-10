@@ -30,9 +30,9 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
             "WHERE ah.created_at = (" +
             "SELECT MAX(ah2.created_at) " +
             "FROM asset_history ah2 " +
-            "WHERE ah2.user_id = ah.user_id AND DATE(ah2.created_at) = :targetDate)",  // CURDATE() 대신 :targetDate 사용
+            "WHERE ah2.user_id = ah.user_id AND DATE(ah2.created_at) = :targetDate)",
             nativeQuery = true)
-    List<AssetHistory> findAllLatestByUser(@Param("targetDate") String targetDate);  // targetDate 파라미터 추가
+    List<AssetHistory> findAllLatestByUser(@Param("targetDate") String targetDate);
 
 
     // 담보총액 변동율이 특정 값 이하인 유저 조회
@@ -41,7 +41,7 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
             "WHERE ah.id IN (" +
             "    SELECT MAX(subAh.id) " +
             "    FROM AssetHistory subAh " +
-            "    WHERE FUNCTION('DATE', subAh.createdAt) = :targetDate " +  // 'CURRENT_DATE' 대신 파라미터 사용
+            "    WHERE FUNCTION('DATE', subAh.createdAt) = :targetDate " +
             "    AND subAh.mortgageSumRateOfChange <= :limit " +
             "    GROUP BY subAh.userId" +
             ")")
