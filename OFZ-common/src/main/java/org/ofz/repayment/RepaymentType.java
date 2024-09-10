@@ -12,4 +12,14 @@ public enum RepaymentType {
     RepaymentType(String kor) {
         this.kor = kor;
     }
+
+    public static String getKorNameByType(String type) {
+        for (RepaymentType repaymentType : RepaymentType.values()) {
+            if (repaymentType.name().equals(type)) {
+                return repaymentType.kor;
+            }
+        }
+
+        return null;
+    }
 }
