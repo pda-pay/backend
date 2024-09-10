@@ -62,6 +62,7 @@ public class AssetHistoryService {
         // Step 2: limit 값을 확인하기 위해 로그를 남깁니다
         logger.info("담보총액 변동률이 {} 이하인 Asset History를 조회합니다.", rateOfChangeLimit);
 
+        System.out.println(LocalDateTime.now());
         // Step 3: 레포지토리 메소드를 실행하여 데이터를 조회합니다
         List<AssetHistoryRateRes> assetHistoryList = assetHistoryRepository.findByMortgageSumRateOfChangeLessThan(rateOfChangeLimit);
 
