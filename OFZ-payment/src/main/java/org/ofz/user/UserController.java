@@ -53,7 +53,7 @@ public class UserController {
         JwtToken jwtToken = jwtTokenProvider.generateToken(userLoginReq.getLoginId());
 
         ResponseCookie accessTokenCookie = ResponseCookie.from( "accessToken", jwtToken.getAccessToken())
-//                .path("/")
+                .path("/")
 //                .domain("localhost")
                 .maxAge(12 * 60 * 60)
                 .sameSite("None")
