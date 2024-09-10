@@ -51,7 +51,7 @@ public class SmsService {
         // 전화번호로 기존 인증 코드 조회
         Optional<VerificationCode> existingCode = verificationCodeRepositoryImpl.findByPhoneNumber(to);
         if (existingCode.isPresent() && !existingCode.get().isExpired(sentAt)) {
-            throw new VerificationCodeAlreadySentException("이미 인증 코드가 발송되었습니다. 잠시 후 다시 시도해주세요.");
+            throw new VerificationCodeAlreadySentException("이미 인증 코드가 발송되었습니다. 1분 후 다시 시도해주세요.");
         }
 
         VerificationCode verificationCode = VerificationCodeGenerator.generateVerificationCode(to, sentAt);
