@@ -47,8 +47,9 @@ public class RepaymentService {
 
         int thisMonthRepaymentAmount = payment.getPreviousMonthDebt();
         int creditLimit = payment.getCreditLimit();
+        final int currentMonthDebt = payment.getCurrentMonthDebt();
 
-        final int totalDebt = payment.getPreviousMonthDebt() + payment.getCurrentMonthDebt();
+        final int totalDebt = payment.getPreviousMonthDebt() + currentMonthDebt;
         final int remainCreditLimit = payment.getCreditLimit() - totalDebt;
 
         Pageable pageable = PageRequest.of(0, 2);
@@ -57,6 +58,7 @@ public class RepaymentService {
         return PaymentInfoForCashResponse.builder()
                 .paymentAmount(thisMonthRepaymentAmount)
                 .creditLimit(creditLimit)
+                .currentMonthDebt(currentMonthDebt)
                 .remainCreditLimit(remainCreditLimit)
                 .paymentHistories(currentPaymentHistories)
                 .build();
