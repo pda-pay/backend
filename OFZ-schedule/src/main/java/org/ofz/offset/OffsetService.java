@@ -59,7 +59,7 @@ public class OffsetService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 9 * * 1-5")
+    @Scheduled(cron = "0 12 15 * * 1-5")
     public void processOffsets(){
         List<Payment> offsetTargets = paymentRepository.findByOverdueDay();
         for (Payment offsetTarget : offsetTargets) {
