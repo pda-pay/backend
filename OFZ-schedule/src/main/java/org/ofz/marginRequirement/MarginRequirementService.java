@@ -214,12 +214,17 @@ public class MarginRequirementService {
 
     // 사용자에게 알림 메시지 전송
     public void notifyToUser(User user, int mortgageSum, int marginRequirement, int creditLimit, int maxLimit) {
+        String formattedMortgageSum = String.format("%,d", mortgageSum);
+        String formattedCreditLimit = String.format("%,d", creditLimit);
+        String formattedMaxLimit= String.format("%,d", maxLimit);
+
+
         // 알림 메시지 전송
         NotificationMessage notificationMessage = NotificationMessage.builder()
                 .loginId(user.getLoginId())
                 .title("담보 유지 비율 경고")
-                .body(String.format("%s님, 전일 종가 기준 담보가치총액(%d)의 변동으로 인해 담보유지비율(%d)이 140보다 낮아졌습니다. 현재 한도는 %d이며, 결제 서비스가 정지되었습니다. 변동된 담보가치총액 기준 최대 한도(%d)로 줄일 경우 서비스 이용이 가능합니다.",
-                        user.getLoginId(), mortgageSum, marginRequirement, creditLimit, maxLimit))
+                .body(String.format("%s님, 전일 종가 기준 담보가치총액(%s원)의 변동으로 인해 담보유지비율(%d%%)이 140보다 낮아졌습니다. \n 현재 한도는 %s원이며, 결제 서비스가 정지되었습니다.\n 변동된 담보가치총액 기준 최대 한도(%d%%)로 줄일 경우 서비스 이용이 가능합니다.",
+                        user.getLoginId(), formattedMortgageSum, marginRequirement, formattedCreditLimit, formattedMaxLimit))
                 .category(NotificationType.valueOf("담보"))
                 .page(NotificationPage.ASSET)
                 .build();
@@ -227,37 +232,5 @@ public class MarginRequirementService {
         notificationPublisher.sendMessage(notificationMessage);
         logger.info("알림 메시지 전송 완료: {}", notificationMessage);
     }
-
-//    // 관리자에게 알림 메시지 전송
-//    public void notifyToAdmin(User user, int mortgageSum, int marginRequirement, int creditLimit, int maxLimit, boolean isAboveThreshold) {
-//        String title;
-//        String message;
-//
-//        if (isAboveThreshold) {
-//            // 140% 초과일 때의 알림 메시지
-//            title = String.format("유저 ID: %d, 담보 유지 비율 140% 준수", user.getId());
-//            message = String.format("유저 %s의 담보 유지 비율이 140%%를 준수 하고있습니다. 현재 담보가치총액은 %d이고, 유지 비율은 %d%%입니다. 현재 한도는 %d이며, 최대 한도는 %d입니다.",
-//                    user.getLoginId(), mortgageSum, marginRequirement, creditLimit, maxLimit);
-//        } else {
-//            // 140% 이하일 때의 알림 메시지
-//            title = String.format("유저 ID: %d, 담보 유지 비율 140% 이하", user.getId());
-//            message = String.format("유저 %s의 담보 유지 비율이 140%% 이하로 떨어졌습니다. 현재 담보가치총액은 %d이고, 유지 비율은 %d%%입니다. 현재 한도는 %d이며, 최대 한도는 %d입니다. 결제 서비스가 정지되었으므로 관리가 필요합니다.",
-//                    user.getLoginId(), mortgageSum, marginRequirement, creditLimit, maxLimit);
-//        }
-//
-//        MarginRequirementLogDto adminLog = MarginRequirementLogDto.builder()
-//                .userId(user.getId())
-//                .loginId(user.getLoginId())
-//                .mortgageSum(mortgageSum)
-//                .creditLimit(creditLimit)
-//                .marginRequirement(marginRequirement)
-//                .maxLimit(maxLimit)
-//                .title(title)
-//                .message(message)
-//                .build();
-//
-//        marginRequirementLogDtoPublisher.sendMessage(adminLog);
-//        logger.info("관리자에게 알림 전송 완료: {}", adminLog);
-//    }
 
 }
