@@ -471,8 +471,8 @@ public class ManagementService {
         }
 
         for (MortgagedStockDto mortgagedStockDto : mortgagedStockDtos) {
-            if (mortgagedStockDto.getStockCode() == stockCode
-                    && mortgagedStockDto.getAccountNumber() == accountNumber) {
+            if (mortgagedStockDto.getStockCode().equals(stockCode)
+                    && mortgagedStockDto.getAccountNumber().equals(accountNumber)) {
                 return mortgagedStockDto.getQuantity();
             }
         }
