@@ -185,6 +185,7 @@ public class AssetHistoryService {
                     assetMqDTO.getMaxLimit()
             );
             assetHistoryRepository.save(assetHistory);
+            calculateAndSaveRateOfChangeForAllUsers();
             logger.info("Asset history for user ID: {} saved successfully.", assetMqDTO.getUserId());
         } catch (Exception e) {
             logger.error("Error saving asset history from MQ: {}", e.getMessage(), e);
