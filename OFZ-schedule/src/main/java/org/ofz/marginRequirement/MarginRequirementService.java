@@ -10,6 +10,7 @@ import org.ofz.marginRequirement.repository.MarginRequirementHistoryRepository;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.management.entity.MortgagedStock;
+import org.ofz.rabbitMQ.NotificationPage;
 import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Publisher;
 import org.ofz.rabbitMQ.rabbitDto.AssetMqDTO;
@@ -208,6 +209,7 @@ public class MarginRequirementService {
                 .body(String.format("%s님, 전일 종가 기준 담보가치총액(%d)의 변동으로 인해 담보유지비율(%d)이 140보다 낮아졌습니다. 현재 한도는 %d이며, 결제 서비스가 정지되었습니다. 변동된 담보가치총액 기준 최대 한도(%d)로 줄일 경우 서비스 이용이 가능합니다.",
                         user.getLoginId(), mortgageSum, marginRequirement, creditLimit, maxLimit))
                 .category(NotificationType.valueOf("담보"))
+                .page(NotificationPage.ASSET)
                 .build();
 
         notificationPublisher.sendMessage(notificationMessage);

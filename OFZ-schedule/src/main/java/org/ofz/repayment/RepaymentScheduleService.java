@@ -2,6 +2,7 @@ package org.ofz.repayment;
 
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
+import org.ofz.rabbitMQ.NotificationPage;
 import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Publisher;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
@@ -323,6 +324,7 @@ public class RepaymentScheduleService {
                 .title("상환 완료 알림")
                 .body(String.format("상환이 완료되었습니다. 이번달 상환 금액은 %d입니다.", payment.getPreviousMonthDebt()))
                 .category(NotificationType.상환)
+                .page(NotificationPage.PAYMENT)
                 .build();
         notificationPublisher.sendMessage(userMessage);
     }
@@ -348,6 +350,7 @@ public class RepaymentScheduleService {
                 .title("일부 상환 알림")
                 .body(String.format("상환이 일부만 완료되었습니다. 3영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체대금은 %d입니다.", remainingDebt))
                 .category(NotificationType.상환)
+                .page(NotificationPage.PAYMENT)
                 .build();
         notificationPublisher.sendMessage(userMessage);
     }
@@ -370,6 +373,7 @@ public class RepaymentScheduleService {
                 .title("상환 실패 알림")
                 .body(String.format("상환이 지연되고 있습니다. 신속한 확인 요청드립니다. 3영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체 대금은 %d입니다.", payment.getPreviousMonthDebt()))
                 .category(NotificationType.상환)
+                .page(NotificationPage.PAYMENT)
                 .build();
         notificationPublisher.sendMessage(userMessage);
     }
