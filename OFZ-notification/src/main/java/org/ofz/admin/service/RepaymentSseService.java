@@ -54,8 +54,7 @@ public class RepaymentSseService implements SseService<RepaymentHistoryLogDTO> {
             sendLogEvent(log);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-
-            throw new RepaymentMQException("선상환 메시지 큐 에러: " + e.getMessage());
+            System.out.println("선상환 메시지 큐 에러: " + e.getMessage());
         }
     }
 }

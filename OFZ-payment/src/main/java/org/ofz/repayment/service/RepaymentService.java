@@ -70,9 +70,9 @@ public class RepaymentService {
 
         String accountNumber = payment.getRepaymentAccountNumber();
         int totalDebt = payment.getPreviousMonthDebt() + payment.getCurrentMonthDebt();
+        final int remainCreditLimit = payment.getCreditLimit() - totalDebt;
 
         AccountResponse response = getPaymentAccountData(accountNumber);
-        int accountDeposit = getPaymentAccountData(accountNumber).getDeposit();
         String companyCode = response.getCompanyCode();
 
         return RepaymentAccountResponse.builder()
@@ -80,7 +80,7 @@ public class RepaymentService {
                 .accountNumber(response.getAccountNumber())
                 .accountName(BankCategory.fromCode(companyCode))
                 .companyCode(companyCode)
-                .accountDeposit(accountDeposit)
+                .remainCreditLimit(remainCreditLimit)
                 .build();
     }
 
