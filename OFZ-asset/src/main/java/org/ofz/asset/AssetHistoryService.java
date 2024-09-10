@@ -211,4 +211,29 @@ public class AssetHistoryService {
             logger.error("Error saving asset history from MQ: {}", e.getMessage(), e);
         }
     }
+
+    /**
+     * marginRequirement가 특정 limit 이하인 유저 조회
+     */
+    public List<AssetHistoryRateRes> getAllByMarginRequirementLessThan(int limit) {
+        try {
+            // 현재 날짜를 targetDate로 설정 (yyyy-MM-dd 형식)
+            String targetDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            // Repository 메소드를 호출하여 데이터를 조회
+            List<AssetHistoryRateRes> results = assetHistoryRepository.findByMarginRequirementLessThan(limit, targetDate);
+
+            if (results.isEmpty()) {
+                logger.warn("marginRequirement가 {} 이하인 기록이 없습니다.", limit);
+                return Collections.emptyList();
+            } else {
+                logger.info("marginRequirement가 {} 이하인 기록 {}개를 찾았습니다.", limit, results.size());
+            }
+
+            return results;
+        } catch (DataAccessException e) {
+            logger.error("데이터베이스 접근 오류: {}", e.getMessage(), e);
+            throw new DatabaseAccessException("데이터베이스 접근 중 문제가 발생했습니다.", e);
+        }
+    }
 }
