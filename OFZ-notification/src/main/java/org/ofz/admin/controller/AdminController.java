@@ -15,11 +15,7 @@ public class AdminController {
 
     private final SimplePaymentSseService simplePaymentSseService;
     private final RepaymentSseService repaymentSseService;
-    private final AllPayedOffsetSseService allPayedOffsetSseService;
-    private final NotAllPayedOffsetSseService notAllPayedOffsetSseService;
     private final MarginRequirementSseService marginRequirementSseService;
-    private final RepaymentScheduleSseService repaymentScheduleSseService;
-
 
     @GetMapping(value = "/payment", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter simplePaymentLog() {
@@ -41,30 +37,6 @@ public class AdminController {
 
         emitter.onCompletion(repaymentSseService::removeEmitter);
         emitter.onTimeout(repaymentSseService::removeEmitter);
-
-        return emitter;
-    }
-
-    @GetMapping(value = "/offset/all-payed", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter allPayedOffsetLog() {
-
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        allPayedOffsetSseService.addEmitter(emitter);
-
-        emitter.onCompletion(allPayedOffsetSseService::removeEmitter);
-        emitter.onTimeout(allPayedOffsetSseService::removeEmitter);
-
-        return emitter;
-    }
-
-    @GetMapping(value = "/offset/not-all-payed", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter notAllPayedOffsetLog() {
-
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        notAllPayedOffsetSseService.addEmitter(emitter);
-
-        emitter.onCompletion(notAllPayedOffsetSseService::removeEmitter);
-        emitter.onTimeout(notAllPayedOffsetSseService::removeEmitter);
 
         return emitter;
     }
