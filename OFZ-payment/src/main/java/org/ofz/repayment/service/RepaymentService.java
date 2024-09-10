@@ -59,7 +59,7 @@ public class RepaymentService {
                 .paymentAmount(thisMonthRepaymentAmount)
                 .creditLimit(creditLimit)
                 .currentMonthDebt(currentMonthDebt)
-                .remainCreditLimit(remainCreditLimit)
+                .remainCreditLimit(remainCreditLimit < 0 ? 0 : remainCreditLimit)
                 .paymentHistories(currentPaymentHistories)
                 .build();
     }
