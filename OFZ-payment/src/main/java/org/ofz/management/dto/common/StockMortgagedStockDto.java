@@ -19,5 +19,5 @@ public class StockMortgagedStockDto {
     private String companyName;
     private int stabilityLevel;
     private int stockPrice;
-    private double limitPrice;
+    private int limitPrice;
 }
