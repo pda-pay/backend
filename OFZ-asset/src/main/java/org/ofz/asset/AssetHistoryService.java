@@ -56,12 +56,26 @@ public class AssetHistoryService {
      * 담보총액 변동율이 특정 값 이하인 유저 조회
      */
     public List<AssetHistoryRateRes> getAllByRateOfChangeLessThan(double limit) {
-        try {
-            return assetHistoryRepository.findByMortgageSumRateOfChangeLessThan(limit);
-        } catch (DataAccessException e) {
-            logger.error("데이터베이스 접근 오류: {}", e.getMessage(), e);
-            throw new DatabaseAccessException("데이터베이스 접근 중 문제가 발생했습니다.", e);
+        // Step 1: limit 매개변수를 정의합니다
+        double rateOfChangeLimit = limit;  // limit 매개변수의 값을 설정합니다
+
+        // Step 2: limit 값을 확인하기 위해 로그를 남깁니다
+        logger.info("담보총액 변동률이 {} 이하인 Asset History를 조회합니다.", rateOfChangeLimit);
+
+        // Step 3: 레포지토리 메소드를 실행하여 데이터를 조회합니다
+        List<AssetHistoryRateRes> assetHistoryList = assetHistoryRepository.findByMortgageSumRateOfChangeLessThan(rateOfChangeLimit);
+
+        // Step 4: 결과 리스트가 비어있는지 확인합니다
+        if (assetHistoryList.isEmpty()) {
+            logger.warn("담보총액 변동률이 {} 이하인 기록이 없습니다.", rateOfChangeLimit);
+        } else {
+            logger.info("담보총액 변동률이 {} 이하인 기록 {}개를 찾았습니다.", rateOfChangeLimit, assetHistoryList.size());
         }
+
+        // Step 5: 조회된 리스트를 반환합니다
+        return assetHistoryList;
+
+
     }
 
 
