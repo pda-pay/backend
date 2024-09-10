@@ -35,12 +35,21 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
     List<AssetHistory> findAllLatestByUser();
 
     // 담보총액 변동율이 특정 값 이하인 유저 조회
+//    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSum, ah.todayLimit, ah.marginRequirement, ah.mortgageSumRateOfChange) " +
+//            "FROM AssetHistory ah " +
+//            "WHERE ah.id IN (" +
+//            "    SELECT MAX(subAh.id) " +
+//            "    FROM AssetHistory subAh " +
+//            "    WHERE FUNCTION('DATE', subAh.createdAt) = CURRENT_DATE " +
+//            "    AND subAh.mortgageSumRateOfChange <= :limit " +
+//            "    GROUP BY subAh.userId" +
+//            ")")
     @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSum, ah.todayLimit, ah.marginRequirement, ah.mortgageSumRateOfChange) " +
             "FROM AssetHistory ah " +
             "WHERE ah.id IN (" +
             "    SELECT MAX(subAh.id) " +
             "    FROM AssetHistory subAh " +
-            "    WHERE FUNCTION('DATE', subAh.createdAt) = CURRENT_DATE " +
+            "    WHERE FUNCTION('DATE', subAh.createdAt) = FUNCTION('CURRENT_DATE') " + // Use CURRENT_DATE directly in JPQL
             "    AND subAh.mortgageSumRateOfChange <= :limit " +
             "    GROUP BY subAh.userId" +
             ")")
