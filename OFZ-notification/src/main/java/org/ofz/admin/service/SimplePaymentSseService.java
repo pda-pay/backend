@@ -30,17 +30,19 @@ public class SimplePaymentSseService implements SseService<SimplePaymentLogDTO> 
     @Override
     public void sendLogEvent(SimplePaymentLogDTO log) {
 
-        if (simplePaymentEmitter != null) {
-            try {
+        if (simplePaymentEmitter == null) {
+            throw new SimplePaymentSseException("간편 결제 SSE 에러: 생성된 SSE 객체가 없습니다.");
+        }
 
-                simplePaymentEmitter.send(SseEmitter.event().
-                        name(QUEUE_NAME).
-                        data(log));
-            } catch (IOException e) {
+        try {
 
-                removeEmitter();
-                throw new SimplePaymentSseException("간편 결제 SSE 에러: " + e.getMessage());
-            }
+            simplePaymentEmitter.send(SseEmitter.event().
+                    name(QUEUE_NAME).
+                    data(log));
+        } catch (IOException e) {
+
+            removeEmitter();
+            throw new SimplePaymentSseException("간편 결제 SSE 에러: " + e.getMessage());
         }
     }
 

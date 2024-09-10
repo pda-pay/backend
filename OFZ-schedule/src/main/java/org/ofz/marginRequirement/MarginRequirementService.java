@@ -10,6 +10,13 @@ import org.ofz.marginRequirement.repository.MarginRequirementHistoryRepository;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.management.entity.MortgagedStock;
+import org.ofz.rabbitMQ.NotificationPage;
+import org.ofz.rabbitMQ.NotificationType;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.AssetMqDTO;
+import org.ofz.rabbitMQ.rabbitDto.MarginRequirementLogDto;
+import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
+import org.ofz.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ofz.redis.RedisUtil;
 import org.springframework.dao.DataAccessException;
+import reactor.netty.udp.UdpServer;
 
 import java.util.Collections;
 import java.util.List;
@@ -42,6 +50,18 @@ public class MarginRequirementService {
     @Autowired
     private MarginRequirementHistoryRepository marginRequirementHistoryRepository;
 
+    private Publisher<AssetMqDTO> publisher;
+    private Publisher<NotificationMessage> notificationPublisher;
+
+    private Publisher<MarginRequirementLogDto> marginRequirementLogDtoPublisher;
+
+    @Autowired
+    public MarginRequirementService(Publisher<AssetMqDTO> publisher, Publisher<NotificationMessage> notificationPublisher, Publisher<MarginRequirementLogDto> marginRequirementLogDtoPublisher) {
+        this.publisher = publisher;
+        this.notificationPublisher = notificationPublisher;
+        this.marginRequirementLogDtoPublisher = marginRequirementLogDtoPublisher;
+    }
+
     // 전체 유저의 margin requirement 조회 메소드
     public List<MarginRequirementHistory> getAllUserMarginRequirements() {
         return marginRequirementHistoryRepository.findAll();
@@ -55,10 +75,6 @@ public class MarginRequirementService {
                 logger.warn("쿼리 결과가 null입니다. 빈 리스트를 반환합니다.");
                 return Collections.emptyList();
             }
-//            if (results == null || results.isEmpty()) {
-//                logger.warn("쿼리 결과가 없습니다. 한도: {}", limit);
-//                throw new NoDataFoundException("해당 조건에 맞는 데이터가 존재하지 않습니다.");
-//            }
             return results;
         } catch (DataAccessException e) {
             logger.error("데이터베이스 접근 중 오류 발생: {}", e.getMessage(), e);
@@ -78,6 +94,8 @@ public class MarginRequirementService {
 
         for (Payment payment : allPayments) {
             final Long userId = payment.getUser().getId();
+            String loginId = payment.getUser().getLoginId(); // 사용자의 로그인 ID를 가져옵니다.
+
             try {
                 List<MortgagedStock> mortgagedStocks = mortgagedStockRepository.findByUserId(userId);
 
@@ -98,7 +116,7 @@ public class MarginRequirementService {
                         .sum();
 
                 // 최대 한도 계산
-                double maxLimit = mortgagedStocks.stream()
+                double maxLimitDouble = mortgagedStocks.stream()
                         .mapToDouble(stock -> {
                             String stockCode = stock.getStockCode();
                             Integer stockPrice = redisUtil.fetchStoredPreviousPrice(stockCode);
@@ -110,6 +128,8 @@ public class MarginRequirementService {
                             return StockStability.calculateLimitPrice(stockInformation.getStabilityLevel(), stockPrice) * stock.getQuantity();
                         })
                         .sum();
+
+                int maxLimit = (int) Math.floor(maxLimitDouble);
 
                 // 현재 한도 비율 계산
                 final int creditLimit = payment.getCreditLimit();
@@ -126,10 +146,10 @@ public class MarginRequirementService {
 
                 // 기존의 MarginRequirementHistory 찾기 또는 새로 생성
                 MarginRequirementHistory history = marginRequirementHistoryRepository.findByUserId(userId)
-                        .orElseGet(() -> new MarginRequirementHistory(userId, mortgageSum, creditLimit, marginRequirement));
+                        .orElseGet(() -> new MarginRequirementHistory(userId, mortgageSum, creditLimit, maxLimit, marginRequirement));
 
                 // mortgageSum, currentLimit 및 margin_requirement 값 업데이트
-                history.updateValues(mortgageSum, creditLimit, marginRequirement);
+                history.updateValues(mortgageSum, creditLimit, maxLimit, marginRequirement);
 
                 // 최대 한도 비율 계산
                 if (maxLimit == 0) {
@@ -144,13 +164,31 @@ public class MarginRequirementService {
                 if (currentLimitRatio <= 140) {
                     payment.disableRateFlag();
                     logger.info("유저 ID: {}, 현재 한도 비율이 140% 이하이므로 rateFlag를 false로 설정합니다.", userId);
+                    notifyToUser(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit);
+//                    notifyToAdmin(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit, true);
+
+
                 } else {
                     payment.enableRateFlag();
                     logger.info("유저 ID: {}, 현재 한도 비율이 140% 초과이므로 rateFlag를 true로 설정합니다.", userId);
+//                    notifyToAdmin(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit, false);
+
                 }
 
                 marginRequirementHistoryRepository.save(history);
                 paymentRepository.save(payment);
+
+                // 메시지 큐로 전송할 DTO 생성 및 전송
+                AssetMqDTO assetMqDTO = AssetMqDTO.builder()
+                        .userId(userId)
+                        .mortgageSum(mortgageSum)
+                        .todayLimit(creditLimit)
+                        .maxLimit(maxLimit)
+                        .margin_requirement(marginRequirement)
+                        .build();
+
+                sendMessage(assetMqDTO); // 메시지 큐에 데이터 전송
+                logger.info("유저 ID: {}의 데이터를 메시지 큐에 전송했습니다.", userId);
 
             } catch (PriceNotFoundException | StockInformationNotFoundException e) {
                 logger.error("유저 ID: {}의 한도 비율 계산 중 오류 발생: {}", userId, e.getMessage(), e);
@@ -163,4 +201,63 @@ public class MarginRequirementService {
 
         logger.info("모든 유저의 담보 한도 비율 계산이 완료되었습니다.");
     }
+
+    // 메소드에서 메시지 전송
+    public void sendMessage(AssetMqDTO assetMqDTO) {
+        try {
+            publisher.sendMessage(assetMqDTO); // 메시지 큐로 데이터 전송
+            logger.info("메시지 전송 성공: {}", assetMqDTO);
+        } catch (Exception e) {
+            logger.error("메시지 전송 실패: {}", e.getMessage(), e);
+        }
+    }
+
+    // 사용자에게 알림 메시지 전송
+    public void notifyToUser(User user, int mortgageSum, int marginRequirement, int creditLimit, int maxLimit) {
+        // 알림 메시지 전송
+        NotificationMessage notificationMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("담보 유지 비율 경고")
+                .body(String.format("%s님, 전일 종가 기준 담보가치총액(%d)의 변동으로 인해 담보유지비율(%d)이 140보다 낮아졌습니다. 현재 한도는 %d이며, 결제 서비스가 정지되었습니다. 변동된 담보가치총액 기준 최대 한도(%d)로 줄일 경우 서비스 이용이 가능합니다.",
+                        user.getLoginId(), mortgageSum, marginRequirement, creditLimit, maxLimit))
+                .category(NotificationType.valueOf("담보"))
+                .page(NotificationPage.ASSET)
+                .build();
+
+        notificationPublisher.sendMessage(notificationMessage);
+        logger.info("알림 메시지 전송 완료: {}", notificationMessage);
+    }
+
+    // 관리자에게 알림 메시지 전송
+    public void notifyToAdmin(User user, int mortgageSum, int marginRequirement, int creditLimit, int maxLimit, boolean isAboveThreshold) {
+        String title;
+        String message;
+
+        if (isAboveThreshold) {
+            // 140% 초과일 때의 알림 메시지
+            title = String.format("유저 ID: %d, 담보 유지 비율 140% 준수", user.getId());
+            message = String.format("유저 %s의 담보 유지 비율이 140%%를 준수 하고있습니다. 현재 담보가치총액은 %d이고, 유지 비율은 %d%%입니다. 현재 한도는 %d이며, 최대 한도는 %d입니다.",
+                    user.getLoginId(), mortgageSum, marginRequirement, creditLimit, maxLimit);
+        } else {
+            // 140% 이하일 때의 알림 메시지
+            title = String.format("유저 ID: %d, 담보 유지 비율 140% 이하", user.getId());
+            message = String.format("유저 %s의 담보 유지 비율이 140%% 이하로 떨어졌습니다. 현재 담보가치총액은 %d이고, 유지 비율은 %d%%입니다. 현재 한도는 %d이며, 최대 한도는 %d입니다. 결제 서비스가 정지되었으므로 관리가 필요합니다.",
+                    user.getLoginId(), mortgageSum, marginRequirement, creditLimit, maxLimit);
+        }
+
+        MarginRequirementLogDto adminLog = MarginRequirementLogDto.builder()
+                .userId(user.getId())
+                .loginId(user.getLoginId())
+                .mortgageSum(mortgageSum)
+                .creditLimit(creditLimit)
+                .marginRequirement(marginRequirement)
+                .maxLimit(maxLimit)
+                .title(title)
+                .message(message)
+                .build();
+
+        marginRequirementLogDtoPublisher.sendMessage(adminLog);
+        logger.info("관리자에게 알림 전송 완료: {}", adminLog);
+    }
+
 }

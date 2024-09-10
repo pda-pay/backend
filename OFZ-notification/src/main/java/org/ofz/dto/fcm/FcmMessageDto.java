@@ -38,5 +38,6 @@ public class FcmMessageDto {
     @Getter
     public static class Data {
         private String category;
+        private String page;
     }
 }

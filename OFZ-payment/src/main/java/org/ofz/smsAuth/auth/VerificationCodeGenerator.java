@@ -7,7 +7,7 @@ public class VerificationCodeGenerator {
 
     public static VerificationCode generateVerificationCode(String phoneNumber, LocalDateTime sentAt) {
         String code = generateRandomCode();
-        LocalDateTime expiresAt = sentAt.plusMinutes(3);  // 코드 유효 기간 3분
+        LocalDateTime expiresAt = sentAt.plusMinutes(1);  // 코드 유효 기간 3분
         return new VerificationCode(phoneNumber, code, sentAt, expiresAt);
     }
 

@@ -7,6 +7,7 @@ import org.ofz.management.repository.StockRepository;
 import org.ofz.offset.dto.*;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
+import org.ofz.rabbitMQ.NotificationPage;
 import org.ofz.rabbitMQ.Publisher;
 import org.ofz.rabbitMQ.rabbitDto.AllPayedOffsetLogDto;
 import org.ofz.rabbitMQ.rabbitDto.NotAllPayedOffsetLogDto;
@@ -240,8 +241,9 @@ public class OffsetService {
                 .loginId(user.getLoginId())
                 .title("반대매매로 채무가 모두 상환되었습니다.")
                 .body("반대매매가 일어나서 채무가 모두 상환되었습니다." +
-                        (excessPayment > 0 ? "\n매도 후" + excessPayment + "만큼의 금액이 남아 해당 증권을 보유한 계좌로 입금되었습니다." : ""))
+                        (excessPayment > 0 ? "\n매도 후 " + excessPayment + "만큼의 금액이 남아 해당 증권을 보유한 계좌로 입금되었습니다." : ""))
                 .category(상환)
+                .page(NotificationPage.ASSET)
                 .build();
         notificationpublisher.sendMessage(notificationAllPayedRepaymentMessage);
 
@@ -250,6 +252,7 @@ public class OffsetService {
                 .title("반대매매로 인해 보유 주식 및 담보 주식이 변경되었습니다.")
                 .body("반대매매로 인해 담보 주식이 매도되었습니다. 보유 주식 및 담보 주식이 변경되었으니 확인해주세요.")
                 .category(담보)
+                .page(NotificationPage.ASSET)
                 .build();
         notificationpublisher.sendMessage(notificationAllPayedMortgageChangeMessage);
 
@@ -258,6 +261,7 @@ public class OffsetService {
                 .title("반대매매로 인해 한도가 0으로 변경되었습니다.")
                 .body("반대매매가 일어나서 한도가 0으로 변경되었습니다. 결제 서비스를 이용하려면 재설정해주세요.")
                 .category(한도)
+                .page(NotificationPage.ASSET)
                 .build();
         notificationpublisher.sendMessage(notificationAllPayedLimitChangeMessage);
     }
@@ -268,6 +272,7 @@ public class OffsetService {
                 .title("반대매매가 일어났지만 채무가 모두 상환되지 못했습니다.")
                 .body("반대매매가 일어나서 채무가 일부 상환되었지만 담보가 부족하여 모두 상환되지 못했어요. 담보를 더 잡거나 선결제를 진행해주세요.")
                 .category(상환)
+                .page(NotificationPage.ASSET)
                 .build();
         notificationpublisher.sendMessage(notificationNotAllPayedRepaymentMessage);
 
@@ -276,6 +281,7 @@ public class OffsetService {
                 .title("반대매매로 인해 보유 주식 및 담보 주식이 변경되었습니다.")
                 .body("반대매매로 인해 담보 주식이 매도되었습니다. 보유 주식 및 담보 주식이 변경되었으니 확인해주세요.")
                 .category(담보)
+                .page(NotificationPage.ASSET)
                 .build();
         notificationpublisher.sendMessage(notificationNotAllPayedMortgageChangeMessage);
 
@@ -284,6 +290,7 @@ public class OffsetService {
                 .title("반대매매로 인해 한도가 0으로 변경되었습니다.")
                 .body("반대매매가 일어나서 한도가 0으로 변경되었습니다. 담보를 재설정하고 한도를 설정해주세요.")
                 .category(한도)
+                .page(NotificationPage.ASSET)
                 .build();
         notificationpublisher.sendMessage(notificationNotAllPayedMortgageChangeMessage);
     }

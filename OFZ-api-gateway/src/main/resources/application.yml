@@ -89,7 +89,7 @@ spring:
         - id: schedule-service-admin
           uri: lb://schedule-service
           predicates:
-            - Path= /api/schedule/user-margin-requirements-under, /api/schedule/all-user-margin-requirements
+            - Path= /api/schedule/user-margin-requirements-under, /api/schedule/all-user-margin-requirements, /api/schedule/process-all-user-limits
           filters:
             - StripPrefix=1
 
@@ -116,6 +116,13 @@ spring:
             - StripPrefix=1
             - LoginJWTFilter
 
+        - id: asset-service-admin
+          uri: lb://asset-service
+          predicates:
+            - Path=/api/asset/rate-of-change/under, /api/asset/calculate-rate-of-change
+          filters:
+            - StripPrefix=1
+            
         - id: asset-service
           uri: lb://asset-service
           predicates:
