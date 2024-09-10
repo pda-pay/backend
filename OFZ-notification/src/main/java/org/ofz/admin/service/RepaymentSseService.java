@@ -30,17 +30,19 @@ public class RepaymentSseService implements SseService<RepaymentHistoryLogDTO> {
     @Override
     public void sendLogEvent(RepaymentHistoryLogDTO log) {
 
-        if (prepaymentEmitter != null) {
-            try {
+        if (prepaymentEmitter == null) {
+            throw new RepaymentSseException("선상환 SSE 에러: 생성된 SSE 객체가 없습니다.");
+        }
 
-                prepaymentEmitter.send(SseEmitter.event().
-                        name(QUEUE_NAME).
-                        data(log));
-            } catch (IOException e) {
+        try {
 
-                removeEmitter();
-                throw new RepaymentSseException("선상환 SSE 에러: " + e.getMessage());
-            }
+            prepaymentEmitter.send(SseEmitter.event().
+                    name(QUEUE_NAME).
+                    data(log));
+        } catch (IOException e) {
+
+            removeEmitter();
+            throw new RepaymentSseException("선상환 SSE 에러: " + e.getMessage());
         }
     }
 
