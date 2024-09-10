@@ -211,6 +211,16 @@ public class PaymentExceptionHandler {
         return new ResponseEntity<>(errorResponseDTO, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponseDTO> catchWebSocketScheduleException(WebSocketScheduleException e) {
+
+        ErrorResponseDTO errorResponseDTO = ErrorResponseDTO.builder()
+                .message(e.getMessage())
+                .build();
+
+        return new ResponseEntity<>(errorResponseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @Getter
     private static class ErrorResponseDTO {
 
