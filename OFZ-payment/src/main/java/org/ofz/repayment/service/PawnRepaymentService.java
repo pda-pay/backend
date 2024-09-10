@@ -329,6 +329,7 @@ public class PawnRepaymentService {
         NotificationMessage message = null;
 
         if (!marginRequirement || (!hasMortgagedStock && finalTotalDebt > 0) || (payment.getCreditLimit() == 0 && finalTotalDebt > 0)) {
+            payment.changeCreditLimit(0);
             payment.changeRateFlag(false);
             payment.disablePay();
 
@@ -342,6 +343,7 @@ public class PawnRepaymentService {
         }
 
         if (!hasMortgagedStock && finalTotalDebt == 0) {
+            payment.changeCreditLimit(0);
             payment.changeRateFlag(true);
             payment.disablePay();
 
