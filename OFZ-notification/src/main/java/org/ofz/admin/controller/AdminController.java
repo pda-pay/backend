@@ -1,10 +1,7 @@
 package org.ofz.admin.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.ofz.admin.service.AllPayedOffsetSseService;
-import org.ofz.admin.service.NotAllPayedOffsetSseService;
-import org.ofz.admin.service.RepaymentSseService;
-import org.ofz.admin.service.SimplePaymentSseService;
+import org.ofz.admin.service.*;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,6 +17,9 @@ public class AdminController {
     private final RepaymentSseService repaymentSseService;
     private final AllPayedOffsetSseService allPayedOffsetSseService;
     private final NotAllPayedOffsetSseService notAllPayedOffsetSseService;
+    private final MarginRequirementSseService marginRequirementSseService;
+    private final RepaymentScheduleSseService repaymentScheduleSseService;
+
 
     @GetMapping(value = "/payment", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter simplePaymentLog() {
@@ -65,6 +65,27 @@ public class AdminController {
 
         emitter.onCompletion(notAllPayedOffsetSseService::removeEmitter);
         emitter.onTimeout(notAllPayedOffsetSseService::removeEmitter);
+
+        return emitter;
+    }
+
+    @GetMapping(value = "/margin-requirement", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter marginRequirementLog() {
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+        marginRequirementSseService.addEmitter(emitter);
+
+        emitter.onCompletion(marginRequirementSseService::removeEmitter);
+        emitter.onTimeout(marginRequirementSseService::removeEmitter);
+
+        return emitter;
+    }
+
+    @GetMapping(value = "/repayment-schedule", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter repaymentScheduleLog() {
+        SseEmitter emitter = repaymentScheduleSseService.addCommonEmitter();
+
+        emitter.onCompletion(repaymentScheduleSseService::removeCommonEmitter);
+        emitter.onTimeout(repaymentScheduleSseService::removeCommonEmitter);
 
         return emitter;
     }

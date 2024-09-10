@@ -2,6 +2,10 @@ package org.ofz.repayment;
 
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
+import org.ofz.rabbitMQ.NotificationPage;
+import org.ofz.rabbitMQ.NotificationType;
+import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.*;
 import org.ofz.repayment.dto.AccountDepositRes;
 import org.ofz.repayment.dto.RepaymentRes;
 import org.ofz.repayment.exception.ExternalServiceException;
@@ -34,14 +38,22 @@ public class RepaymentScheduleService {
     @Value("${webclient.base-url}")
     private String partnersUrl;
 
+    private final Publisher<NotificationMessage> notificationPublisher;
+    private final Publisher<RepaymentHistoryLogDTO> successPublisher;
+    private final Publisher<RepaymentSchedulePartialLogDTO> partialPublisher;
+    private final Publisher<RepaymentScheduleFailureLogDTO> failurePublisher;
+
     @Autowired
     public RepaymentScheduleService(PaymentRepository paymentRepository,
                                     RepaymentHistoryRepository repaymentHistoryRepository,
-                                    WebClient.Builder webClientBuilder) {
+                                    WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationPublisher, Publisher<RepaymentHistoryLogDTO> successPublisher, Publisher<RepaymentSchedulePartialLogDTO> partialPublisher, Publisher<RepaymentScheduleFailureLogDTO> failurePublisher) {
         this.paymentRepository = paymentRepository;
         this.repaymentHistoryRepository = repaymentHistoryRepository;
-//        this.webClient = webClientBuilder.baseUrl("http://ec2-3-34-1-150.ap-northeast-2.compute.amazonaws.com").build();
         this.webClient = webClientBuilder.baseUrl(partnersUrl).build();
+        this.notificationPublisher = notificationPublisher;
+        this.successPublisher = successPublisher;
+        this.partialPublisher = partialPublisher;
+        this.failurePublisher = failurePublisher;
     }
 
     /**
@@ -182,10 +194,12 @@ public class RepaymentScheduleService {
 
         repaymentHistoryRepository.save(repaymentHistory);
 
-        // 연체일 초기화
         payment.updateOverdueDay(null);
         payment.enablePay();
+
+        sendSuccessNotification(payment);
         paymentRepository.save(payment);
+
         logger.info("상환 내역 기록 완료: 대상자 ID: {}", payment.getUser().getId());
     }
 
@@ -220,7 +234,9 @@ public class RepaymentScheduleService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+//        sendPartialNotification(payment, accountDeposit);
         repaymentHistoryRepository.save(repaymentHistory);
+
         logger.info("상환 내역 기록 완료: 대상자 ID: {}", payment.getUser().getId());
     }
 
@@ -237,7 +253,10 @@ public class RepaymentScheduleService {
         if (payment.getOverdueDay() == null) {
             payment.updateOverdueDay(LocalDate.now());
         }
+
+//        sendFailureNotification(payment);
         paymentRepository.save(payment);
+
         logger.warn("상환 실패 처리 완료: 대상자 ID: {}, 서비스 중지 및 연체일 설정", payment.getId());
     }
 
@@ -285,7 +304,80 @@ public class RepaymentScheduleService {
         }
     }
 
+    // 전체 상환 알림 전송
+    private void sendSuccessNotification(Payment payment) {
+        LocalDateTime nowTime = LocalDateTime.now();
 
+        // 관리자에게 전송
+        RepaymentHistoryLogDTO adminDto = RepaymentHistoryLogDTO.builder()
+                .id(payment.getUser().getId())
+                .loginId(payment.getUser().getLoginId())
+                .amount(payment.getPreviousMonthDebt())
+                .accountNumber(payment.getRepaymentAccountNumber())
+                .type(RepaymentType.CASH.kor)
+                .date(nowTime)
+                .build();
+        successPublisher.sendMessage(adminDto);
+
+        // 고객에게 전송
+        NotificationMessage userMessage = NotificationMessage.builder()
+                .loginId(payment.getUser().getLoginId())
+                .title("상환 완료 알림")
+                .body(String.format("상환이 완료되었습니다. 이번달 상환 금액은 %d입니다.", payment.getPreviousMonthDebt()))
+                .category(NotificationType.상환)
+                .page(NotificationPage.PAYMENT)
+                .build();
+        notificationPublisher.sendMessage(userMessage);
+    }
+
+    // 일부 상환 알림 전송
+    private void sendPartialNotification(Payment payment, int accountDeposit) {
+        int remainingDebt = payment.getPreviousMonthDebt() - accountDeposit;
+
+        // 관리자에게 전송
+        RepaymentSchedulePartialLogDTO adminDto = RepaymentSchedulePartialLogDTO.builder()
+                .userId(payment.getUser().getId())
+                .loginId(payment.getUser().getLoginId())
+                .status("PARTIAL")
+                .accountDeposit(accountDeposit)
+                .remainingDebt(remainingDebt)
+                .overdueDay(payment.getOverdueDay())
+                .build();
+        partialPublisher.sendMessage(adminDto);
+
+        // 고객에게 전송
+        NotificationMessage userMessage = NotificationMessage.builder()
+                .loginId(payment.getUser().getLoginId())
+                .title("일부 상환 알림")
+                .body(String.format("상환이 일부만 완료되었습니다. 3영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체대금은 %d입니다.", remainingDebt))
+                .category(NotificationType.상환)
+                .page(NotificationPage.PAYMENT)
+                .build();
+        notificationPublisher.sendMessage(userMessage);
+    }
+
+    // 상환 실패 알림 전송
+    private void sendFailureNotification(Payment payment) {
+        // 관리자에게 전송
+        RepaymentScheduleFailureLogDTO adminDto = RepaymentScheduleFailureLogDTO.builder()
+                .userId(payment.getUser().getId())
+                .loginId(payment.getUser().getLoginId())
+                .status("FAILURE")
+                .previousMonthDebt(payment.getPreviousMonthDebt())
+                .overdueDay(payment.getOverdueDay())
+                .build();
+        failurePublisher.sendMessage(adminDto);
+
+        // 고객에게 전송
+        NotificationMessage userMessage = NotificationMessage.builder()
+                .loginId(payment.getUser().getLoginId())
+                .title("상환 실패 알림")
+                .body(String.format("상환이 지연되고 있습니다. 신속한 확인 요청드립니다. 3영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체 대금은 %d입니다.", payment.getPreviousMonthDebt()))
+                .category(NotificationType.상환)
+                .page(NotificationPage.PAYMENT)
+                .build();
+        notificationPublisher.sendMessage(userMessage);
+    }
 
 
 }
