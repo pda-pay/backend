@@ -255,7 +255,7 @@ public class RepaymentScheduleService {
             payment.updateOverdueDay(LocalDate.now());
         }
 
-        sendFailureNotification(payment, repaymentAmount);
+        sendFailureNotification(payment);
         paymentRepository.save(payment);
 
         logger.warn("상환 실패 처리 완료: 대상자 ID: {}, 서비스 중지 및 연체일 설정", payment.getId());
@@ -350,7 +350,7 @@ public class RepaymentScheduleService {
     }
 
     // 상환 실패 알림 전송
-    private void sendFailureNotification(Payment payment, int repaymentAmount) {
+    private void sendFailureNotification(Payment payment) {
         int remainingDebt = payment.getPreviousMonthDebt();
         String formattedRepaymentAmount = String.format("%,d", remainingDebt);
 
