@@ -31,7 +31,8 @@ public class RepaymentSseService implements SseService<RepaymentHistoryLogDTO> {
     public void sendLogEvent(RepaymentHistoryLogDTO log) {
 
         if (prepaymentEmitter == null) {
-            throw new RepaymentSseException("선상환 SSE 에러: 생성된 SSE 객체가 없습니다.");
+            System.out.println("선상환 SSE 에러: 생성된 SSE 객체가 없습니다.");
+            return;
         }
 
         try {
