@@ -32,7 +32,8 @@ public class SimplePaymentSseService implements SseService<SimplePaymentLogDTO> 
     public void sendLogEvent(SimplePaymentLogDTO log) {
 
         if (simplePaymentEmitter == null) {
-            throw new SimplePaymentSseException("간편 결제 SSE 에러: 생성된 SSE 객체가 없습니다.");
+            System.out.println("간편 결제 SSE 에러: 생성된 SSE 객체가 없습니다.");
+            return;
         }
 
         try {
