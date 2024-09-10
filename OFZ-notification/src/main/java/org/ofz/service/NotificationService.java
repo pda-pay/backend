@@ -1,6 +1,7 @@
 package org.ofz.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.ofz.dto.redis.CacheTokenDto;
 import org.ofz.dto.api.SaveTokenRequest;
 import org.ofz.dto.api.TokenResponse;
@@ -15,6 +16,7 @@ import java.io.IOException;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class NotificationService {
     private final CacheTokenService cacheTokenService;
     private final FCMService fcmService;
@@ -42,6 +44,7 @@ public class NotificationService {
         CacheTokenDto cacheTokenDto = cacheTokenService.getCachedToken(notificationMessage.getLoginId());
 
         if (isExistCacheToken(cacheTokenDto)) {
+            log.info("firebase 메세지 수신: " + notificationMessage.getBody());
             fcmService.sendFcmMessageByNotificationMessage(notificationMessage, cacheTokenDto.getToken());
         }
 
