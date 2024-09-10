@@ -9,8 +9,6 @@ import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.rabbitMQ.NotificationPage;
 import org.ofz.rabbitMQ.Publisher;
-import org.ofz.rabbitMQ.rabbitDto.AllPayedOffsetLogDto;
-import org.ofz.rabbitMQ.rabbitDto.NotAllPayedOffsetLogDto;
 import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.ofz.rabbitMQ.rabbitDto.RepaymentHistoryLogDTO;
 import org.ofz.repayment.RepaymentHistory;
@@ -63,7 +61,7 @@ public class OffsetService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 52 15 * * 1-5")
+    @Scheduled(cron = "0 0 9 * * 1-5")
     public void processOffsets(){
         List<Payment> offsetTargets = paymentRepository.findByOverdueDay();
         for (Payment offsetTarget : offsetTargets) {
