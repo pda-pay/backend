@@ -57,3 +57,5 @@ public class AssetHistory {
         this.mortgageSumRateOfChange = rateOfChange;
     }
 }
+
+

@@ -119,7 +119,7 @@ spring:
         - id: asset-service-admin
           uri: lb://asset-service
           predicates:
-            - Path=/api/asset/rate-of-change/under, /api/asset/calculate-rate-of-change
+            - Path=/api/asset/rate-of-change/under, /api/asset/calculate-rate-of-change, /api/asset/margin-requirement/under
           filters:
             - StripPrefix=1
             

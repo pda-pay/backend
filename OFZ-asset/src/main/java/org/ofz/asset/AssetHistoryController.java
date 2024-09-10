@@ -48,4 +48,11 @@ public class AssetHistoryController {
         List<AssetHistoryLast10DaysRes> data = assetHistoryService.getLast10DaysData(userId);
         return ResponseEntity.ok(data);
     }
+
+    // marginRequirement가 특정 limit 이하인 유저 조회 API
+    @GetMapping("/margin-requirement/under")
+    public ResponseEntity<List<AssetHistoryRateRes>> getAllByMarginRequirementLessThan(@RequestParam int limit) {
+        List<AssetHistoryRateRes> results = assetHistoryService.getAllByMarginRequirementLessThan(limit);
+        return ResponseEntity.ok(results);
+    }
 }
