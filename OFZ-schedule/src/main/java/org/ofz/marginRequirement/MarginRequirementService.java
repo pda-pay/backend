@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ofz.redis.RedisUtil;
 import org.springframework.dao.DataAccessException;
-import reactor.netty.udp.UdpServer;
 
 import java.util.Collections;
 import java.util.List;
@@ -53,13 +52,10 @@ public class MarginRequirementService {
     private Publisher<AssetMqDTO> publisher;
     private Publisher<NotificationMessage> notificationPublisher;
 
-    private Publisher<MarginRequirementLogDto> marginRequirementLogDtoPublisher;
-
     @Autowired
-    public MarginRequirementService(Publisher<AssetMqDTO> publisher, Publisher<NotificationMessage> notificationPublisher, Publisher<MarginRequirementLogDto> marginRequirementLogDtoPublisher) {
+    public MarginRequirementService(Publisher<AssetMqDTO> publisher, Publisher<NotificationMessage> notificationPublisher) {
         this.publisher = publisher;
         this.notificationPublisher = notificationPublisher;
-        this.marginRequirementLogDtoPublisher = marginRequirementLogDtoPublisher;
     }
 
     // 전체 유저의 margin requirement 조회 메소드
@@ -161,7 +157,7 @@ public class MarginRequirementService {
                 logger.info("유저 ID: {}, 현재 한도 비율: {}, 최대 한도 비율: {}", userId, currentLimitRatio, maxLimitRatio);
 
                 // 140% 이하인지 확인하여 플래그 변경
-                if (currentLimitRatio <= 140) {
+                if (currentLimitRatio <= 140 && marginRequirement >= 0) {
                     payment.disableRateFlag();
                     logger.info("유저 ID: {}, 현재 한도 비율이 140% 이하이므로 rateFlag를 false로 설정합니다.", userId);
                     notifyToUser(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit);
