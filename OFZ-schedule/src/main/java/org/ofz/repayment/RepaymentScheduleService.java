@@ -326,7 +326,7 @@ public class RepaymentScheduleService {
         NotificationMessage userMessage = NotificationMessage.builder()
                 .loginId(payment.getUser().getLoginId())
                 .title("상환 완료 알림")
-                .body(String.format("상환이 완료되었습니다. 이번 달 상환 금액은 %s원입니다.", formattedRepaymentAmount))
+                .body(String.format("상환이 완료되었습니다. 이번 달 상환 금액은 %s원 입니다.", formattedRepaymentAmount))
                 .category(NotificationType.상환)
                 .page(NotificationPage.PAYMENT)
                 .build();
@@ -335,8 +335,7 @@ public class RepaymentScheduleService {
 
     private void sendPartialNotification(Payment payment, int accountDeposit) {
         int initialDebt = payment.getPreviousMonthDebt();
-        int actualRepayment = Math.min(accountDeposit, initialDebt);
-        int remainingDebt = initialDebt - actualRepayment;
+        int remainingDebt = initialDebt - accountDeposit;
 
         String formattedRepaymentAmount = String.format("%,d", remainingDebt);
 
@@ -345,7 +344,7 @@ public class RepaymentScheduleService {
         NotificationMessage userMessage = NotificationMessage.builder()
                 .loginId(payment.getUser().getLoginId())
                 .title("일부 상환 알림")
-                .body(String.format("상환이 일부만 완료되었습니다. 3 영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 잔여 연체 금액은 %s입니다.", formattedRepaymentAmount))
+                .body(String.format("상환이 일부만 완료되었습니다. 3 영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 잔여 연체 금액은 %s원 입니다.", formattedRepaymentAmount))
                 .category(NotificationType.상환)
                 .page(NotificationPage.PAYMENT)
                 .build();
@@ -362,7 +361,7 @@ public class RepaymentScheduleService {
         NotificationMessage userMessage = NotificationMessage.builder()
                 .loginId(payment.getUser().getLoginId())
                 .title("상환 실패 알림")
-                .body(String.format("상환이 지연되고 있습니다. 신속한 확인 요청드립니다. 3 영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체된 금액은 %s입니다.", formattedRepaymentAmount))
+                .body(String.format("상환이 지연되고 있습니다. 신속한 확인 요청드립니다. 3 영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체된 금액은 %s원 입니다.", formattedRepaymentAmount))
                 .category(NotificationType.상환)
                 .page(NotificationPage.PAYMENT)
                 .build();
