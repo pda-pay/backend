@@ -5,7 +5,8 @@ import org.ofz.payment.PaymentRepository;
 import org.ofz.rabbitMQ.NotificationPage;
 import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Publisher;
-import org.ofz.rabbitMQ.rabbitDto.*;
+import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
+import org.ofz.rabbitMQ.rabbitDto.RepaymentHistoryLogDTO;
 import org.ofz.repayment.dto.AccountDepositRes;
 import org.ofz.repayment.dto.RepaymentRes;
 import org.ofz.repayment.exception.ExternalServiceException;
@@ -40,20 +41,18 @@ public class RepaymentScheduleService {
 
     private final Publisher<NotificationMessage> notificationPublisher;
     private final Publisher<RepaymentHistoryLogDTO> successPublisher;
-    private final Publisher<RepaymentSchedulePartialLogDTO> partialPublisher;
-    private final Publisher<RepaymentScheduleFailureLogDTO> failurePublisher;
+//    private final Publisher<RepaymentSchedulePartialLogDTO> partialPublisher;
+//    private final Publisher<RepaymentScheduleFailureLogDTO> failurePublisher;
 
     @Autowired
     public RepaymentScheduleService(PaymentRepository paymentRepository,
                                     RepaymentHistoryRepository repaymentHistoryRepository,
-                                    WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationPublisher, Publisher<RepaymentHistoryLogDTO> successPublisher, Publisher<RepaymentSchedulePartialLogDTO> partialPublisher, Publisher<RepaymentScheduleFailureLogDTO> failurePublisher) {
+                                    WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationPublisher, Publisher<RepaymentHistoryLogDTO> successPublisher) {
         this.paymentRepository = paymentRepository;
         this.repaymentHistoryRepository = repaymentHistoryRepository;
         this.webClient = webClientBuilder.baseUrl(partnersUrl).build();
         this.notificationPublisher = notificationPublisher;
         this.successPublisher = successPublisher;
-        this.partialPublisher = partialPublisher;
-        this.failurePublisher = failurePublisher;
     }
 
     /**
