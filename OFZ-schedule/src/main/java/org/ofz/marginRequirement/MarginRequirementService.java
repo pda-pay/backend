@@ -165,13 +165,13 @@ public class MarginRequirementService {
                     payment.disableRateFlag();
                     logger.info("유저 ID: {}, 현재 한도 비율이 140% 이하이므로 rateFlag를 false로 설정합니다.", userId);
                     notifyToUser(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit);
-                    notifyToAdmin(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit, true);
+//                    notifyToAdmin(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit, true);
 
 
                 } else {
                     payment.enableRateFlag();
                     logger.info("유저 ID: {}, 현재 한도 비율이 140% 초과이므로 rateFlag를 true로 설정합니다.", userId);
-                    notifyToAdmin(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit, false);
+//                    notifyToAdmin(payment.getUser(), mortgageSum, marginRequirement, creditLimit, maxLimit, false);
 
                 }
 

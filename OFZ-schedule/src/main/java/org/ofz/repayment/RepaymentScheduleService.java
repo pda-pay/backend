@@ -234,7 +234,7 @@ public class RepaymentScheduleService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        sendPartialNotification(payment, accountDeposit);
+//        sendPartialNotification(payment, accountDeposit);
         repaymentHistoryRepository.save(repaymentHistory);
 
         logger.info("상환 내역 기록 완료: 대상자 ID: {}", payment.getUser().getId());
@@ -254,7 +254,7 @@ public class RepaymentScheduleService {
             payment.updateOverdueDay(LocalDate.now());
         }
 
-        sendFailureNotification(payment);
+//        sendFailureNotification(payment);
         paymentRepository.save(payment);
 
         logger.warn("상환 실패 처리 완료: 대상자 ID: {}, 서비스 중지 및 연체일 설정", payment.getId());
