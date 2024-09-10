@@ -5,10 +5,7 @@ import org.ofz.payment.PaymentRepository;
 import org.ofz.rabbitMQ.NotificationPage;
 import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Publisher;
-import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
-import org.ofz.rabbitMQ.rabbitDto.RepaymentScheduleFailureLogDTO;
-import org.ofz.rabbitMQ.rabbitDto.RepaymentSchedulePartialLogDTO;
-import org.ofz.rabbitMQ.rabbitDto.RepaymentScheduleSuccessLogDTO;
+import org.ofz.rabbitMQ.rabbitDto.*;
 import org.ofz.repayment.dto.AccountDepositRes;
 import org.ofz.repayment.dto.RepaymentRes;
 import org.ofz.repayment.exception.ExternalServiceException;
@@ -42,14 +39,14 @@ public class RepaymentScheduleService {
     private String partnersUrl;
 
     private final Publisher<NotificationMessage> notificationPublisher;
-    private final Publisher<RepaymentScheduleSuccessLogDTO> successPublisher;
+    private final Publisher<RepaymentHistoryLogDTO> successPublisher;
     private final Publisher<RepaymentSchedulePartialLogDTO> partialPublisher;
     private final Publisher<RepaymentScheduleFailureLogDTO> failurePublisher;
 
     @Autowired
     public RepaymentScheduleService(PaymentRepository paymentRepository,
                                     RepaymentHistoryRepository repaymentHistoryRepository,
-                                    WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationPublisher, Publisher<RepaymentScheduleSuccessLogDTO> successPublisher, Publisher<RepaymentSchedulePartialLogDTO> partialPublisher, Publisher<RepaymentScheduleFailureLogDTO> failurePublisher) {
+                                    WebClient.Builder webClientBuilder, Publisher<NotificationMessage> notificationPublisher, Publisher<RepaymentHistoryLogDTO> successPublisher, Publisher<RepaymentSchedulePartialLogDTO> partialPublisher, Publisher<RepaymentScheduleFailureLogDTO> failurePublisher) {
         this.paymentRepository = paymentRepository;
         this.repaymentHistoryRepository = repaymentHistoryRepository;
         this.webClient = webClientBuilder.baseUrl(partnersUrl).build();
@@ -309,12 +306,16 @@ public class RepaymentScheduleService {
 
     // 전체 상환 알림 전송
     private void sendSuccessNotification(Payment payment) {
+        LocalDateTime nowTime = LocalDateTime.now();
+
         // 관리자에게 전송
-        RepaymentScheduleSuccessLogDTO adminDto = RepaymentScheduleSuccessLogDTO.builder()
-                .userId(payment.getUser().getId())
+        RepaymentHistoryLogDTO adminDto = RepaymentHistoryLogDTO.builder()
+                .id(payment.getUser().getId())
                 .loginId(payment.getUser().getLoginId())
-                .status("SUCCESS")
-                .previousMonthDebt(payment.getPreviousMonthDebt())
+                .amount(payment.getPreviousMonthDebt())
+                .accountNumber(payment.getRepaymentAccountNumber())
+                .type(RepaymentType.CASH.kor)
+                .date(nowTime)
                 .build();
         successPublisher.sendMessage(adminDto);
 
