@@ -25,7 +25,10 @@ import org.ofz.payment.repository.FranchiseRepository;
 import org.ofz.payment.repository.PaymentHistoryRepository;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.utils.PaymentTokenUtils;
+import org.ofz.rabbitMQ.NotificationPage;
+import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.ofz.rabbitMQ.rabbitDto.SimplePaymentLogDTO;
 import org.ofz.repayment.exception.user.UserNotFoundException;
 import org.ofz.repayment.utils.AccountUtils;
@@ -51,6 +54,7 @@ public class PaymentService {
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final UserRepository userRepository;
     private final Publisher<SimplePaymentLogDTO> publisher;
+    private final Publisher<NotificationMessage> notifyPublisher;
     private final PaymentTokenUtils paymentTokenUtils;
     private final AccountUtils accountUtils;
 
@@ -86,7 +90,7 @@ public class PaymentService {
         int leftCreditLimit = creditLimit - (currentMonthDebt + paymentAmount);
 
         if (creditLimit < currentMonthDebt + paymentAmount) {
-            throw new ExceededCreditLimitException(user, franchise, paymentAmount, "한도 초과");
+            throw new ExceededCreditLimitException(user, franchise, leftCreditLimit, paymentAmount, "한도 초과");
         }
 
         payment.plusCurrentMonthDebt(paymentAmount);
@@ -119,6 +123,17 @@ public class PaymentService {
 
         session.sendMessage(new TextMessage(message));
         session.close();
+
+        // 알림
+        NotificationMessage notificationMessage = NotificationMessage.builder()
+                .loginId(user.getLoginId())
+                .title("간편 결제")
+                .body("결제가 완료 되었습니다. [결제 금액: " + paymentAmount + "]")
+                .category(NotificationType.결제)
+                .page(NotificationPage.PAYMENT)
+                .build();
+
+        notifyPublisher.sendMessage(notificationMessage);
 
         // MQ
         String userLoginId = user.getLoginId();
