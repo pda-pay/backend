@@ -244,7 +244,7 @@ public class OffsetService {
                 .loginId(user.getLoginId())
                 .title("반대매매로 채무가 모두 상환되었습니다.")
                 .body("반대매매가 일어나서 채무가 모두 상환되었습니다." +
-                        (excessPayment > 0 ? "\n매도 후" + excessPayment + "만큼의 금액이 남아 해당 증권을 보유한 계좌로 입금되었습니다." : ""))
+                        (excessPayment > 0 ? "\n매도 후 " + excessPayment + "만큼의 금액이 남아 해당 증권을 보유한 계좌로 입금되었습니다." : ""))
                 .category(상환)
                 .build();
         notificationpublisher.sendMessage(notificationAllPayedRepaymentMessage);
