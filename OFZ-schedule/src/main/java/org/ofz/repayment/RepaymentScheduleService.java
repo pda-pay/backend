@@ -191,12 +191,12 @@ public class RepaymentScheduleService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-        repaymentHistoryRepository.save(repaymentHistory);
+        sendSuccessNotification(payment, repaymentAmount);
 
         payment.updateOverdueDay(null);
         payment.enablePay();
 
-        sendSuccessNotification(payment, repaymentAmount);
+        repaymentHistoryRepository.save(repaymentHistory);
         paymentRepository.save(payment);
 
         logger.info("상환 내역 기록 완료: 대상자 ID: {}", payment.getUser().getId());
