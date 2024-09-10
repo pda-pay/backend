@@ -178,6 +178,18 @@ public class MarginRequirementService {
                 marginRequirementHistoryRepository.save(history);
                 paymentRepository.save(payment);
 
+                // 메시지 큐로 전송할 DTO 생성 및 전송
+                AssetMqDTO assetMqDTO = AssetMqDTO.builder()
+                        .userId(userId)
+                        .mortgageSum(mortgageSum)
+                        .todayLimit(creditLimit)
+                        .maxLimit(maxLimit)
+                        .margin_requirement(marginRequirement)
+                        .build();
+
+                sendMessage(assetMqDTO); // 메시지 큐에 데이터 전송
+                logger.info("유저 ID: {}의 데이터를 메시지 큐에 전송했습니다.", userId);
+
             } catch (PriceNotFoundException | StockInformationNotFoundException e) {
                 logger.error("유저 ID: {}의 한도 비율 계산 중 오류 발생: {}", userId, e.getMessage(), e);
             } catch (ArithmeticException e) {
