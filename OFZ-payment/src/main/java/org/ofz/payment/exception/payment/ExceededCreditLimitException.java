@@ -10,16 +10,16 @@ public class ExceededCreditLimitException extends RuntimeException {
     private User user;
     private Franchise franchise;
     private int triedAmount;
-    private int leftCreditLimit;
+    private int creditLimit;
     private String message;
 
     public ExceededCreditLimitException() {}
 
-    public ExceededCreditLimitException(User user, Franchise franchise, int triedAmount, int leftCreditLimit, String message) {
+    public ExceededCreditLimitException(User user, Franchise franchise, int triedAmount, int creditLimit, String message) {
         this.user = user;
         this.franchise = franchise;
         this.triedAmount = triedAmount;
-        this.leftCreditLimit = leftCreditLimit;
+        this.creditLimit = creditLimit;
         this.message = message;
     }
 }
