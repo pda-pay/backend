@@ -115,7 +115,7 @@ public class AssetHistoryService {
      */
     @Transactional
     public List<AssetHistoryLast10DaysRes> getLast10DaysData(Long userId) {
-        LocalDate endDate = LocalDate.now().minusDays(1);
+        LocalDate endDate = LocalDate.now();
         LocalDate startDate = endDate.minusDays(9);
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
