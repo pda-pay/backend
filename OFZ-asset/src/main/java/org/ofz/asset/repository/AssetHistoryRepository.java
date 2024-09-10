@@ -35,7 +35,7 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
     List<AssetHistory> findAllLatestByUser();
 
     // 담보총액 변동율이 특정 값 이하인 유저 조회
-    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSumRateOfChange) " +
+    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSum, ah.todayLimit, ah.marginRequirement, ah.mortgageSumRateOfChange) " +
             "FROM AssetHistory ah " +
             "WHERE ah.id IN (" +
             "    SELECT MAX(subAh.id) " +
