@@ -42,6 +42,7 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
             "    SELECT MAX(subAh.id) " +
             "    FROM AssetHistory subAh " +
             "    WHERE FUNCTION('DATE', subAh.createdAt) = :targetDate " +
+            "    AND subAh.marginRequirement >= 0 " +
             "    AND subAh.mortgageSumRateOfChange <= :limit " +
             "    GROUP BY subAh.userId" +
             ")")
