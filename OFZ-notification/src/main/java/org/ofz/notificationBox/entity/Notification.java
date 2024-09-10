@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.ofz.rabbitMQ.NotificationType;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -24,7 +24,7 @@ public class Notification {
     private String content;
 
     @Column(name = "created_at")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @Enumerated(EnumType.STRING)
     private NotificationType category;
@@ -35,6 +35,6 @@ public class Notification {
         this.title = title;
         this.content = content;
         this.category = notificationType;
-        this.createdAt = LocalDate.now();
+        this.createdAt = LocalDateTime.now();
     }
 }
