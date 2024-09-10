@@ -41,6 +41,7 @@ public class OffsetService {
     private final StockRepository stockRepository;
     private final WebClient webClient;
     private final Publisher<NotificationMessage> notificationpublisher;
+    private final Publisher<RepaymentHistoryLogDTO> publisher;
     private final Publisher<AllPayedOffsetLogDto> allPayedAdminPublisher;
     private final Publisher<NotAllPayedOffsetLogDto> notAllPayedAdminPublisher;
 
@@ -61,7 +62,7 @@ public class OffsetService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 42 15 * * 1-5")
+    @Scheduled(cron = "0 52 15 * * 1-5")
     public void processOffsets(){
         List<Payment> offsetTargets = paymentRepository.findByOverdueDay();
         for (Payment offsetTarget : offsetTargets) {
@@ -315,6 +316,7 @@ public class OffsetService {
                 .type(RepaymentType.OFFSET.kor)
                 .date(nowTime)
                 .build();
+        publisher.sendMessage(log);
     }
 }
 
