@@ -15,7 +15,7 @@ public class OffsetController {
         this.offsetService = offsetService;
     }
 
-    @PostMapping("/schedule/offset")
+    @GetMapping("/schedule/offset")
     public ResponseEntity<Void> processOffsets() {
         offsetService.processOffsets();
         return new ResponseEntity<>(HttpStatus.OK);
