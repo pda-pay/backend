@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,8 +40,12 @@ public class AssetHistoryService {
      * 각 유저의 최신 margin_requirement 변동률 조회
      */
     public List<AssetHistory> getAllLatestUserMarginRequirements() {
+
+
         try {
-            List<AssetHistory> latestHistories = assetHistoryRepository.findAllLatestByUser();
+            String targetDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+
+            List<AssetHistory> latestHistories = assetHistoryRepository.findAllLatestByUser(targetDate);
             if (latestHistories.isEmpty()) {
                 return Collections.emptyList();
             }
@@ -56,24 +61,21 @@ public class AssetHistoryService {
      * 담보총액 변동율이 특정 값 이하인 유저 조회
      */
     public List<AssetHistoryRateRes> getAllByRateOfChangeLessThan(double limit) {
-        // Step 1: limit 매개변수를 정의합니다
-        double rateOfChangeLimit = limit;  // limit 매개변수의 값을 설정합니다
+        double rateOfChangeLimit = limit;
 
-        // Step 2: limit 값을 확인하기 위해 로그를 남깁니다
         logger.info("담보총액 변동률이 {} 이하인 Asset History를 조회합니다.", rateOfChangeLimit);
 
-        System.out.println(LocalDateTime.now());
-        // Step 3: 레포지토리 메소드를 실행하여 데이터를 조회합니다
-        List<AssetHistoryRateRes> assetHistoryList = assetHistoryRepository.findByMortgageSumRateOfChangeLessThan(rateOfChangeLimit);
+        String targetDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-        // Step 4: 결과 리스트가 비어있는지 확인합니다
+        System.out.println(LocalDateTime.now());
+        List<AssetHistoryRateRes> assetHistoryList = assetHistoryRepository.findByMortgageSumRateOfChangeLessThan(rateOfChangeLimit, targetDate);
+
         if (assetHistoryList.isEmpty()) {
             logger.warn("담보총액 변동률이 {} 이하인 기록이 없습니다.", rateOfChangeLimit);
         } else {
             logger.info("담보총액 변동률이 {} 이하인 기록 {}개를 찾았습니다.", rateOfChangeLimit, assetHistoryList.size());
         }
 
-        // Step 5: 조회된 리스트를 반환합니다
         return assetHistoryList;
 
 
@@ -199,7 +201,7 @@ public class AssetHistoryService {
                     assetMqDTO.getMargin_requirement(),
                     LocalDateTime.now(),
                     null,
-                    0.0, // 변동률은 초기값 0으로 설정
+                    0.0,
                     assetMqDTO.getMaxLimit()
             );
             assetHistoryRepository.save(assetHistory);

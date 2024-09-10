@@ -20,12 +20,6 @@ public class AssetHistoryController {
         this.assetHistoryService = assetHistoryService;
     }
 
-    // 특정 유저의 mortgage_sum 변동률 조회
-//    @GetMapping("/rate-of-change/{userId}")
-//    public ResponseEntity<Double> getMortgageSumRateOfChange(@PathVariable Long userId) {
-//        double rateOfChange = assetHistoryService.getMortgageSumRateOfChange(userId);
-//        return ResponseEntity.ok(rateOfChange);
-//    }
 
     // 전체 유저의 최신 mortgage_sum_rate_of_change 조회
     @GetMapping("/rate-of-change/all")
