@@ -15,7 +15,6 @@ public class AdminController {
 
     private final SimplePaymentSseService simplePaymentSseService;
     private final RepaymentSseService repaymentSseService;
-    private final MarginRequirementSseService marginRequirementSseService;
 
     @GetMapping(value = "/payment", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter simplePaymentLog() {
