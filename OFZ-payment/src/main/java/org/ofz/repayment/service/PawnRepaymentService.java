@@ -328,29 +328,40 @@ public class PawnRepaymentService {
 
         NotificationMessage message = null;
 
-        if (!marginRequirement || (!hasMortgagedStock && finalTotalDebt > 0) || (payment.getCreditLimit() == 0 && finalTotalDebt > 0)) {
-            payment.changeCreditLimit(0);
+        if (!hasMortgagedStock && finalTotalDebt > 0) {
             payment.changeRateFlag(false);
             payment.disablePay();
 
             message = NotificationMessage.builder()
                     .loginId(user.getLoginId())
                     .title("간편 결제 서비스 정지")
-                    .body("상환해야 할 금액이 남아 있지만, 담보가 없습니다. 한도 및 담보를 다시 설정해 주세요.")
+                    .body("상환해야 할 금액이 남아 있지만, 담보가 없습니다.\n한도 및 담보를 다시 설정해 주세요.")
                     .category(NotificationType.담보)
                     .page(NotificationPage.ALL_MENU)
                     .build();
         }
 
         if (!hasMortgagedStock && finalTotalDebt == 0) {
-            payment.changeCreditLimit(0);
             payment.changeRateFlag(true);
             payment.disablePay();
 
             message = NotificationMessage.builder()
                     .loginId(user.getLoginId())
                     .title("간편 결제 서비스 정지")
-                    .body("한도 및 담보를 다시 설정해 주세요.")
+                    .body("상환할 금액 및 담보가 없습니다.\n결제 서비스를 이용하시려면, 한도 및 담보를 다시 설정해 주세요.")
+                    .category(NotificationType.담보)
+                    .page(NotificationPage.ALL_MENU)
+                    .build();
+        }
+
+        if (hasMortgagedStock && !marginRequirement) {
+            payment.changeRateFlag(false);
+            payment.disablePay();
+
+            message = NotificationMessage.builder()
+                    .loginId(user.getLoginId())
+                    .title("간편 결제 서비스 정지")
+                    .body("담보유지비율이 140% 아래입니다.\n한도 및 담보를 다시 설정해 주세요.")
                     .category(NotificationType.담보)
                     .page(NotificationPage.ALL_MENU)
                     .build();
