@@ -13,5 +13,5 @@ public class RepaymentAccountResponse {
     private String accountNumber;
     private String accountName;
     private String companyCode;
-    public int remainCreditLimit;
+    public int accountDeposit;
 }

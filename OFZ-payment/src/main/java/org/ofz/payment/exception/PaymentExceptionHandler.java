@@ -113,7 +113,7 @@ public class PaymentExceptionHandler {
         NotificationMessage notificationMessage = NotificationMessage.builder()
                 .loginId(e.getUser().getLoginId())
                 .title("간편 결제")
-                .body("한도 초과로 결제에 실패하였습니다.\n[결제 시도 금액: " + e.getTriedAmount() + "]\n[남은 한도: " + e.getLeftCreditLimit() + "]")
+                .body("한도 초과로 결제에 실패하였습니다.\n[결제 시도 금액: " + e.getTriedAmount() + "]\n[남은 한도: " + e.getCreditLimit() + "]")
                 .category(NotificationType.결제)
                 .page(NotificationPage.MAIN)
                 .build();

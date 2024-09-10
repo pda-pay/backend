@@ -90,7 +90,7 @@ public class PaymentService {
         int leftCreditLimit = creditLimit - (currentMonthDebt + paymentAmount);
 
         if (creditLimit < currentMonthDebt + paymentAmount) {
-            throw new ExceededCreditLimitException(user, franchise, leftCreditLimit, paymentAmount, "한도 초과");
+            throw new ExceededCreditLimitException(user, franchise, paymentAmount, creditLimit, "한도 초과");
         }
 
         payment.plusCurrentMonthDebt(paymentAmount);
