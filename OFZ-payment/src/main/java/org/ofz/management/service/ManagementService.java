@@ -59,10 +59,13 @@ public class ManagementService {
 
     @Transactional
     public UserStockResponse getUserStocks(String userLoginId) {
-        Long userId = findUserbyLoginId(userLoginId).getId();
+        PaymentUser paymentUser = checkPaymentUser(userLoginId);
+        User user = paymentUser.getUser();
+        Long userId = user.getId();
 
         UserStockResponse userStockResponse = new UserStockResponse(new ArrayList<>(), 0);
         List<UserStockProjection> UserStockProjections = stockRepository.findUserStocksByUserId(userId);
+        List<MortgagedStockDto> mortgagedStockDtos = cacheService.getCachedMortgagedStocks(userLoginId);
 
         for (UserStockProjection userStockProjection : UserStockProjections) {
             final String stockCode = userStockProjection.getStockCode();
@@ -71,11 +74,18 @@ public class ManagementService {
             StockInformation stockInformation = stockInformationRepository.findByStockCode(stockCode)
                     .orElseThrow(() -> new StockInformationNotFoundException("증권 정보를 찾지 못했음."));
             final int stabilityLevel = stockInformation.getStabilityLevel();
+            int mortgagedQuantity = 0;
+
+            if (paymentUser.isJoined()) {
+                mortgagedQuantity = userStockProjection.getMortgagedQuantity();
+            } else {
+                mortgagedQuantity = checkCacheMortgagedStock(mortgagedStockDtos, userStockProjection.getStockCode(), userStockProjection.getAccountNumber());
+            }
 
             StockMortgagedStockDto stockMortgagedStockDto = StockMortgagedStockDto.builder()
                     .accountNumber(userStockProjection.getAccountNumber())
                     .quantity(userStockProjection.getQuantity())
-                    .mortgagedQuantity(userStockProjection.getMortgagedQuantity())
+                    .mortgagedQuantity(mortgagedQuantity)
                     .stockCode(stockCode)
                     .stockName(stockInformation.getName())
                     .companyCode(companyCode)
@@ -455,6 +465,20 @@ public class ManagementService {
         return SavedResponse.success(userLoginId);
     }
 
+    private int checkCacheMortgagedStock(List<MortgagedStockDto> mortgagedStockDtos, String stockCode, String accountNumber) {
+        if (mortgagedStockDtos == null) {
+            return 0;
+        }
+
+        for (MortgagedStockDto mortgagedStockDto : mortgagedStockDtos) {
+            if (mortgagedStockDto.getStockCode() == stockCode
+                    && mortgagedStockDto.getAccountNumber() == accountNumber) {
+                return mortgagedStockDto.getQuantity();
+            }
+        }
+
+        return 0;
+    }
 
     private Payment getPaymentByUserId(Long userId) {
         return paymentRepository.findPaymentByUserId(userId)
