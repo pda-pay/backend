@@ -1,4 +1,4 @@
-package org.ofz.repayment.dto.response;
+package org.ofz.repayment;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,14 +24,14 @@ public class RepaymentHistoryResponse {
     @NoArgsConstructor
     public static class RepaymentHistoryDTO {
         private int repaymentAmount;
-        private String createdAt;
+        private LocalDateTime createdAt;
         private String type;
 
         @Builder
-        public RepaymentHistoryDTO(int repaymentAmount, LocalDateTime createdAt, String type) {
+        public RepaymentHistoryDTO(int repaymentAmount, LocalDateTime createdAt, RepaymentType type) {
             this.repaymentAmount = repaymentAmount;
-            this.createdAt = createdAt.toString();
-            this.type = type;
+            this.createdAt = createdAt;
+            this.type = type.kor;
         }
     }
 }

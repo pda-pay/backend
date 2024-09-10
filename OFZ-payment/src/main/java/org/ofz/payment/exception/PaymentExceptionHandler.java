@@ -9,7 +9,10 @@ import org.ofz.payment.exception.franchise.FranchisePasswordMismatchException;
 import org.ofz.payment.exception.history.MissingParameterException;
 import org.ofz.payment.exception.payment.*;
 import org.ofz.payment.exception.websocket.*;
+import org.ofz.rabbitMQ.NotificationPage;
+import org.ofz.rabbitMQ.NotificationType;
 import org.ofz.rabbitMQ.Publisher;
+import org.ofz.rabbitMQ.rabbitDto.NotificationMessage;
 import org.ofz.rabbitMQ.rabbitDto.SimplePaymentLogDTO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +26,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class PaymentExceptionHandler {
 
+    private final Publisher<NotificationMessage> notifyPublisher;
     private final Publisher<SimplePaymentLogDTO> publisher;
 
     @ExceptionHandler
@@ -105,6 +109,16 @@ public class PaymentExceptionHandler {
     @ExceptionHandler
     public ResponseEntity<PaymentFailResponseDTO> catchExceededCreditLimitException(ExceededCreditLimitException e) {
         log.error("exception class: {}", e.getClass());
+
+        NotificationMessage notificationMessage = NotificationMessage.builder()
+                .loginId(e.getUser().getLoginId())
+                .title("간편 결제")
+                .body("한도 초과로 결제에 실패하였습니다.\n[결제 시도 금액: " + e.getTriedAmount() + "]\n[남은 한도: " + e.getLeftCreditLimit() + "]")
+                .category(NotificationType.결제)
+                .page(NotificationPage.MAIN)
+                .build();
+
+        notifyPublisher.sendMessage(notificationMessage);
 
         publisher.sendMessage(SimplePaymentLogDTO.builder()
                 .id(0L)

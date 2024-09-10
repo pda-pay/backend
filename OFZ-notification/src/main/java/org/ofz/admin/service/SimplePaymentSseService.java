@@ -1,6 +1,7 @@
 package org.ofz.admin.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.ofz.admin.exception.mq.SimplePaymentMQException;
 import org.ofz.admin.exception.sse.SimplePaymentSseException;
 import org.ofz.rabbitMQ.rabbitDto.SimplePaymentLogDTO;
@@ -54,8 +55,7 @@ public class SimplePaymentSseService implements SseService<SimplePaymentLogDTO> 
             sendLogEvent(log);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-
-            throw new SimplePaymentMQException("간편 결제 메시지 큐 에러: " + e.getMessage());
+            System.out.println("간편 결제 메시지 큐 에러: " + e.getMessage());
         }
     }
 }
