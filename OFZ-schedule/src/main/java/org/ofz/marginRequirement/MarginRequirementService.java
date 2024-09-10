@@ -53,7 +53,7 @@ public class MarginRequirementService {
     private Publisher<NotificationMessage> notificationPublisher;
 
     @Autowired
-    public MarginRequirementService(Publisher<AssetMqDTO> publisher, Publisher<NotificationMessage> notificationPublisher, Publisher<MarginRequirementLogDto> marginRequirementLogDtoPublisher) {
+    public MarginRequirementService(Publisher<AssetMqDTO> publisher, Publisher<NotificationMessage> notificationPublisher) {
         this.publisher = publisher;
         this.notificationPublisher = notificationPublisher;
     }
