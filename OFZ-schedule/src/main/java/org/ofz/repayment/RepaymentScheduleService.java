@@ -233,7 +233,7 @@ public class RepaymentScheduleService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-//        sendPartialNotification(payment, accountDeposit);
+        sendPartialNotification(payment, accountDeposit);
         repaymentHistoryRepository.save(repaymentHistory);
 
         logger.info("상환 내역 기록 완료: 대상자 ID: {}", payment.getUser().getId());
@@ -247,13 +247,15 @@ public class RepaymentScheduleService {
     @Transactional
     @Async
     public void processFailedRepayment(Payment payment) {
+        int repaymentAmount = payment.getPreviousMonthDebt();
+
         logger.info("상환 실패 처리를 시작합니다. 대상자 ID: {}, 실행 스레드: {}", payment.getId(), Thread.currentThread().getName());
         payment.disablePay(); // 서비스 중지
         if (payment.getOverdueDay() == null) {
             payment.updateOverdueDay(LocalDate.now());
         }
 
-//        sendFailureNotification(payment);
+        sendFailureNotification(payment, repaymentAmount);
         paymentRepository.save(payment);
 
         logger.warn("상환 실패 처리 완료: 대상자 ID: {}, 서비스 중지 및 연체일 설정", payment.getId());
@@ -306,6 +308,8 @@ public class RepaymentScheduleService {
     // 전체 상환 알림 전송
     private void sendSuccessNotification(Payment payment, int repaymentAmount) {
         LocalDateTime nowTime = LocalDateTime.now();
+        String formattedRepaymentAmount = String.format("%,d", repaymentAmount);
+
 
         // 관리자에게 전송
         RepaymentHistoryLogDTO adminDto = RepaymentHistoryLogDTO.builder()
@@ -322,7 +326,7 @@ public class RepaymentScheduleService {
         NotificationMessage userMessage = NotificationMessage.builder()
                 .loginId(payment.getUser().getLoginId())
                 .title("상환 완료 알림")
-                .body(String.format("상환이 완료되었습니다. 이번 달 상환 금액은 %d입니다.", payment.getPreviousMonthDebt()))
+                .body(String.format("상환이 완료되었습니다. 이번 달 상환 금액은 %s원입니다.", formattedRepaymentAmount))
                 .category(NotificationType.상환)
                 .page(NotificationPage.PAYMENT)
                 .build();
@@ -331,12 +335,14 @@ public class RepaymentScheduleService {
 
     private void sendPartialNotification(Payment payment, int accountDeposit) {
         int remainingDebt = payment.getPreviousMonthDebt() - accountDeposit;
+        String formattedRepaymentAmount = String.format("%,d", remainingDebt);
+
 
         // 고객에게 전송
         NotificationMessage userMessage = NotificationMessage.builder()
                 .loginId(payment.getUser().getLoginId())
                 .title("일부 상환 알림")
-                .body(String.format("상환이 일부만 완료되었습니다. 3영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체대금은 %d입니다.", remainingDebt))
+                .body(String.format("상환이 일부만 완료되었습니다. 3 영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체 대금은 %s입니다.", formattedRepaymentAmount))
                 .category(NotificationType.상환)
                 .page(NotificationPage.PAYMENT)
                 .build();
@@ -344,13 +350,16 @@ public class RepaymentScheduleService {
     }
 
     // 상환 실패 알림 전송
-    private void sendFailureNotification(Payment payment) {
+    private void sendFailureNotification(Payment payment, int repaymentAmount) {
+        int remainingDebt = payment.getPreviousMonthDebt();
+        String formattedRepaymentAmount = String.format("%,d", remainingDebt);
+
 
         // 고객에게 전송
         NotificationMessage userMessage = NotificationMessage.builder()
                 .loginId(payment.getUser().getLoginId())
                 .title("상환 실패 알림")
-                .body(String.format("상환이 지연되고 있습니다. 신속한 확인 요청드립니다. 3영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체 대금은 %d입니다.", payment.getPreviousMonthDebt()))
+                .body(String.format("상환이 지연되고 있습니다. 신속한 확인 요청드립니다. 3 영업일 이내 상환하지 않을 경우 반대매매가 발생합니다. 연체 대금은 %s입니다.", formattedRepaymentAmount))
                 .category(NotificationType.상환)
                 .page(NotificationPage.PAYMENT)
                 .build();
