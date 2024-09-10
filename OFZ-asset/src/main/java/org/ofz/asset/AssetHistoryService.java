@@ -130,12 +130,15 @@ public class AssetHistoryService {
             List<AssetHistoryLast10DaysRes> fullData = new ArrayList<>();
             for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
                 AssetHistory history = historyMap.getOrDefault(date, new AssetHistory(null, userId, 0, 0, 0, date.atStartOfDay(), null, 0.0, 0));
+
+                LocalDateTime adjustedCreatedAt = history.getCreatedAt().minusDays(1);
+
                 fullData.add(new AssetHistoryLast10DaysRes(
                         history.getUserId(),
                         history.getMortgageSum(),
                         history.getTodayLimit(),
                         history.getMaxLimit(),
-                        history.getCreatedAt()
+                        adjustedCreatedAt
                 ));
             }
 
