@@ -13,15 +13,15 @@ public class PaymentInfoForCashResponse {
 
     private int paymentAmount;
     private int creditLimit;
-    private int accountDeposit;
+    private int remainCreditLimit;
     List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories;
 
     public PaymentInfoForCashResponse() {}
 
-    public PaymentInfoForCashResponse(int paymentAmount, int creditLimit, int accountDeposit, List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories) {
+    public PaymentInfoForCashResponse(int paymentAmount, int creditLimit, int remainCreditLimit, List<PaymentHistoriesResponse.PaymentHistoryDTO> paymentHistories) {
         this.paymentAmount = paymentAmount;
         this.creditLimit = creditLimit;
-        this.accountDeposit = accountDeposit;
+        this.remainCreditLimit = remainCreditLimit;
         this.paymentHistories = paymentHistories;
     }
 }

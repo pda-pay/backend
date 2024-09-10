@@ -48,8 +48,8 @@ public class RepaymentService {
         int thisMonthRepaymentAmount = payment.getPreviousMonthDebt();
         int creditLimit = payment.getCreditLimit();
 
-        String accountNumber = payment.getRepaymentAccountNumber();
-        int accountDeposit = getPaymentAccountData(accountNumber).getDeposit();
+        final int totalDebt = payment.getPreviousMonthDebt() + payment.getCurrentMonthDebt();
+        final int remainCreditLimit = payment.getCreditLimit() - totalDebt;
 
         Pageable pageable = PageRequest.of(0, 2);
         List<PaymentHistoriesResponse.PaymentHistoryDTO> currentPaymentHistories = paymentHistoryRepository.findPaymentHistoryByUserId(userId, pageable);
@@ -57,7 +57,7 @@ public class RepaymentService {
         return PaymentInfoForCashResponse.builder()
                 .paymentAmount(thisMonthRepaymentAmount)
                 .creditLimit(creditLimit)
-                .accountDeposit(accountDeposit)
+                .remainCreditLimit(remainCreditLimit)
                 .paymentHistories(currentPaymentHistories)
                 .build();
     }
@@ -70,8 +70,7 @@ public class RepaymentService {
 
         String accountNumber = payment.getRepaymentAccountNumber();
         int totalDebt = payment.getPreviousMonthDebt() + payment.getCurrentMonthDebt();
-        final int remainCreditLimit = payment.getCreditLimit() - totalDebt;
-
+        int accountDeposit = getPaymentAccountData(accountNumber).getDeposit();
         AccountResponse response = getPaymentAccountData(accountNumber);
         String companyCode = response.getCompanyCode();
 
@@ -80,7 +79,7 @@ public class RepaymentService {
                 .accountNumber(response.getAccountNumber())
                 .accountName(BankCategory.fromCode(companyCode))
                 .companyCode(companyCode)
-                .remainCreditLimit(remainCreditLimit)
+                .accountDeposit(accountDeposit)
                 .build();
     }
 
