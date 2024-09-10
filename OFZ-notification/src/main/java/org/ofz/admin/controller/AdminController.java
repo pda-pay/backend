@@ -17,9 +17,6 @@ public class AdminController {
     private final RepaymentSseService repaymentSseService;
     private final AllPayedOffsetSseService allPayedOffsetSseService;
     private final NotAllPayedOffsetSseService notAllPayedOffsetSseService;
-    private final MarginRequirementSseService marginRequirementSseService;
-    private final RepaymentScheduleSseService repaymentScheduleSseService;
-
 
     @GetMapping(value = "/payment", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter simplePaymentLog() {
@@ -69,14 +66,4 @@ public class AdminController {
         return emitter;
     }
 
-    @GetMapping(value = "/margin-requirement", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter marginRequirementLog() {
-        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
-        marginRequirementSseService.addEmitter(emitter);
-
-        emitter.onCompletion(marginRequirementSseService::removeEmitter);
-        emitter.onTimeout(marginRequirementSseService::removeEmitter);
-
-        return emitter;
-    }
 }
