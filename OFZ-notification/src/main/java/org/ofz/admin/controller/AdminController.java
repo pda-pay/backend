@@ -79,14 +79,4 @@ public class AdminController {
 
         return emitter;
     }
-
-    @GetMapping(value = "/repayment-schedule", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter repaymentScheduleLog() {
-        SseEmitter emitter = repaymentScheduleSseService.addCommonEmitter();
-
-        emitter.onCompletion(repaymentScheduleSseService::removeCommonEmitter);
-        emitter.onTimeout(repaymentScheduleSseService::removeCommonEmitter);
-
-        return emitter;
-    }
 }
