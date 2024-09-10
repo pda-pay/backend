@@ -55,10 +55,11 @@ public interface AssetHistoryRepository extends JpaRepository<AssetHistory, Long
                                              @Param("startDate") LocalDateTime startDate,
                                              @Param("endDate") LocalDateTime endDate);
 
-    // marginRequirement가 특정 limit 이하인 유저의 데이터 조회 (created_at 기준 날짜로 필터링)
-    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSum, ah.todayLimit, ah.marginRequirement) " +
+    // marginRequirement가 0 이상이고 특정 limit 이하인 유저의 데이터 조회 (created_at 기준 날짜로 필터링)
+    @Query("SELECT new org.ofz.asset.dto.AssetHistoryRateRes(ah.id, ah.userId, ah.mortgageSum, ah.todayLimit, ah.marginRequirement, ah.mortgageSumRateOfChange) " +
             "FROM AssetHistory ah " +
-            "WHERE ah.marginRequirement <= :limit " +
+            "WHERE ah.marginRequirement >= 0 " +
+            "AND ah.marginRequirement <= :limit " +
             "AND FUNCTION('DATE', ah.createdAt) = :targetDate")
     List<AssetHistoryRateRes> findByMarginRequirementLessThan(@Param("limit") int limit, @Param("targetDate") String targetDate);
 
