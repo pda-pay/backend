@@ -15,11 +15,11 @@ public class OffsetController {
         this.offsetService = offsetService;
     }
 
-//    @PostMapping("/schedule/offset")
-//    public ResponseEntity<Void> processOffsets() {
-//        offsetService.processOffsets();
-//        return new ResponseEntity<>(HttpStatus.OK);
-//    }
+    @PostMapping("/schedule/offset")
+    public ResponseEntity<Void> processOffsets() {
+        offsetService.processOffsets();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
 //    @GetMapping("/schedule/offset/{userId}")
 //    public ResponseEntity<Void> processOffset(@PathVariable(value = "userId") Long userId){
