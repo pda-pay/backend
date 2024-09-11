@@ -1,13 +1,20 @@
 package org.ofz.repayment.service;
 
 import lombok.RequiredArgsConstructor;
+import org.ofz.management.entity.StockInformation;
+import org.ofz.management.exception.StockInformationNotFoundException;
+import org.ofz.management.projection.QuantityAndStockCodeOfMortgagedStock;
+import org.ofz.management.repository.MortgagedStockRepository;
+import org.ofz.management.repository.StockInformationRepository;
 import org.ofz.management.utils.BankCategory;
+import org.ofz.management.utils.StockStability;
 import org.ofz.payment.Payment;
 import org.ofz.payment.PaymentRepository;
 import org.ofz.payment.exception.payment.PaymentNotFoundException;
 import org.ofz.payment.repository.PaymentHistoryRepository;
 import org.ofz.rabbitMQ.Publisher;
 import org.ofz.rabbitMQ.rabbitDto.RepaymentHistoryLogDTO;
+import org.ofz.redis.RedisUtil;
 import org.ofz.repayment.dto.request.CashRepaymentRequest;
 import org.ofz.repayment.dto.response.*;
 import org.ofz.repayment.utils.AccountUtils;
@@ -18,6 +25,7 @@ import org.ofz.repayment.exception.repayment.InvalidPrepaymentAmountException;
 import org.ofz.repayment.exception.repayment.NoRepaymentRecordsException;
 import org.ofz.repayment.exception.repayment.TooHighPrepaymentAmountException;
 import org.ofz.repayment.exception.user.UserNotFoundException;
+import org.ofz.repayment.utils.StockUtils;
 import org.ofz.user.User;
 import org.ofz.user.UserRepository;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +43,11 @@ public class RepaymentService {
     private final PaymentRepository paymentRepository;
     private final PaymentHistoryRepository paymentHistoryRepository;
     private final UserRepository userRepository;
+    private final StockUtils stockUtils;
+    private final RedisUtil redisUtil;
+    private final StockInformationRepository stockInformationRepository;
     private final RepaymentHistoryRepository repaymentHistoryRepository;
+    private final MortgagedStockRepository mortgagedStockRepository;
     private final AccountUtils accountUtils;
     private final Publisher<RepaymentHistoryLogDTO> publisher;
 
@@ -164,6 +176,32 @@ public class RepaymentService {
                 .build();
 
         RepaymentHistory savedrepaymentHistory = repaymentHistoryRepository.save(repaymentHistory);
+
+        boolean hasMortgagedStock = mortgagedStockRepository.existsByUserId(userId);
+        boolean marginRequirement = true;
+        int userCreditLimit = payment.getCreditLimit();
+
+        if (hasMortgagedStock) {
+            marginRequirement = checkMarginRequirement(userCreditLimit, userId);
+        } else {
+            payment.changeCreditLimit(0);
+        }
+
+        if (marginRequirement && payment.getOverdueDay() != null) {
+
+            if (payment.isRateFlag()) {
+                payment.enablePay();
+            }
+        }
+
+        if (payment.getTotalDebt() == 0 && !payment.isRateFlag()) {
+            payment.enableRateFlag();
+        }
+
+        if (payment.getTotalDebt() == 0) {
+            payment.resetOverdueDay();
+        }
+
         paymentRepository.save(payment);
 
         RepaymentHistoryLogDTO log = RepaymentHistoryLogDTO.builder()
@@ -182,5 +220,35 @@ public class RepaymentService {
 
     private AccountResponse getPaymentAccountData(String accountNumber) {
         return accountUtils.fetchPaymentAccount(accountNumber);
+    }
+
+    private boolean checkMarginRequirement(int userCreditLimit, Long userId) {
+
+        List<QuantityAndStockCodeOfMortgagedStock> mortgagedStocks = mortgagedStockRepository.findMortgagedStocksByUserId(userId);
+
+        double totalPriceOfPawn = 0;
+
+        for (QuantityAndStockCodeOfMortgagedStock mortgagedStock : mortgagedStocks) {
+
+            String stockCode = mortgagedStock.getStockCode();
+            int quantity = mortgagedStock.getQuantity();
+
+            Integer previousPrice = redisUtil.fetchStoredPreviousPrice(stockCode);
+            if (previousPrice == null) {
+                previousPrice = stockUtils.fetchPreviousStockPrice(stockCode);
+            }
+
+            StockInformation stockInformation = stockInformationRepository
+                    .findByStockCode(stockCode)
+                    .orElseThrow(() -> new StockInformationNotFoundException("증권 정보가 조회되지 않습니다. " + stockCode));
+
+            int stabilityLevel = stockInformation.getStabilityLevel();
+
+            totalPriceOfPawn += quantity * StockStability.calculateLimitPrice(stabilityLevel, previousPrice);
+        }
+
+        double ratio = totalPriceOfPawn / userCreditLimit * 100;
+
+        return ratio >= 140;
     }
 }
