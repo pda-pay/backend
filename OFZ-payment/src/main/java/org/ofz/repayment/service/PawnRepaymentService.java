@@ -381,6 +381,16 @@ public class PawnRepaymentService {
                 .build();
 
         RepaymentHistory savedrepaymentHistory = repaymentHistoryRepository.save(repaymentHistory);
+
+        if (marginRequirement && payment.getTotalDebt() == 0 && payment.getOverdueDay() != null) {
+
+            if (payment.isRateFlag()) {
+                payment.enablePay();
+            }
+
+            payment.resetOverdueDay();
+        }
+
         paymentRepository.save(payment);
 
         RepaymentHistoryLogDTO log = RepaymentHistoryLogDTO.builder()

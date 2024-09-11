@@ -23,7 +23,6 @@ public class PawnRepaymentController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    // 담보 결제 시도
     @PostMapping("/payment/pawn")
     public ResponseEntity<PawnRepaymentResponse> prepayWithPawn(@RequestHeader("X-USER-ID") String userId, @RequestBody PawnRepaymentRequest pawnRepaymentRequest) {
 
