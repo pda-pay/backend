@@ -6,6 +6,10 @@ plugins {
 group 'org.ofz'
 version 'unspecified'
 
+jar {
+    enabled = false
+}
+
 repositories {
     mavenCentral()
 }

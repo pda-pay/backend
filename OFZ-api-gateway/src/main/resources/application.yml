@@ -1,23 +1,183 @@
-server:
-  port: 8080
-
 spring:
+  profiles:
+    active: local
+    group:
+      local:
+        - common
+      prod:
+        - common
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+    import: optional:file:.env[.properties]
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
   application:
     name: api-gateway
 
+  rabbitmq:
+    port: ${RABBITMQ_PORT}
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+
+
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
   cloud:
     gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins:
+              - "https://140pay.site"
+              - "http://localhost:5173"
+            allow-credentials: true
+            allowedHeaders:
+              - x-requested-with
+              - authorization
+              - content-type
+              - credential
+              - X-AUTH-TOKEN
+              - X-CSRF-TOKEN
+            allowedMethods:
+              - POST
+              - GET
+              - PUT
+              - PATCH
+              - OPTIONS
+              - DELETE
+
       routes:
-        - id: payment-service
+        - id: users-loginSession
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/users/validation, /api/users/login, /api/users/signup, /api/users/sms-request, /api/users/sms-verification, /api/payment/socket
+          filters:
+            - StripPrefix=1
+
+        - id: users
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/users/**
+          filters:
+            - StripPrefix=1
+            - LoginJWTFilter
+
+        - id: payment
           uri: lb://payment-service
           predicates:
             - Path=/api/payment/**
+          filters:
+            - StripPrefix=1
+            - LoginJWTFilter
+            
+        - id: franchise
+          uri: lb://payment-service
+          predicates:
+            - Path=/api/franchise/**
+          filters:
+            - StripPrefix=1
+
+        - id: schedule-service-admin
+          uri: lb://schedule-service
+          predicates:
+            - Path= /api/schedule/user-margin-requirements-under, /api/schedule/all-user-margin-requirements, /api/schedule/process-all-user-limits, /api/schedule/process
+          filters:
+            - StripPrefix=1
+
+        - id: schedule-service
+          uri: lb://schedule-service
+          predicates:
+            - Path=/api/schedule/**
+          filters:
+            - StripPrefix=1
+            - LoginJWTFilter
+
+        - id: notification-service-admin
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notification/payment, /api/notification/repayment, /api/notification/offset/all-payed, /api/notification/offset/not-all-payed
+          filters:
+            - StripPrefix=1
+
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notification/**
+          filters:
+            - StripPrefix=1
+            - LoginJWTFilter
+
+        - id: asset-service-admin
+          uri: lb://asset-service
+          predicates:
+            - Path=/api/asset/rate-of-change/under, /api/asset/calculate-rate-of-change, /api/asset/margin-requirement/under
+          filters:
+            - StripPrefix=1
+            
+        - id: asset-service
+          uri: lb://asset-service
+          predicates:
+            - Path=/api/asset/**
+          filters:
+            - StripPrefix=1
+            - LoginJWTFilter
+
+
+server:
+  port: 8080
+
+jwt:
+  secret: ${JWT_SECRET}
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: ${LOCAL_PAYMENT_DB_URL}
+    username: ${LOCAL_DB_USERNAME}
+    password: ${LOCAL_DB_PASSWORD}
 
 eureka:
-  instance:
-    prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
     serviceUrl:
-      defaultZone: http://localhost:8087/eureka
+      defaultZone: "http://localhost:8087/eureka"
+  server:
+    wait-time-in-ms-when-sync-empty: 5
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  datasource:
+    url: ${PAYMENT_DB_URL}
+    username: ${PAYMENT_DB_USERNAME}
+    password: ${PAYMENT_DB_PASSWORD}
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: ${OFZ_EUREKA_URL}
+  server:
+    wait-time-in-ms-when-sync-empty: 5
+
+server:
+  ssl:
+    key-store: file:/home/ubuntu/OFZ-api-gateway/keystore.p12
+    key-store-type: PKCS12
+    key-store-password: ${SSL_PASSWORD}

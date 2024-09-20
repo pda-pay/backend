@@ -1,14 +1,109 @@
+spring:
+  profiles:
+    active: local
+    group:
+      local:
+        - common
+      prod:
+        - common
+---
+spring:
+  config:
+    activate:
+      on-profile: common
+    import: optional:file:.env[.properties]
+
+  rabbitmq:
+    port: ${RABBITMQ_PORT}
+    host: ${RABBITMQ_HOST}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+  application:
+    name: notification-service
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
+  datasource:
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
+
+firebase:
+  config:
+    url: ${FIREBASE_FCM_URL}
+    path: ${FIREBASE_JSON_PATH}
+
+jwt:
+  secret: ${JWT_SECRET}
+
 server:
   port: 8084
 
+---
 spring:
-  application:
-    name: notification-service
+  config:
+    activate:
+      on-profile: local
+    import: optional:file:.env[.properties]
+
+  datasource:
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+secret:
+  key:
+    base64: ${SECRET_KEY_BASE64}
+
+  redis:
+    host: ${REDIS_HOST}
+    port: ${REDIS_PORT}
+
+jwt:
+  secret: ${JWT_SECRET}
+
+  datasource:
+    url: ${NOTIFICATION_DB_URL}
+    username: ${NOTIFICATION_DB_USERNAME}
+    password: ${NOTIFICATION_DB_PASSWORD}
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
 eureka:
   instance:
     prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8087/eureka/
+    serviceUrl:
+      defaultZone: "http://localhost:8087/eureka"
+  server:
+    wait-time-in-ms-when-sync-empty: 5
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    serviceUrl:
+      defaultZone: ${OFZ_EUREKA_URL}
+  server:
+    wait-time-in-ms-when-sync-empty: 5

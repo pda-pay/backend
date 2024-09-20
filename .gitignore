@@ -5,6 +5,7 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+
 ### STS ###
 .apt_generated
 .classpath
@@ -35,3 +36,9 @@ out/
 
 ### VS Code ###
 .vscode/
+
+.env
+
+### Private KEY ###
+keystore.p12
+OFZ-notification/src/main/resources/firebase/*
